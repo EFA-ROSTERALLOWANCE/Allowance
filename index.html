@@ -1,0 +1,926 @@
+import { useState, useEffect } from "react";
+
+// ─── EA 2025 Constants ────────────────────────────────────────────────────────
+const INDEX_YEARS = [
+  { label: "FFPP Commencement", mult: 1.0000 },
+  { label: "FFPP 1 Jan 2027",   mult: 1.0300 },
+  { label: "FFPP 1 Jan 2028",   mult: 1.0609 },
+  { label: "FFPP 1 Jan 2029",   mult: 1.0927 },
+];
+
+const RATES = {
+  DVA_CPT:      400.00, DVA_FO:       250.00,
+  DDO_CPT:     1231.00, DDO_FO:       837.00,
+  DHA_CPT:       17.51, DHA_FO:        11.39,
+  MISSED_MEAL:   30.00, ACCOM_OPTOUT:  75.00,
+};
+
+// ─── Airports ─────────────────────────────────────────────────────────────────
+const AIRPORTS = [
+  { code: "SYD", name: "Sydney",      flag: "🇦🇺" },
+  { code: "MEL", name: "Melbourne",   flag: "🇦🇺" },
+  { code: "PER", name: "Perth",       flag: "🇦🇺" },
+  { code: "SIN", name: "Singapore",   flag: "🇸🇬" },
+  { code: "HKG", name: "Hong Kong",   flag: "🇭🇰" },
+  { code: "PVG", name: "Shanghai",    flag: "🇨🇳" },
+  { code: "AKL", name: "Auckland",    flag: "🇳🇿" },
+];
+
+const AIRPORT_ZONE = {
+  SYD:"domestic", MEL:"domestic", PER:"domestic",
+  SIN:"hk_singapore", HKG:"hk_singapore",
+  PVG:"china_japan", AKL:"auckland",
+};
+
+// ─── Meal zones ───────────────────────────────────────────────────────────────
+const DESTINATIONS = {
+  domestic:     { label:"Domestic (AUS)",          flag:"🇦🇺", color:"#34D399", breakfast:33.25,  lunch:37.65,  dinner:53.15,  incidental:17.85 },
+  auckland:     { label:"Auckland",                flag:"🇳🇿", color:"#60A5FA", breakfast:96.66,  lunch:96.66,  dinner:96.68,  incidental:50.00 },
+  china_japan:  { label:"China / Japan",           flag:"🇨🇳", color:"#F472B6", breakfast:121.66, lunch:121.66, dinner:121.68, incidental:60.00 },
+  hk_singapore: { label:"Hong Kong / Singapore",   flag:"🇸🇬", color:"#A78BFA", breakfast:138.33, lunch:138.33, dinner:138.34, incidental:60.00 },
+};
+
+const MEAL_WINDOWS = [
+  { id:"b", label:"Breakfast", icon:"🍳", color:"#FCD34D", wS:7*60+30,  wE:9*60+30,  label2:"0730–0930", key:"breakfast" },
+  { id:"l", label:"Lunch",     icon:"🥗", color:"#86EFAC", wS:11*60+30, wE:13*60+30, label2:"1130–1330", key:"lunch"     },
+  { id:"d", label:"Dinner",    icon:"🍽️", color:"#F59E0B", wS:17*60+30, wE:19*60+30, label2:"1730–1930", key:"dinner"    },
+];
+
+const DAYS = ["MON","TUE","WED","THU","FRI","SAT","SUN"];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function parseTime(s) {
+  if (!s || !s.includes(":")) return null;
+  const [h, m] = s.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+}
+function fmtTime(mins) {
+  if (mins == null) return "—";
+  const n = ((mins % 1440) + 1440) % 1440;
+  return `${String(Math.floor(n/60)).padStart(2,"0")}:${String(n%60).padStart(2,"0")}`;
+}
+function dutyMins(on, off) {
+  if (on == null || off == null) return 0;
+  let d = off - on; if (d < 0) d += 1440; return d;
+}
+function overlapsWindow(ss, se, wS, wE) {
+  let end = se < ss ? se + 1440 : se;
+  return ss <= wE && end >= wS;
+}
+function fmtAUD(n) {
+  return n.toLocaleString("en-AU", { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function zoneFromAirport(code) { return AIRPORT_ZONE[code] || "domestic"; }
+function airportInfo(code) { return AIRPORTS.find(a => a.code === code) || null; }
+
+// Parse date string "YYYY-MM-DD" → Date (local)
+function parseDate(s) {
+  if (!s) return null;
+  const d = new Date(s + "T00:00:00");
+  return isNaN(d) ? null : d;
+}
+function fmtDate(s) {
+  const d = parseDate(s);
+  if (!d) return "—";
+  return d.toLocaleDateString("en-AU", { day:"2-digit", month:"short", year:"numeric" });
+}
+function daysBetween(from, to) {
+  const f = parseDate(from), t = parseDate(to);
+  if (!f || !t) return 0;
+  return Math.max(0, Math.round((t - f) / 86400000));
+}
+
+// Given hotel check-in time (mins) and checkout time (mins) across N nights,
+// return total slip minutes (check-in day 1 to checkout day N+1)
+function totalSlipMins(checkInMins, checkOutMins, nights) {
+  if (checkInMins == null || checkOutMins == null || nights <= 0) return 0;
+  // Full days between + partial first/last day
+  return nights * 1440 - checkInMins + checkOutMins;
+}
+
+// For multi-day hotel stay, figure out which meal windows are covered on each day
+// Returns array of {day, breakfast, lunch, dinner} booleans
+function mealsCoveredPerDay(checkInMins, checkOutMins, nights) {
+  if (checkInMins == null || checkOutMins == null || nights <= 0) return [];
+  const days = [];
+  for (let i = 0; i < nights; i++) {
+    // Day 0: from checkIn to midnight; Day N-1: from midnight to checkOut
+    const dayStart = i === 0 ? checkInMins : 0;
+    const dayEnd   = i === nights - 1 ? checkOutMins + 1440 * i : 1440 * (i + 1); // in absolute mins
+    // Convert to same-day mins for window check (each 24h block)
+    // We accumulate from check-in as absolute minutes
+    const absStart = i * 1440 + (i === 0 ? checkInMins : 0);
+    const absEnd   = i === nights - 1 ? i * 1440 + checkOutMins : (i + 1) * 1440;
+    const meals = {};
+    MEAL_WINDOWS.forEach(w => {
+      const wAbsS = i * 1440 + w.wS;
+      const wAbsE = i * 1440 + w.wE;
+      meals[w.id] = absStart <= wAbsE && absEnd >= wAbsS;
+    });
+    days.push({ dayNum: i + 1, ...meals });
+  }
+  return days;
+}
+
+// ─── Allowance engine ─────────────────────────────────────────────────────────
+function calcDayAllowances(day, role, yearIdx) {
+  const mult = INDEX_YEARS[yearIdx].mult;
+  const items = [];
+  const add = (id, label, clause, color, icon, baseRate, qty, reason) => {
+    const rate = baseRate * mult;
+    items.push({ id, label, clause, color, icon, rate, qty, amount: rate * qty, reason });
+  };
+
+  // ── Outbound flight duty hours (Cl. 6.9) ────────────────────────────────
+  const rSOn  = parseTime(day.rSignOn);
+  const rSOff = parseTime(day.rSignOff);
+  const aSOn  = parseTime(day.aSignOn);
+  const aSOff = parseTime(day.aSignOff);
+  const effOn  = aSOn  ?? rSOn;
+  const effOff = aSOff ?? rSOff;
+
+  if (effOn != null && effOff != null) {
+    const dh = dutyMins(effOn, effOff) / 60;
+    if (dh > 0) {
+      const r = role === "cpt" ? RATES.DHA_CPT : RATES.DHA_FO;
+      add("dha_out","Duty Hour Allowance (Outbound)","Cl. 6.9","#38BDF8","🕐",
+        r * dh, 1,
+        `${dh.toFixed(2)}h × $${(r*mult).toFixed(4)}/h (${fmtTime(effOn)}–${fmtTime(effOff)})`);
+    }
+  }
+
+  // ── Outbound DVA (Cl. 5.28) ──────────────────────────────────────────────
+  if (rSOn != null && rSOff != null && (aSOn != null || aSOff != null)) {
+    const aOn  = aSOn  ?? rSOn;
+    const aOff = aSOff ?? rSOff;
+    const onEarlier = Math.max(0, rSOn  - aOn);
+    const offLater  = Math.max(0, aOff  - rSOff);
+    const maxChange = Math.max(onEarlier, offLater);
+    if (maxChange > 120) {
+      const dvaRate = role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO;
+      const details = [];
+      if (onEarlier > 120) details.push(`sign-on ${onEarlier}min earlier`);
+      if (offLater  > 120) details.push(`sign-off ${offLater}min later`);
+      add("dva_out","Duty Variation Allowance (Outbound)","Cl. 5.28","#F59E0B","⚡",
+        dvaRate, 1, details.join("; ") + ` — >${maxChange > 240 ? "4h" : "2h"} buffer`);
+    }
+    if ((aSOn ?? rSOn) < 5*60)
+      add("early_out","Early Report – Outbound (pre-0500)","Cl. 5.19","#F87171","🌅", 0, 0,
+        `Sign-on at ${fmtTime(aSOn ?? rSOn)} — DVA applies if following a DDO`);
+  }
+
+  // ── Return flight duty hours (Cl. 6.9) ──────────────────────────────────
+  const rRSOn  = parseTime(day.rRetSignOn);
+  const rRSOff = parseTime(day.rRetSignOff);
+  const aRSOn  = parseTime(day.aRetSignOn);
+  const aRSOff = parseTime(day.aRetSignOff);
+  const effROn  = aRSOn  ?? rRSOn;
+  const effROff = aRSOff ?? rRSOff;
+
+  if (effROn != null && effROff != null) {
+    const dh = dutyMins(effROn, effROff) / 60;
+    if (dh > 0) {
+      const r = role === "cpt" ? RATES.DHA_CPT : RATES.DHA_FO;
+      add("dha_ret","Duty Hour Allowance (Return)","Cl. 6.9","#7DD3FC","🔄",
+        r * dh, 1,
+        `${dh.toFixed(2)}h × $${(r*mult).toFixed(4)}/h (${fmtTime(effROn)}–${fmtTime(effROff)})`);
+    }
+  }
+
+  // ── Return DVA (Cl. 5.28) ────────────────────────────────────────────────
+  if (rRSOn != null && rRSOff != null && (aRSOn != null || aRSOff != null)) {
+    const aOn  = aRSOn  ?? rRSOn;
+    const aOff = aRSOff ?? rRSOff;
+    const onEarlier = Math.max(0, rRSOn  - aOn);
+    const offLater  = Math.max(0, aOff   - rRSOff);
+    const maxChange = Math.max(onEarlier, offLater);
+    if (maxChange > 120) {
+      const dvaRate = role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO;
+      const details = [];
+      if (onEarlier > 120) details.push(`sign-on ${onEarlier}min earlier`);
+      if (offLater  > 120) details.push(`sign-off ${offLater}min later`);
+      add("dva_ret","Duty Variation Allowance (Return)","Cl. 5.28","#FBBF24","⚡",
+        dvaRate, 1, details.join("; ") + ` — >${maxChange > 240 ? "4h" : "2h"} buffer`);
+    }
+    if ((aRSOn ?? rRSOn) < 5*60)
+      add("early_ret","Early Report – Return (pre-0500)","Cl. 5.19","#FCA5A5","🌅", 0, 0,
+        `Sign-on at ${fmtTime(aRSOn ?? rRSOn)} — DVA applies if following a DDO`);
+  }
+
+  // ── DDO Infringed (Cl. 5.20/5.33) ───────────────────────────────────────
+  if (day.ddoInfringed) {
+    const ddoRate = role === "cpt" ? RATES.DDO_CPT : RATES.DDO_FO;
+    add("ddo","Designated Day Off – Worked","Cl. 5.20/5.33","#EF4444","📅",
+      ddoRate, 1, "Actual duty infringed a rostered designated day off");
+  }
+
+  // ── Hotel meal allowances (Cl. 6.22–6.24) ───────────────────────────────
+  if (day.hasSlip && day.hotelCheckIn && day.hotelCheckOut && day.hotelFrom && day.hotelTo) {
+    const nights = daysBetween(day.hotelFrom, day.hotelTo);
+    const ciMins = parseTime(day.hotelCheckIn);
+    const coMins = parseTime(day.hotelCheckOut);
+    const zone   = day.arrAirport ? zoneFromAirport(day.arrAirport) : (day.destination || "domestic");
+    const dest   = DESTINATIONS[zone] || DESTINATIONS.domestic;
+
+    if (nights > 0 && ciMins != null && coMins != null) {
+      const totalSlip = totalSlipMins(ciMins, coMins, nights);
+
+      if (totalSlip > 4 * 60) {
+        const perDay = mealsCoveredPerDay(ciMins, coMins, nights);
+
+        // Count meals across all days
+        const mealCounts = { b: 0, l: 0, d: 0 };
+        perDay.forEach(d => {
+          if (d.b) mealCounts.b++;
+          if (d.l) mealCounts.l++;
+          if (d.d) mealCounts.d++;
+        });
+
+        if (mealCounts.b > 0)
+          add("meal_b", `Breakfast × ${mealCounts.b} — ${dest.label}`, "Cl. 6.24(a)",
+            "#FCD34D", "🍳", dest.breakfast, mealCounts.b,
+            `${dest.flag} ${mealCounts.b} breakfast(s) across ${nights}-night stay (0730–0930)`);
+
+        if (mealCounts.l > 0)
+          add("meal_l", `Lunch × ${mealCounts.l} — ${dest.label}`, "Cl. 6.24(b)",
+            "#86EFAC", "🥗", dest.lunch, mealCounts.l,
+            `${dest.flag} ${mealCounts.l} lunch(es) across ${nights}-night stay (1130–1330)`);
+
+        if (mealCounts.d > 0)
+          add("meal_d", `Dinner × ${mealCounts.d} — ${dest.label}`, "Cl. 6.24(c)",
+            "#F59E0B", "🍽️", dest.dinner, mealCounts.d,
+            `${dest.flag} ${mealCounts.d} dinner(s) across ${nights}-night stay (1730–1930)`);
+
+        // Incidental: payable if total slip > 24h
+        if (totalSlip > 24 * 60)
+          add("meal_i", `Incidental — ${dest.label}`, "Cl. 6.24", "#D97706", "☕",
+            dest.incidental, 1,
+            `${dest.flag} Total slip ${(totalSlip/60).toFixed(1)}h exceeds 24h`);
+      }
+    }
+  }
+
+  // ── Missed Crew Meal (Cl. 23.1) ──────────────────────────────────────────
+  if (day.missedMealOut)
+    add("missed_out","Missed Crew Meal (Outbound)","Cl. 23.1","#FB923C","🚫",
+      RATES.MISSED_MEAL, 1, "Outbound — crew meal not provided");
+  if (day.missedMealRet)
+    add("missed_ret","Missed Crew Meal (Return)","Cl. 23.1","#FB923C","🚫",
+      RATES.MISSED_MEAL, 1, "Return — crew meal not provided");
+
+  // ── Accommodation opt-out (Cl. 6.32) ─────────────────────────────────────
+  if (day.accomOptOut) {
+    const nights = daysBetween(day.hotelFrom, day.hotelTo) || 1;
+    add("accom","Accommodation Opt-Out","Cl. 6.32","#818CF8","🏨",
+      RATES.ACCOM_OPTOUT, nights,
+      `${nights} night(s) — elected not to use accommodation; 48h notice given`);
+  }
+
+  return items;
+}
+
+// ─── UI Components ────────────────────────────────────────────────────────────
+const mono = "'IBM Plex Mono', monospace";
+const MID = { color:"#4A5568" };
+
+function Label({ text, color, hi }) {
+  return <div style={{ fontSize:8, letterSpacing:1, color: hi ? "#38BDF8" : (color || "#4A5568"), fontFamily:mono, marginBottom:3 }}>{text}</div>;
+}
+
+function TimeInput({ label, value, onChange, highlight, color }) {
+  const col = color || (highlight ? "#38BDF8" : "#4A5568");
+  return (
+    <div style={{ display:"flex", flexDirection:"column" }}>
+      <Label text={label} hi={highlight} color={color} />
+      <input type="time" value={value} onChange={e => onChange(e.target.value)} style={{
+        background:"#09090F", border:`1px solid ${highlight||color ? "#1E3A5F" : "#1a1a2e"}`,
+        borderRadius:6, color: value ? "#E2E8F0" : "#2D3748",
+        padding:"5px 8px", fontFamily:mono, fontSize:13, width:100,
+      }} />
+    </div>
+  );
+}
+
+function DateInput({ label, value, onChange, highlight }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column" }}>
+      <Label text={label} hi={highlight} />
+      <input type="date" value={value} onChange={e => onChange(e.target.value)} style={{
+        background:"#09090F", border:`1px solid ${highlight ? "#1E3A5F" : "#1a1a2e"}`,
+        borderRadius:6, color: value ? "#E2E8F0" : "#2D3748",
+        padding:"5px 8px", fontFamily:mono, fontSize:12, width:148,
+        colorScheme:"dark",
+      }} />
+    </div>
+  );
+}
+
+function AirportSelect({ label, value, onChange, highlight, color }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column" }}>
+      <Label text={label} hi={highlight} color={color} />
+      <select value={value} onChange={e => onChange(e.target.value)} style={{
+        background:"#09090F", border:`1px solid ${highlight||color ? "#1E3A5F" : "#1a1a2e"}`,
+        borderRadius:6, color: value ? "#E2E8F0" : "#2D3748",
+        padding:"5px 8px", fontFamily:mono, fontSize:12, cursor:"pointer", width:148,
+        appearance:"none", WebkitAppearance:"none",
+      }}>
+        <option value="">Select airport</option>
+        {AIRPORTS.map(a => <option key={a.code} value={a.code}>{a.flag} {a.code} — {a.name}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function Toggle({ label, checked, onChange, color="#38BDF8" }) {
+  return (
+    <div onClick={() => onChange(!checked)} style={{ display:"flex", alignItems:"center", gap:7, cursor:"pointer", userSelect:"none" }}>
+      <div style={{ width:32, height:18, borderRadius:9, background:checked?color:"#1a1a2e", border:`1px solid ${checked?color:"#2D3748"}`, position:"relative", transition:"all 0.2s", flexShrink:0 }}>
+        <div style={{ position:"absolute", top:2, left:checked?14:2, width:12, height:12, borderRadius:"50%", background:checked?"#fff":"#4A5568", transition:"left 0.2s" }} />
+      </div>
+      <span style={{ fontSize:10, color:checked?"#CBD5E1":"#4A5568" }}>{label}</span>
+    </div>
+  );
+}
+
+function DiffBadge({ rostered, actual, label }) {
+  const r = parseTime(rostered), a = parseTime(actual);
+  if (r==null || a==null) return null;
+  const diff=r-a, abs=Math.abs(diff);
+  const h=Math.floor(abs/60), m=abs%60;
+  const str=h>0?`${h}h ${m}m`:`${m}m`;
+  const dir=diff>0?"earlier":diff<0?"later":"on time";
+  const col=abs===0?"#34D399":abs>240?"#EF4444":abs>120?"#F59E0B":"#34D399";
+  return <span style={{ fontSize:9, fontFamily:mono }}><span style={MID}>{label}: </span><span style={{ color:col, fontWeight:700 }}>{abs===0?"on time":`${str} ${dir}`}</span></span>;
+}
+
+function SectionHead({ children }) {
+  return <div style={{ fontSize:9, letterSpacing:2, color:"#2D3748", fontFamily:mono, marginBottom:12 }}>{children}</div>;
+}
+
+function Card({ children, border, style={} }) {
+  return <div style={{ background:"#0D1117", border:`1px solid ${border||"#141420"}`, borderRadius:14, padding:"16px 20px", ...style }}>{children}</div>;
+}
+
+function InnerCard({ children, border, style={} }) {
+  return <div style={{ background:"#09090F", border:`1px solid ${border||"#141420"}`, borderRadius:10, padding:14, ...style }}>{children}</div>;
+}
+
+function emptyDay() {
+  return {
+    // Outbound flight
+    flightNo:"", depAirport:"", arrAirport:"",
+    rSignOn:"", rSignOff:"", aSignOn:"", aSignOff:"",
+    // Hotel stay
+    hasSlip:false, destination:"domestic",
+    hotelFrom:"", hotelTo:"",         // date range
+    hotelCheckIn:"", hotelCheckOut:"", // times
+    // Return flight
+    retFlightNo:"", retDepAirport:"", retArrAirport:"",
+    rRetSignOn:"", rRetSignOff:"", aRetSignOn:"", aRetSignOff:"",
+    // Other
+    ddoInfringed:false, missedMealOut:false, missedMealRet:false, accomOptOut:false,
+  };
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+export default function App() {
+  const [role,    setRole]    = useState("cpt");
+  const [yearIdx, setYearIdx] = useState(0);
+  const [empName, setEmpName] = useState("Capt. Sarah Chen");
+  const [empNo,   setEmpNo]   = useState("EFA-0142");
+  const [days,    setDays]    = useState(() => { const d={}; DAYS.forEach(k=>{d[k]=emptyDay();}); return d; });
+  const [active,  setActive]  = useState("MON");
+  const [tab,     setTab]     = useState("entry");
+  const [clock,   setClock]   = useState(new Date());
+
+  useEffect(()=>{ const t=setInterval(()=>setClock(new Date()),1000); return ()=>clearInterval(t); },[]);
+
+  function upd(dayKey, field, val) {
+    setDays(prev => ({ ...prev, [dayKey]: { ...prev[dayKey], [field]: val } }));
+  }
+  function updArr(dayKey, code) {
+    // Auto-set destination zone from arrival airport
+    setDays(prev => ({ ...prev, [dayKey]: { ...prev[dayKey], arrAirport:code, destination:zoneFromAirport(code) } }));
+  }
+  function updRetDep(dayKey, code) {
+    // Return departure defaults to outbound arrival
+    setDays(prev => ({ ...prev, [dayKey]: { ...prev[dayKey], retDepAirport:code } }));
+  }
+
+  const dayResults = {};
+  DAYS.forEach(d => { dayResults[d] = calcDayAllowances(days[d], role, yearIdx); });
+  const dayTotals  = {};
+  DAYS.forEach(d => { dayTotals[d] = dayResults[d].reduce((s,i)=>s+i.amount,0); });
+  const weekTotal  = Object.values(dayTotals).reduce((s,v)=>s+v,0);
+
+  const d         = days[active];
+  const zone      = d.arrAirport ? zoneFromAirport(d.arrAirport) : d.destination;
+  const destInfo  = DESTINATIONS[zone] || DESTINATIONS.domestic;
+  const nights    = daysBetween(d.hotelFrom, d.hotelTo);
+  const ciMins    = parseTime(d.hotelCheckIn);
+  const coMins    = parseTime(d.hotelCheckOut);
+  const totalSlip = nights>0 && ciMins!=null && coMins!=null ? totalSlipMins(ciMins,coMins,nights) : 0;
+  const perDayMeals = nights>0 && ciMins!=null && coMins!=null ? mealsCoveredPerDay(ciMins,coMins,nights) : [];
+  const utc       = clock.toISOString().slice(11,19)+"Z";
+
+  // Section styles
+  const tabBtn = (id) => ({
+    background:"transparent", border:"none",
+    color: tab===id ? "#38BDF8" : "#2D3748",
+    borderBottom: tab===id ? "2px solid #38BDF8" : "2px solid transparent",
+    padding:"0 14px", height:52,
+    fontSize:10, fontWeight:700, letterSpacing:1.5, fontFamily:mono, cursor:"pointer",
+  });
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#09090F", color:"#CBD5E1", fontFamily:"'Syne', sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0;}
+        ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-track{background:#09090F;} ::-webkit-scrollbar-thumb{background:#1E2A3A;border-radius:2px;}
+        input[type=time]::-webkit-calendar-picker-indicator,input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.3);cursor:pointer;}
+        input:focus,select:focus{outline:none!important;}
+        select option{background:#0D1117;color:#CBD5E1;}
+        @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+        .fadein{animation:fadein 0.25s ease both;}
+        .pill:hover{border-color:#1E3A5F!important;}
+        .hrow:hover{background:rgba(56,189,248,0.03)!important;}
+      `}</style>
+
+      {/* ── Topbar ── */}
+      <div style={{ position:"sticky", top:0, zIndex:50, background:"#09090F", borderBottom:"1px solid #141420", display:"flex", alignItems:"center", gap:14, padding:"0 24px", height:52 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:9, flexShrink:0 }}>
+          <div style={{ width:28, height:28, borderRadius:7, background:"linear-gradient(135deg,#1E3A5F,#0EA5E9)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13 }}>✈</div>
+          <div>
+            <div style={{ fontFamily:mono, fontSize:11, fontWeight:700, color:"#E2E8F0", letterSpacing:2 }}>EFA PAY</div>
+            <div style={{ fontSize:7, color:"#2D3748", letterSpacing:1.5 }}>EA 2025 · TRIP ALLOWANCE CALCULATOR</div>
+          </div>
+        </div>
+
+        {[["cpt","Captain"],["fo","F/Officer"]].map(([r,lbl])=>(
+          <button key={r} onClick={()=>setRole(r)} style={{ padding:"4px 12px", borderRadius:6, cursor:"pointer", background:role===r?"#0F1929":"transparent", border:`1px solid ${role===r?"#38BDF8":"#141420"}`, color:role===r?"#38BDF8":"#4A5568", fontSize:10, fontWeight:700, fontFamily:mono }}>
+            {lbl}
+          </button>
+        ))}
+
+        <select value={yearIdx} onChange={e=>setYearIdx(+e.target.value)} style={{ background:"#0D1117", border:"1px solid #141420", borderRadius:6, color:"#38BDF8", padding:"4px 8px", fontFamily:mono, fontSize:10, cursor:"pointer" }}>
+          {INDEX_YEARS.map((y,i)=><option key={i} value={i}>{y.label}</option>)}
+        </select>
+
+        <div style={{ display:"flex", gap:2, flex:1 }}>
+          {[["entry","DUTY ENTRY"],["rates","MEAL RATES"],["summary","WEEK SUMMARY"]].map(([id,lbl])=>(
+            <button key={id} onClick={()=>setTab(id)} style={tabBtn(id)}>{lbl}</button>
+          ))}
+        </div>
+
+        <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+          <input value={empName} onChange={e=>setEmpName(e.target.value)} style={{ background:"transparent", border:"none", borderBottom:"1px solid #141420", color:"#CBD5E1", fontSize:12, fontWeight:700, fontFamily:"'Syne'", width:160, padding:"2px 0" }} />
+          <input value={empNo}   onChange={e=>setEmpNo(e.target.value)}   style={{ background:"transparent", border:"none", borderBottom:"1px solid #141420", color:"#4A5568", fontSize:10, fontFamily:mono, width:80, padding:"2px 0" }} />
+        </div>
+        <div style={{ fontFamily:mono, fontSize:11, color:"#38BDF8", letterSpacing:1, flexShrink:0 }}>{utc}</div>
+      </div>
+
+      {/* ── Day selector ── */}
+      {tab==="entry" && (
+        <div style={{ background:"#09090F", borderBottom:"1px solid #141420", padding:"10px 24px", display:"flex", gap:6, overflowX:"auto" }}>
+          {DAYS.map(day=>{
+            const t=dayTotals[day], isActive=active===day;
+            const dep=airportInfo(days[day].depAirport), arr=airportInfo(days[day].arrAirport);
+            return (
+              <div key={day} className="pill" onClick={()=>setActive(day)} style={{ padding:"7px 14px", borderRadius:8, flexShrink:0, cursor:"pointer", background:isActive?"#0F1929":"transparent", border:`1px solid ${isActive?"#1E3A5F":"#141420"}`, color:isActive?"#E2E8F0":days[day].rSignOn?"#CBD5E1":"#2D3748", transition:"all 0.15s", minWidth:76 }}>
+                <div style={{ fontSize:10, fontWeight:800, fontFamily:mono, letterSpacing:1, color:(day==="SAT"||day==="SUN")?(isActive?"#F87171":"#4A5568"):"inherit" }}>{day}</div>
+                {dep&&arr ? <div style={{ fontSize:8, color:isActive?"#38BDF8":"#4A5568", marginTop:2, fontFamily:mono }}>{dep.code}→{arr.code}</div>
+                           : days[day].flightNo ? <div style={{ fontSize:8, color:"#4A5568", marginTop:2, fontFamily:mono }}>{days[day].flightNo}</div> : null}
+                <div style={{ fontSize:9, fontFamily:mono, marginTop:2, color:t>0?"#86EFAC":"#2D3748" }}>{t>0?`$${fmtAUD(t)}`:"—"}</div>
+              </div>
+            );
+          })}
+          <div style={{ marginLeft:"auto", padding:"7px 16px", borderRadius:8, flexShrink:0, background:weekTotal>0?"#0A1A2F":"transparent", border:`1px solid ${weekTotal>0?"#1E3A5F":"#141420"}` }}>
+            <div style={{ fontSize:8, color:"#4A5568", fontFamily:mono, letterSpacing:1 }}>WEEK TOTAL</div>
+            <div style={{ fontSize:14, fontWeight:700, fontFamily:mono, color:weekTotal>0?"#38BDF8":"#2D3748", textShadow:weekTotal>0?"0 0 16px rgba(56,189,248,0.4)":"none" }}>{weekTotal>0?`$${fmtAUD(weekTotal)}`:"—"}</div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ maxWidth:1000, margin:"0 auto", padding:"20px 24px" }}>
+
+        {/* ══ DUTY ENTRY ══ */}
+        {tab==="entry" && (
+          <div className="fadein">
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:12 }}>
+              <div>
+                <div style={{ fontSize:8, letterSpacing:2, color:"#2D3748", fontFamily:mono }}>DUTY DAY</div>
+                <div style={{ fontSize:26, fontWeight:800, color:"#E2E8F0", letterSpacing:-0.5 }}>{active}</div>
+              </div>
+            </div>
+
+            {/* ══ OUTBOUND FLIGHT ══ */}
+            <Card style={{ marginBottom:14 }}>
+              <SectionHead>✈ OUTBOUND FLIGHT</SectionHead>
+              {/* Route + flight no */}
+              <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:16, alignItems:"flex-end" }}>
+                <div style={{ display:"flex", flexDirection:"column" }}>
+                  <Label text="FLIGHT NO." />
+                  <input value={d.flightNo} onChange={e=>upd(active,"flightNo",e.target.value)} placeholder="e.g. WR401"
+                    style={{ background:"#09090F", border:"1px solid #1a1a2e", borderRadius:6, color:"#E2E8F0", padding:"5px 8px", fontFamily:mono, fontSize:12, width:120 }} />
+                </div>
+                <AirportSelect label="DEPARTURE" value={d.depAirport} onChange={v=>upd(active,"depAirport",v)} />
+                <div style={{ paddingBottom:6, color:"#2D3748", fontSize:18, alignSelf:"flex-end" }}>→</div>
+                <AirportSelect label="ARRIVAL" value={d.arrAirport} onChange={v=>updArr(active,v)} highlight />
+                {d.arrAirport && (
+                  <div style={{ paddingBottom:2, display:"flex", alignItems:"center", gap:6, background:`${destInfo.color}12`, border:`1px solid ${destInfo.color}35`, borderRadius:8, padding:"5px 10px" }}>
+                    <span style={{ fontSize:14 }}>{destInfo.flag}</span>
+                    <div>
+                      <div style={{ fontSize:9, fontWeight:700, color:destInfo.color }}>{destInfo.label}</div>
+                      <div style={{ fontSize:8, color:"#4A5568", fontFamily:mono }}>meal zone</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Outbound sign-on/off */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <InnerCard>
+                  <div style={{ fontSize:9, letterSpacing:1.5, color:"#4A5568", fontFamily:mono, marginBottom:10 }}>📋 ROSTERED</div>
+                  <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                    <TimeInput label="SIGN-ON"  value={d.rSignOn}  onChange={v=>upd(active,"rSignOn",v)} />
+                    <TimeInput label="SIGN-OFF" value={d.rSignOff} onChange={v=>upd(active,"rSignOff",v)} />
+                  </div>
+                  {d.rSignOn&&d.rSignOff && <div style={{ marginTop:7, fontSize:10, color:"#4A5568", fontFamily:mono }}>Duration: <span style={{ color:"#CBD5E1" }}>{(dutyMins(parseTime(d.rSignOn),parseTime(d.rSignOff))/60).toFixed(1)}h</span></div>}
+                </InnerCard>
+                <InnerCard border="#1E3A5F">
+                  <div style={{ fontSize:9, letterSpacing:1.5, color:"#38BDF8", fontFamily:mono, marginBottom:10 }}>✈ ACTUAL</div>
+                  <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                    <TimeInput label="SIGN-ON"  value={d.aSignOn}  onChange={v=>upd(active,"aSignOn",v)}  highlight />
+                    <TimeInput label="SIGN-OFF" value={d.aSignOff} onChange={v=>upd(active,"aSignOff",v)} highlight />
+                  </div>
+                  {d.aSignOn&&d.aSignOff && <div style={{ marginTop:7, fontSize:10, color:"#4A5568", fontFamily:mono }}>Duration: <span style={{ color:"#38BDF8" }}>{(dutyMins(parseTime(d.aSignOn),parseTime(d.aSignOff))/60).toFixed(1)}h</span></div>}
+                </InnerCard>
+              </div>
+              {d.rSignOn&&d.rSignOff&&(d.aSignOn||d.aSignOff) && (
+                <div style={{ marginTop:10, padding:"8px 12px", background:"#09090F", border:"1px solid #141420", borderRadius:8, display:"flex", gap:18, flexWrap:"wrap" }}>
+                  <DiffBadge rostered={d.rSignOn}  actual={d.aSignOn}  label="Sign-on" />
+                  <DiffBadge rostered={d.rSignOff} actual={d.aSignOff} label="Sign-off" />
+                </div>
+              )}
+            </Card>
+
+            {/* ══ HOTEL STAY ══ */}
+            <Card style={{ marginBottom:14 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:d.hasSlip?14:0 }}>
+                <SectionHead style={{ marginBottom:0 }}>🏨 HOTEL STAY (CL. 6.22–6.24)</SectionHead>
+                <Toggle label="Hotel slip on this trip" checked={d.hasSlip} onChange={v=>upd(active,"hasSlip",v)} />
+              </div>
+
+              {d.hasSlip && (
+                <>
+                  {/* Date range + times */}
+                  <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:14, alignItems:"flex-end" }}>
+                    <DateInput label="CHECK-IN DATE"  value={d.hotelFrom}     onChange={v=>upd(active,"hotelFrom",v)}     highlight />
+                    <TimeInput label="CHECK-IN TIME"  value={d.hotelCheckIn}  onChange={v=>upd(active,"hotelCheckIn",v)}  highlight />
+                    <div style={{ paddingBottom:6, color:"#2D3748", fontSize:18 }}>→</div>
+                    <DateInput label="CHECK-OUT DATE" value={d.hotelTo}       onChange={v=>upd(active,"hotelTo",v)}       highlight />
+                    <TimeInput label="CHECK-OUT TIME" value={d.hotelCheckOut} onChange={v=>upd(active,"hotelCheckOut",v)} highlight />
+
+                    {/* Stay summary */}
+                    {nights > 0 && (
+                      <div style={{ paddingBottom:2, background:"#09090F", border:"1px solid #1E3A5F", borderRadius:8, padding:"7px 12px" }}>
+                        <div style={{ fontFamily:mono, fontSize:13, fontWeight:700, color:"#38BDF8" }}>{nights} night{nights!==1?"s":""}</div>
+                        <div style={{ fontSize:9, color:"#4A5568", marginTop:2 }}>{fmtDate(d.hotelFrom)} → {fmtDate(d.hotelTo)}</div>
+                        {totalSlip > 0 && <div style={{ fontSize:9, color:totalSlip>4*60?"#34D399":"#EF4444", marginTop:2, fontFamily:mono }}>
+                          {(totalSlip/60).toFixed(1)}h total slip {totalSlip>4*60?"✓":"✗ <4h"}
+                        </div>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Manual zone override if no arrival airport */}
+                  {!d.arrAirport && (
+                    <div style={{ marginBottom:14 }}>
+                      <div style={{ fontSize:8, color:"#F59E0B", fontFamily:mono, marginBottom:8 }}>⚠ No arrival airport — select meal zone manually:</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8 }}>
+                        {Object.entries(DESTINATIONS).map(([key,dest])=>{
+                          const sel=d.destination===key;
+                          return (
+                            <div key={key} onClick={()=>upd(active,"destination",key)} style={{ padding:"10px 12px", borderRadius:10, background:sel?`${dest.color}12`:"#09090F", border:`1px solid ${sel?dest.color:"#1a1a2e"}`, cursor:"pointer" }}>
+                              <div style={{ fontSize:16, marginBottom:3 }}>{dest.flag}</div>
+                              <div style={{ fontSize:10, fontWeight:700, color:sel?dest.color:"#4A5568", lineHeight:1.3 }}>{dest.label}</div>
+                              <div style={{ fontSize:9, color:sel?dest.color:"#2D3748", fontFamily:mono, marginTop:2 }}>${fmtAUD(dest.breakfast+dest.lunch+dest.dinner)}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Per-day meal breakdown */}
+                  {perDayMeals.length > 0 && totalSlip > 4*60 && (
+                    <div>
+                      <div style={{ fontSize:8, color:"#2D3748", fontFamily:mono, letterSpacing:1.5, marginBottom:8 }}>MEAL COVERAGE PER NIGHT</div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                        {perDayMeals.map(pd=>(
+                          <div key={pd.dayNum} style={{ display:"flex", alignItems:"center", gap:8, background:"#09090F", border:"1px solid #141420", borderRadius:8, padding:"8px 12px" }}>
+                            <div style={{ fontFamily:mono, fontSize:10, fontWeight:700, color:"#4A5568", width:42, flexShrink:0 }}>
+                              {pd.dayNum===1 ? "CI" : pd.dayNum===nights ? "CO" : `D${pd.dayNum}`}
+                            </div>
+                            <div style={{ fontSize:9, color:"#2D3748", width:80, flexShrink:0, fontFamily:mono }}>
+                              {pd.dayNum===1 ? `Check-in ${fmtTime(ciMins)}` : pd.dayNum===nights ? `Check-out ${fmtTime(coMins)}` : "Full day"}
+                            </div>
+                            <div style={{ display:"flex", gap:6, flex:1, flexWrap:"wrap" }}>
+                              {MEAL_WINDOWS.map(w=>{
+                                const applies = pd[w.id];
+                                return (
+                                  <div key={w.id} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 8px", borderRadius:6, background:applies?`${w.color}15`:"transparent", border:`1px solid ${applies?w.color+"40":"#1a1a2e"}`, opacity:applies?1:0.3 }}>
+                                    <span style={{ fontSize:11 }}>{w.icon}</span>
+                                    <span style={{ fontSize:9, color:applies?w.color:"#2D3748", fontFamily:mono }}>{applies?`$${fmtAUD(destInfo[w.key])}`:"—"}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div style={{ fontFamily:mono, fontSize:11, fontWeight:700, color:"#86EFAC", minWidth:60, textAlign:"right" }}>
+                              ${fmtAUD(
+                                (pd.b ? destInfo.breakfast : 0) +
+                                (pd.l ? destInfo.lunch     : 0) +
+                                (pd.d ? destInfo.dinner    : 0)
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {/* Incidental */}
+                        {totalSlip > 24*60 && (
+                          <div style={{ display:"flex", alignItems:"center", gap:8, background:"#09090F", border:`1px solid #D9770640`, borderRadius:8, padding:"8px 12px" }}>
+                            <span style={{ fontSize:14 }}>☕</span>
+                            <div style={{ flex:1, fontSize:10, color:"#D97706" }}>Incidental allowance (slip &gt;24h)</div>
+                            <div style={{ fontFamily:mono, fontSize:11, fontWeight:700, color:"#86EFAC" }}>${fmtAUD(destInfo.incidental)}</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card>
+
+            {/* ══ RETURN FLIGHT ══ */}
+            <Card border="#1a2a1a" style={{ marginBottom:14 }}>
+              <SectionHead>🔄 RETURN FLIGHT</SectionHead>
+              <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:16, alignItems:"flex-end" }}>
+                <div style={{ display:"flex", flexDirection:"column" }}>
+                  <Label text="FLIGHT NO." />
+                  <input value={d.retFlightNo} onChange={e=>upd(active,"retFlightNo",e.target.value)} placeholder="e.g. WR402"
+                    style={{ background:"#09090F", border:"1px solid #1a1a2e", borderRadius:6, color:"#E2E8F0", padding:"5px 8px", fontFamily:mono, fontSize:12, width:120 }} />
+                </div>
+                <AirportSelect label="DEPARTURE" value={d.retDepAirport} onChange={v=>upd(active,"retDepAirport",v)} color="#86EFAC" />
+                <div style={{ paddingBottom:6, color:"#2D3748", fontSize:18, alignSelf:"flex-end" }}>→</div>
+                <AirportSelect label="ARRIVAL (home base)" value={d.retArrAirport} onChange={v=>upd(active,"retArrAirport",v)} color="#86EFAC" />
+              </div>
+
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <InnerCard>
+                  <div style={{ fontSize:9, letterSpacing:1.5, color:"#4A5568", fontFamily:mono, marginBottom:10 }}>📋 ROSTERED</div>
+                  <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                    <TimeInput label="SIGN-ON"  value={d.rRetSignOn}  onChange={v=>upd(active,"rRetSignOn",v)} />
+                    <TimeInput label="SIGN-OFF" value={d.rRetSignOff} onChange={v=>upd(active,"rRetSignOff",v)} />
+                  </div>
+                  {d.rRetSignOn&&d.rRetSignOff && <div style={{ marginTop:7, fontSize:10, color:"#4A5568", fontFamily:mono }}>Duration: <span style={{ color:"#CBD5E1" }}>{(dutyMins(parseTime(d.rRetSignOn),parseTime(d.rRetSignOff))/60).toFixed(1)}h</span></div>}
+                </InnerCard>
+                <InnerCard border="#1a3a1a">
+                  <div style={{ fontSize:9, letterSpacing:1.5, color:"#86EFAC", fontFamily:mono, marginBottom:10 }}>🔄 ACTUAL</div>
+                  <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                    <TimeInput label="SIGN-ON"  value={d.aRetSignOn}  onChange={v=>upd(active,"aRetSignOn",v)}  color="#86EFAC" />
+                    <TimeInput label="SIGN-OFF" value={d.aRetSignOff} onChange={v=>upd(active,"aRetSignOff",v)} color="#86EFAC" />
+                  </div>
+                  {d.aRetSignOn&&d.aRetSignOff && <div style={{ marginTop:7, fontSize:10, color:"#4A5568", fontFamily:mono }}>Duration: <span style={{ color:"#86EFAC" }}>{(dutyMins(parseTime(d.aRetSignOn),parseTime(d.aRetSignOff))/60).toFixed(1)}h</span></div>}
+                </InnerCard>
+              </div>
+              {d.rRetSignOn&&d.rRetSignOff&&(d.aRetSignOn||d.aRetSignOff) && (
+                <div style={{ marginTop:10, padding:"8px 12px", background:"#09090F", border:"1px solid #141420", borderRadius:8, display:"flex", gap:18, flexWrap:"wrap" }}>
+                  <DiffBadge rostered={d.rRetSignOn}  actual={d.aRetSignOn}  label="Sign-on" />
+                  <DiffBadge rostered={d.rRetSignOff} actual={d.aRetSignOff} label="Sign-off" />
+                </div>
+              )}
+            </Card>
+
+            {/* ══ OTHER ══ */}
+            <Card style={{ marginBottom:18 }}>
+              <SectionHead>OTHER</SectionHead>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:18 }}>
+                <Toggle label="DDO infringed (Cl. 5.20/5.33)"         checked={d.ddoInfringed}  onChange={v=>upd(active,"ddoInfringed",v)}  color="#EF4444" />
+                <Toggle label="Missed meal – outbound (Cl. 23.1)"     checked={d.missedMealOut} onChange={v=>upd(active,"missedMealOut",v)} color="#FB923C" />
+                <Toggle label="Missed meal – return (Cl. 23.1)"       checked={d.missedMealRet} onChange={v=>upd(active,"missedMealRet",v)} color="#FB923C" />
+                <Toggle label="Accommodation opt-out (Cl. 6.32)"      checked={d.accomOptOut}   onChange={v=>upd(active,"accomOptOut",v)}   color="#818CF8" />
+              </div>
+            </Card>
+
+            {/* ══ RESULTS ══ */}
+            <div style={{ fontSize:9, letterSpacing:2, color:"#2D3748", fontFamily:mono, marginBottom:10 }}>AUTO-CALCULATED ALLOWANCES — {active}</div>
+            {dayResults[active].length===0 ? (
+              <div style={{ background:"#0D1117", border:"1px solid #141420", borderRadius:12, padding:24, textAlign:"center", color:"#2D3748", fontSize:12 }}>
+                No allowances triggered yet — enter sign-on / sign-off times above
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                {dayResults[active].map((item,i)=>(
+                  <div key={i} style={{ background:`${item.color}10`, border:`1px solid ${item.color}30`, borderRadius:10, padding:"10px 14px", display:"flex", alignItems:"flex-start", gap:10 }}>
+                    <span style={{ fontSize:18, flexShrink:0 }}>{item.icon}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }}>
+                          <span style={{ fontSize:12, fontWeight:700, color:item.color }}>{item.label}</span>
+                          <span style={{ fontSize:8, fontWeight:700, letterSpacing:0.8, color:item.color, border:`1px solid ${item.color}40`, borderRadius:3, padding:"1px 4px", background:`${item.color}10`, fontFamily:mono }}>{item.clause}</span>
+                        </div>
+                        {item.amount>0 && <span style={{ fontFamily:mono, fontSize:15, fontWeight:700, color:"#86EFAC", whiteSpace:"nowrap" }}>${fmtAUD(item.amount)}</span>}
+                      </div>
+                      <div style={{ fontSize:9, color:"#4A5568", marginTop:3, lineHeight:1.5 }}>{item.reason}</div>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ background:"#0A1A2F", border:"1px solid #1E3A5F", borderRadius:10, padding:"11px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:4 }}>
+                  <span style={{ fontSize:9, letterSpacing:1.5, color:"#4A5568", fontFamily:mono }}>TOTAL — {active}</span>
+                  <span style={{ fontFamily:mono, fontSize:18, fontWeight:700, color:"#38BDF8", textShadow:"0 0 20px rgba(56,189,248,0.35)" }}>AUD ${fmtAUD(dayTotals[active])}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ MEAL RATES ══ */}
+        {tab==="rates" && (
+          <div className="fadein">
+            <div style={{ marginBottom:18 }}>
+              <div style={{ fontSize:8, letterSpacing:2, color:"#2D3748", fontFamily:mono, marginBottom:4 }}>EFA EA 2025 — CL. 6.22–6.24</div>
+              <div style={{ fontSize:22, fontWeight:800, color:"#E2E8F0" }}>Meal Allowance Schedule</div>
+              <div style={{ fontSize:11, color:"#4A5568", marginTop:4 }}>Payable when slip at crew hotel exceeds 4 hours and overlaps meal window</div>
+            </div>
+
+            {/* Airport zone map */}
+            <Card style={{ marginBottom:20, padding:0, overflow:"hidden" }}>
+              <div style={{ padding:"10px 16px", fontSize:9, letterSpacing:2, color:"#2D3748", fontFamily:mono, borderBottom:"1px solid #141420" }}>AIRPORT → MEAL ZONE</div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))" }}>
+                {AIRPORTS.map((ap,i)=>{
+                  const dest=DESTINATIONS[zoneFromAirport(ap.code)];
+                  return (
+                    <div key={ap.code} style={{ padding:"12px 16px", borderRight:"1px solid #0D0D1A", borderBottom:"1px solid #0D0D1A", display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ fontSize:22 }}>{ap.flag}</div>
+                      <div>
+                        <div style={{ fontFamily:mono, fontSize:13, fontWeight:700, color:"#E2E8F0" }}>{ap.code}</div>
+                        <div style={{ fontSize:10, color:"#4A5568" }}>{ap.name}</div>
+                        <div style={{ fontSize:9, fontWeight:700, color:dest.color, marginTop:2 }}>{dest.flag} {dest.label}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* Rate table */}
+            <Card style={{ padding:0, overflow:"hidden", marginBottom:20 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"160px repeat(4,1fr)", borderBottom:"1px solid #141420" }}>
+                <div style={{ padding:"10px 16px", fontSize:8, letterSpacing:1.5, color:"#4A5568", fontFamily:mono, borderRight:"1px solid #141420" }}>ALLOWANCE</div>
+                {Object.values(DESTINATIONS).map((dest,i)=>(
+                  <div key={i} style={{ padding:"10px 14px", borderRight:i<3?"1px solid #141420":"none" }}>
+                    <div style={{ fontSize:18 }}>{dest.flag}</div>
+                    <div style={{ fontSize:10, fontWeight:700, color:dest.color, marginTop:3, lineHeight:1.3 }}>{dest.label}</div>
+                  </div>
+                ))}
+              </div>
+              {[
+                { label:"Breakfast", icon:"🍳", clause:"Cl. 6.24(a)", win:"0730–0930",  key:"breakfast",   color:"#FCD34D" },
+                { label:"Lunch",     icon:"🥗", clause:"Cl. 6.24(b)", win:"1130–1330",  key:"lunch",       color:"#86EFAC" },
+                { label:"Dinner",    icon:"🍽️", clause:"Cl. 6.24(c)", win:"1730–1930",  key:"dinner",      color:"#F59E0B" },
+                { label:"Total (meals only)", icon:"∑", clause:"", win:"", key:"_total", color:"#94A3B8", sub:true },
+                { label:"Incidental",icon:"☕", clause:"Cl. 6.24",  win:">24h total",   key:"incidental",  color:"#D97706" },
+                { label:"Total (inc. incidental)", icon:"★", clause:"", win:"", key:"_totalInc", color:"#38BDF8", bold:true },
+              ].map((row,ri,arr)=>(
+                <div key={row.key} style={{ display:"grid", gridTemplateColumns:"160px repeat(4,1fr)", borderBottom:ri<arr.length-1?"1px solid #0D0D1A":"none", background:row.bold?"#0A1A2F":row.sub?"#09090F":"transparent" }}>
+                  <div style={{ padding:"11px 16px", borderRight:"1px solid #141420", display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:15 }}>{row.icon}</span>
+                    <div>
+                      <div style={{ fontSize:11, fontWeight:row.bold?800:600, color:row.bold?"#E2E8F0":row.sub?"#4A5568":"#CBD5E1" }}>{row.label}</div>
+                      {row.clause&&<div style={{ fontSize:8, color:"#2D3748", fontFamily:mono, marginTop:1 }}>{row.clause}{row.win?` · ${row.win}`:""}</div>}
+                    </div>
+                  </div>
+                  {Object.values(DESTINATIONS).map((dest,i)=>{
+                    const val=row.key==="_total"?dest.breakfast+dest.lunch+dest.dinner
+                             :row.key==="_totalInc"?dest.breakfast+dest.lunch+dest.dinner+dest.incidental
+                             :dest[row.key];
+                    return (
+                      <div key={i} style={{ padding:"11px 14px", borderRight:i<3?"1px solid #141420":"none", textAlign:"right" }}>
+                        <span style={{ fontFamily:mono, fontSize:row.bold?15:13, fontWeight:row.bold?700:500, color:row.bold?"#38BDF8":row.sub?"#4A5568":"#E2E8F0" }}>${fmtAUD(val)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </Card>
+
+            {/* Window diagram */}
+            <Card>
+              <SectionHead>MEAL WINDOW REFERENCE (CL. 6.24)</SectionHead>
+              {MEAL_WINDOWS.map(meal=>(
+                <div key={meal.id} style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8 }}>
+                  <div style={{ width:70, fontSize:10, color:"#4A5568", display:"flex", alignItems:"center", gap:5, flexShrink:0 }}><span>{meal.icon}</span><span>{meal.label}</span></div>
+                  <div style={{ flex:1, height:20, background:"#09090F", borderRadius:4, position:"relative" }}>
+                    <div style={{ position:"absolute", top:0, height:"100%", left:`${(meal.wS/1440)*100}%`, width:`${((meal.wE-meal.wS)/1440)*100}%`, background:meal.color, borderRadius:3, opacity:0.7 }} />
+                  </div>
+                  <div style={{ fontFamily:mono, fontSize:9, color:"#4A5568", width:90, flexShrink:0 }}>{fmtTime(meal.wS)}–{fmtTime(meal.wE)}</div>
+                </div>
+              ))}
+              <div style={{ display:"flex", justifyContent:"space-between", paddingLeft:82, fontSize:8, color:"#2D3748", fontFamily:mono, marginTop:4 }}>
+                {["0000","0600","1200","1800","2400"].map(t=><span key={t}>{t}</span>)}
+              </div>
+              <div style={{ marginTop:12, fontSize:9, color:"#2D3748", fontFamily:mono, lineHeight:1.8 }}>
+                Meal allowance payable where slip at hotel includes &gt;30 min in one of the above windows (Cl. 6.24). Total slip must exceed 4h. Incidental payable where total slip &gt;24h.
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* ══ WEEK SUMMARY ══ */}
+        {tab==="summary" && (
+          <div className="fadein">
+            <div style={{ marginBottom:18 }}>
+              <div style={{ fontSize:8, letterSpacing:2, color:"#2D3748", fontFamily:mono, marginBottom:4 }}>WEEK OVERVIEW</div>
+              <div style={{ fontSize:24, fontWeight:800, color:"#E2E8F0" }}>{empName}</div>
+              <div style={{ fontSize:10, color:"#4A5568", marginTop:3, fontFamily:mono }}>{empNo} · {role==="cpt"?"Captain":"First Officer"} · {INDEX_YEARS[yearIdx].label}</div>
+            </div>
+
+            <div style={{ background:"linear-gradient(135deg,#0D1529,#09090F)", border:"1px solid #1E3A5F", borderRadius:14, padding:"18px 22px", marginBottom:20, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <div style={{ fontSize:8, letterSpacing:2, color:"#2D3748", fontFamily:mono, marginBottom:4 }}>TOTAL ALLOWANCES — WEEK</div>
+                <div style={{ fontFamily:mono, fontSize:40, fontWeight:700, color:"#38BDF8", letterSpacing:-1.5, textShadow:"0 0 30px rgba(56,189,248,0.25)" }}>AUD ${fmtAUD(weekTotal)}</div>
+              </div>
+              <div style={{ fontSize:48, opacity:0.06 }}>✈</div>
+            </div>
+
+            <Card style={{ padding:0, overflow:"hidden", marginBottom:20 }}>
+              {DAYS.map((day,di)=>{
+                const items=dayResults[day], t=dayTotals[day];
+                const dep=airportInfo(days[day].depAirport), arr=airportInfo(days[day].arrAirport);
+                const retDep=airportInfo(days[day].retDepAirport), retArr=airportInfo(days[day].retArrAirport);
+                const nt=daysBetween(days[day].hotelFrom,days[day].hotelTo);
+                return (
+                  <div key={day} className="hrow" onClick={()=>{setActive(day);setTab("entry");}} style={{ display:"grid", gridTemplateColumns:"110px 1fr auto", borderBottom:di<6?"1px solid #0D0D1A":"none", cursor:"pointer", transition:"background 0.15s" }}>
+                    <div style={{ padding:"11px 14px", borderRight:"1px solid #141420" }}>
+                      <div style={{ fontFamily:mono, fontSize:11, fontWeight:700, color:(day==="SAT"||day==="SUN")?"#F87171":t>0?"#CBD5E1":"#2D3748" }}>{day}</div>
+                      {dep&&arr&&<div style={{ fontSize:8, color:"#4A5568", fontFamily:mono, marginTop:1 }}>{dep.flag}{dep.code}→{arr.flag}{arr.code}</div>}
+                      {retDep&&retArr&&<div style={{ fontSize:8, color:"#4A5568", fontFamily:mono, marginTop:1 }}>{retDep.flag}{retDep.code}→{retArr.flag}{retArr.code}</div>}
+                      {nt>0&&<div style={{ fontSize:8, color:"#60A5FA", fontFamily:mono, marginTop:1 }}>🏨 {nt}n</div>}
+                    </div>
+                    <div style={{ padding:"11px 14px", borderRight:"1px solid #141420" }}>
+                      {items.length>0
+                        ? <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>{items.map((item,i)=>(
+                            <span key={i} style={{ fontSize:9, padding:"2px 6px", borderRadius:4, background:`${item.color}15`, color:item.color, border:`1px solid ${item.color}30`, fontWeight:600, fontFamily:mono }}>
+                              {item.icon} {item.label}{item.amount>0?` $${fmtAUD(item.amount)}`:""}
+                            </span>
+                          ))}</div>
+                        : <span style={{ fontSize:10, color:"#1a1a2e" }}>{days[day].rSignOn?"No allowances triggered":"No data entered"}</span>
+                      }
+                    </div>
+                    <div style={{ padding:"11px 16px", textAlign:"right", fontFamily:mono, fontSize:14, fontWeight:700, color:t>0?"#86EFAC":"#1a1a2e" }}>{t>0?`$${fmtAUD(t)}`:"—"}</div>
+                  </div>
+                );
+              })}
+              <div style={{ display:"grid", gridTemplateColumns:"110px 1fr auto", background:"#0A1A2F", borderTop:"1px solid #1E3A5F" }}>
+                <div style={{ padding:"11px 14px" }} />
+                <div style={{ padding:"11px 14px", fontSize:9, color:"#4A5568", fontFamily:mono }}>{Object.values(dayResults).flat().filter(i=>i.amount>0).length} allowance items</div>
+                <div style={{ padding:"11px 16px", textAlign:"right", fontFamily:mono, fontSize:18, fontWeight:700, color:weekTotal>0?"#38BDF8":"#2D3748", textShadow:weekTotal>0?"0 0 20px rgba(56,189,248,0.3)":"none" }}>
+                  {weekTotal>0?`$${fmtAUD(weekTotal)}`:"—"}
+                </div>
+              </div>
+            </Card>
+
+            {(()=>{
+              const byType={};
+              DAYS.forEach(day=>dayResults[day].forEach(item=>{
+                if(!byType[item.id]) byType[item.id]={...item,count:0,total:0};
+                byType[item.id].count++;byType[item.id].total+=item.amount;
+              }));
+              const sorted=Object.values(byType).sort((a,b)=>b.total-a.total);
+              if(!sorted.length) return null;
+              return (
+                <div>
+                  <div style={{ fontSize:8, letterSpacing:2, color:"#2D3748", fontFamily:mono, marginBottom:10 }}>ALLOWANCE TYPE BREAKDOWN</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:8 }}>
+                    {sorted.map(item=>(
+                      <div key={item.id} style={{ background:"#0D1117", border:`1px solid ${item.color}25`, borderRadius:10, padding:"12px 14px", display:"flex", alignItems:"center", gap:10 }}>
+                        <span style={{ fontSize:20 }}>{item.icon}</span>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:11, fontWeight:600, color:item.color }}>{item.label}</div>
+                          <div style={{ fontSize:9, color:"#4A5568", marginTop:1 }}>{item.count}× · {item.clause}</div>
+                        </div>
+                        <div style={{ fontFamily:mono, fontSize:14, fontWeight:700, color:"#86EFAC" }}>{item.total>0?`$${fmtAUD(item.total)}`:"—"}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
