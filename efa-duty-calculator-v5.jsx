@@ -2734,7 +2734,7 @@ export default function App() {
   return (
     <div className={darkMode?"dark":""} style={{minHeight:"100vh",background:"#FAF7F2",color:"#4A4F57",fontFamily:"'Syne',sans-serif"}}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
         ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-track{background:#FAF7F2;} ::-webkit-scrollbar-thumb{background:#C4B8A8;border-radius:2px;}
         input[type=time]::-webkit-calendar-picker-indicator,input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.7);cursor:pointer;}
@@ -2790,7 +2790,7 @@ export default function App() {
       <div className="topbar">
         <div className="topbar-brand">
           <div>
-            <div style={{fontFamily:mono,fontSize:13,fontWeight:700,color:"#1A1A2E",letterSpacing:2}}>EFA PAY</div>
+            <div style={{fontFamily:"'IBM Plex Sans Condensed',sans-serif",fontSize:14,fontWeight:700,color:"#1A1A2E",letterSpacing:1.5}}>EFA PAY</div>
             <div style={{fontSize:9,color:"#4A4F57",letterSpacing:1.5}}>EA 2025 · TRIP ALLOWANCE CALCULATOR</div>
           </div>
         </div>
