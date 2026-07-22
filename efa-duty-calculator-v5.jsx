@@ -2305,6 +2305,7 @@ export default function App() {
   const [showStayList,setShowStayList]=useState(false);
   const [showMealList,setShowMealList]=useState(false);
   const [showCreditHours,setShowCreditHours]=useState(false);
+  const [showRosterView,setShowRosterView]=useState(false);
   const [mealRateYear,setMealRateYear]=useState(0);
 
   // Current week's days
@@ -2509,7 +2510,7 @@ export default function App() {
           if (detectedYos >= 0) lastDetectedYos = detectedYos;
           if (detectedJoiningDate) lastDetectedJoiningDate = detectedJoiningDate;
           if (detectedBP && rangeFrom && rangeTo) {
-            newBpEntries.push({ bp: detectedBP, from: rangeFrom, to: rangeTo, headerCarry: headerCarry || null });
+            newBpEntries.push({ bp: detectedBP, from: rangeFrom, to: rangeTo, headerCarry: headerCarry || null, rawText: text, fileName: file.name });
           }
         } catch (err) {
           failedFiles.push(`${file.name}: ${err.message}`);
@@ -4215,7 +4216,7 @@ export default function App() {
                       <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
                         {trips.map((trip,ti)=>(
                           <div key={`${trip.ws}-${trip.dn}`} className="hrow" onClick={()=>{setWeekStart(trip.ws);setActive(trip.dn);setTab("entry");}}
-                            style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",borderBottom:ti<trips.length-1?"1px solid #E8E2D9":"none",cursor:"pointer",transition:"background 0.15s"}}>
+                            style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",borderBottom:"1px solid #E8E2D9",cursor:"pointer",transition:"background 0.15s"}}>
                             <div style={{padding:"11px 14px",borderRight:"1px solid #D4CCC0"}}>
                               <div style={{fontSize:12,fontWeight:700,color:"#1A1A2E",fontFamily:mono}}>{fmtShort(trip.tripFrom)}{trip.tripFrom!==trip.tripTo?` - ${fmtShort(trip.tripTo)}`:""}</div>
                               {trip.route&&<div style={{fontSize:10,color:"#2D3239",fontFamily:mono,marginTop:2}}>{trip.route}</div>}
@@ -4236,47 +4237,19 @@ export default function App() {
                             </div>
                           </div>
                         ))}
+                        {(() => {
+                          const tripsSum = trips.reduce((s, t) => s + (t.tripTotal || 0), 0);
+                          return (
+                            <div style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
+                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1}}>TRIPS TOTAL</div>
+                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{trips.length} trip{trips.length!==1?"s":""} · raw sum (excludes BP carry adjustment)</div>
+                              <div style={{padding:"10px 16px",textAlign:"right",fontFamily:mono,fontSize:16,fontWeight:700,color:"#1E8AC0"}}>${fmtAUD(tripsSum)}</div>
+                            </div>
+                          );
+                        })()}
                       </Card>
                     </>
                   )}
-
-                  <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:9}}>WEEK-BY-WEEK BREAKDOWN</div>
-                  <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
-                    {weekData.map(({ws,wTotal,byType},wi)=>{
-                      const wEnd=weekDate(ws,6);
-                      return (
-                        <div key={ws} className="hrow" onClick={()=>{setWeekStart(ws);setTab("entry");}}
-                          className="monthly-row" style={{borderBottom:wi<weekData.length-1?"1px solid #E8E2D9":"none",cursor:"pointer",transition:"background 0.15s"}}>
-                          <div style={{padding:"11px 14px",borderRight:"1px solid #D4CCC0"}}>
-                            <div style={{fontSize:12,fontWeight:700,color:wTotal>0?"#4A4F57":"#4A4F57",fontFamily:mono}}>{fmtShort(ws)}</div>
-                            <div style={{fontSize:10,color:"#2D3239",fontFamily:mono,marginTop:1}}>→ {fmtShort(wEnd)}</div>
-                          </div>
-                          <div style={{padding:"11px 14px",borderRight:"1px solid #D4CCC0"}}>
-                            {Object.keys(byType).length>0
-                              ?<div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                                {Object.values(byType).sort((a,b)=>b.total-a.total).map((item,pi)=>(
-                                  <span key={`${item.label}-${pi}`} style={{fontSize:10,padding:"2px 5px",borderRadius:4,background:`${item.color}15`,color:item.color,border:`1px solid ${item.color}30`,fontWeight:600,fontFamily:mono}}>
-                                    {item.icon} {item.count>1?`${item.count}× $${fmtAUD(item.rate)}`:`$${fmtAUD(item.total)}`}
-                                  </span>
-                                ))}
-                              </div>
-                              :<span style={{fontSize:12,color:"#D4CCC0"}}>No allowances</span>
-                            }
-                          </div>
-                          <div style={{padding:"11px 16px",textAlign:"right",fontFamily:mono,fontSize:16,fontWeight:700,color:wTotal>0?"#3DA866":"#D4CCC0"}}>
-                            {wTotal>0?`$${fmtAUD(wTotal)}`:"—"}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="monthly-row" style={{background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
-                      <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1}}>MONTHLY TOTAL</div>
-                      <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{monthTypes.length} allowance types</div>
-                      <div style={{padding:"10px 16px",textAlign:"right",fontFamily:mono,fontSize:17,fontWeight:700,color:monthTotal>0?"#1E8AC0":"#4A4F57",textShadow:monthTotal>0?"0 0 20px rgba(56,189,248,0.3)":"none"}}>
-                        {monthTotal>0?`$${fmtAUD(monthTotal)}`:"—"}
-                      </div>
-                    </div>
-                  </Card>
 
                   {/* Monthly allowance type breakdown */}
                   {monthTypes.length>0&&(
@@ -4542,6 +4515,24 @@ export default function App() {
                               })()}
                             </div>
                           )}
+                        </Card>
+                      )}
+                    </>
+                  )}
+
+                  {/* Roster View — raw .txt of the selected BP */}
+                  {selectedBpForItems?.rawText && (
+                    <>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,marginTop:18,gap:10,flexWrap:"wrap"}}>
+                        <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>ROSTER VIEW{selectedBpForItems.fileName ? ` — ${selectedBpForItems.fileName}` : ""}</div>
+                        <button onClick={()=>setShowRosterView(!showRosterView)}
+                          style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                          {showRosterView ? "Hide" : "Show"}
+                        </button>
+                      </div>
+                      {showRosterView && (
+                        <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
+                          <pre style={{margin:0,padding:"14px 16px",fontFamily:mono,fontSize:11,lineHeight:1.5,color:"#2D3239",background:"#F0EBE3",whiteSpace:"pre",overflowX:"auto",maxHeight:"70vh",overflowY:"auto"}}>{selectedBpForItems.rawText}</pre>
                         </Card>
                       )}
                     </>
