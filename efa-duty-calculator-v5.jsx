@@ -2974,7 +2974,7 @@ export default function App() {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:8}}>
               <div>
                 <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>DUTY DAY</div>
-                <div style={{fontFamily:heading,fontSize:24,fontWeight:700,color:"#1A1A2E",letterSpacing:0,lineHeight:1}}>
+                <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"#1A1A2E",letterSpacing:0,lineHeight:1}}>
                   {active} <span style={{color:"#1E8AC0"}}>{fmtShort(dayDate)}</span>
                 </div>
                 <div style={{fontSize:12,color:"#2D3239",marginTop:2}}>{fmtFull(dayDate)}</div>
@@ -3398,7 +3398,7 @@ export default function App() {
             <div style={{marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
               <div>
                 <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>EFA EA 2025 — CL. 6.22–6.24</div>
-                <div style={{fontFamily:heading,fontSize:22,fontWeight:700,color:"#1A1A2E"}}>Meal Allowance Schedule</div>
+                <div style={{fontFamily:heading,fontSize:25,fontWeight:700,color:"#1A1A2E"}}>Meal Allowance Schedule</div>
               </div>
               <select value={mealRateYear} onChange={e=>setMealRateYear(+e.target.value)} style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,color:"#1E8AC0",padding:"6px 12px",fontFamily:mono,fontSize:13,fontWeight:700,cursor:"pointer"}}>
                 {MEAL_RATE_YEARS.map((yr,i)=><option key={i} value={i}>{yr.label}</option>)}
@@ -3465,7 +3465,7 @@ export default function App() {
             <div style={{marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
               <div>
                 <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>WEEK OF {fmtFull(weekStart)}</div>
-                <div style={{fontFamily:heading,fontSize:24,fontWeight:700,color:"#1A1A2E"}}>Week Summary</div>
+                <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"#1A1A2E"}}>Week Summary</div>
                 <div style={{fontSize:12,color:"#2D3239",marginTop:3,fontFamily:mono}}>{role==="cpt"?"Captain":"First Officer"} · {INDEX_YEARS[yearIdx].label}</div>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
@@ -4151,7 +4151,7 @@ export default function App() {
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <button onClick={()=>{const d=new Date(mvYear,mvMonth-2,1);setMonthView(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);setCustomFrom("");setCustomTo("");}}
                       style={{background:"transparent",border:"none",color:"#2D3239",fontSize:18,cursor:"pointer",fontFamily:mono,padding:"0 4px",opacity:useCustom?0.2:1}}>‹</button>
-                    <div style={{fontFamily:heading,fontSize:24,fontWeight:700,color:"#1A1A2E"}}>{useCustom ? (rosterBPs.find(b=>b.from===customFrom&&b.to===customTo) ? `BP ${rosterBPs.find(b=>b.from===customFrom&&b.to===customTo).bp}` : "Custom Range") : `${monthName} ${mvYear}`}</div>
+                    <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"#1A1A2E"}}>{useCustom ? (rosterBPs.find(b=>b.from===customFrom&&b.to===customTo) ? `BP ${rosterBPs.find(b=>b.from===customFrom&&b.to===customTo).bp}` : "Custom Range") : `${monthName} ${mvYear}`}</div>
                     <button onClick={()=>{const d=new Date(mvYear,mvMonth,1);setMonthView(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);setCustomFrom("");setCustomTo("");}}
                       style={{background:"transparent",border:"none",color:"#2D3239",fontSize:18,cursor:"pointer",fontFamily:mono,padding:"0 4px",opacity:useCustom?0.2:1}}>›</button>
                   </div>
