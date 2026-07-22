@@ -3691,8 +3691,16 @@ export default function App() {
           });
           const monthTypes=Object.values(monthByType).sort((a,b)=>b.total-a.total);
 
-          // Build per-trip data: each entry day with sectors becomes a trip
+          // Build per-PATTERN data. Each entry day with sectors is one BP
+          // pattern. A pattern is attributed to the bid period in which it
+          // STARTS (its sign-on day), and its total is the FULL allowance for
+          // the whole pattern across every date — not just the dollars that
+          // happen to fall inside the viewed month. This is what "totals for
+          // all patterns on the BP file" means, and it makes a boundary
+          // pattern (one that spans two BPs) appear under exactly ONE bid
+          // period, so loading two adjacent BP files never counts it twice.
           const trips = [];
+          const seenPatternKeys = new Set();
           allWeeksToProcess.forEach(ws => {
             const wDays = allWeeks[ws];
             if (!wDays) return;
@@ -3700,27 +3708,37 @@ export default function App() {
               const day = wDays[dn];
               if (!day || !day.sectors?.[0]?.aSignOn) return;
               const tripDate = weekDate(ws, di);
+              // tripDate is the pattern's sign-on day (its entry-day key). Own
+              // the pattern to the BP/month that contains that day. A pattern
+              // that starts in the previous period but spills allowances into
+              // this one is NOT this period's pattern, so it is skipped here.
+              if (!isInRange(tripDate)) return;
               const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
-              const inRangeItems = [];
-              Object.entries(byDate).forEach(([dateStr, items]) => {
-                if (isInRange(dateStr)) inRangeItems.push(...items);
-              });
-              if (inRangeItems.length === 0) return;
-              const tripTotal = inRangeItems.reduce((s, i) => s + i.amount, 0);
+              // Full pattern total — every rated date, not clipped to range.
+              const allItems = Object.values(byDate).reduce((acc, items) => acc.concat(items), []);
+              if (allItems.length === 0) return;
+              const tripTotal = allItems.reduce((s, i) => s + i.amount, 0);
               const secs = day.sectors;
               const first = secs[0], last = secs[secs.length - 1];
               const depPort = first?.depAirport || "";
               const arrPort = last?.arrAirport || "";
               const route = depPort && arrPort ? `${depPort} → ${arrPort}` : "";
-              const tripDates = Object.keys(byDate).filter(dt => isInRange(dt)).sort();
-              const tripFrom = tripDates[0] || tripDate;
-              const tripTo = tripDates[tripDates.length - 1] || tripDate;
+              const secDates = secs.map(s => s.sectorDate).filter(Boolean).sort();
+              const tripFrom = tripDate;
+              const tripTo = secDates[secDates.length - 1] || tripDate;
+              // De-dup guard: if the same boundary pattern is present in two
+              // overlapping BP uploads, skip the repeat. (The parser already
+              // merges same-day entries; this keys on start-date + route +
+              // sector count as a belt-and-braces safety net.)
+              const pKey = `${tripFrom}|${depPort}|${arrPort}|${secs.length}`;
+              if (seenPatternKeys.has(pKey)) return;
+              seenPatternKeys.add(pKey);
               trips.push({
                 ws, dn, tripFrom, tripTo, route,
                 depPort, arrPort,
                 sectorCount: secs.length, tripTotal,
                 isReserve: !!secs[0]?.reservePeriod,
-                items: inRangeItems,
+                items: allItems,
               });
             });
           });
@@ -4212,7 +4230,7 @@ export default function App() {
                   {/* Trips breakdown */}
                   {trips.length>0&&(
                     <>
-                      <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:9}}>TRIPS — {trips.length}</div>
+                      <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:9}}>PATTERNS — {trips.length}</div>
                       <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
                         {trips.map((trip,ti)=>(
                           <div key={`${trip.ws}-${trip.dn}`} className="hrow" onClick={()=>{setWeekStart(trip.ws);setActive(trip.dn);setTab("entry");}}
@@ -4241,8 +4259,8 @@ export default function App() {
                           const tripsSum = trips.reduce((s, t) => s + (t.tripTotal || 0), 0);
                           return (
                             <div style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
-                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1}}>TRIPS TOTAL</div>
-                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{trips.length} trip{trips.length!==1?"s":""} · raw sum (excludes BP carry adjustment)</div>
+                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1}}>PATTERNS TOTAL</div>
+                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{trips.length} pattern{trips.length!==1?"s":""} · full pattern totals (excludes BP carry adjustment)</div>
                               <div style={{padding:"10px 16px",textAlign:"right",fontFamily:mono,fontSize:16,fontWeight:700,color:"#1E8AC0"}}>${fmtAUD(tripsSum)}</div>
                             </div>
                           );
