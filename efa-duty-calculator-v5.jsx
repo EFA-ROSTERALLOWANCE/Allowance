@@ -1310,7 +1310,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
 const mono="'IBM Plex Mono',monospace";
 // Narrower face for the big page headings (day-of-week, "Meal Allowance
 // Schedule", "Week Summary", BP number) — the default Syne face renders wide.
-const heading="'IBM Plex Sans Condensed',sans-serif";
+const heading="'Archivo Narrow',sans-serif";
 
 function Lbl({t,hi,color,extra}) {
   return (
@@ -2737,7 +2737,7 @@ export default function App() {
   return (
     <div className={darkMode?"dark":""} style={{minHeight:"100vh",background:"#FAF7F2",color:"#4A4F57",fontFamily:"'Syne',sans-serif"}}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&family=Archivo+Narrow:wght@500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
         ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-track{background:#FAF7F2;} ::-webkit-scrollbar-thumb{background:#C4B8A8;border-radius:2px;}
         input[type=time]::-webkit-calendar-picker-indicator,input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.7);cursor:pointer;}
