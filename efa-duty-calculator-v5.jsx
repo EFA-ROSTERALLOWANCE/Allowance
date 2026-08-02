@@ -3596,17 +3596,27 @@ export default function App() {
             return dateStr >= rangeFrom && dateStr <= rangeTo;
           };
           // For DHA/credit base calc when a BP chip is selected: extend the
-          // upper bound so outgoing boundary trips (with sectorDate 1–3 days
-          // past rangeTo) are included in base. Header COut then subtracts
-          // them. If an adjacent BP is loaded (its rangeFrom is soon after
-          // this BP's rangeTo), cap the extension so we don't pull that BP's
-          // flights into this BP's base.
+          // upper bound so THIS BP's own outgoing boundary pattern (whose
+          // duty/meals sit 1–3 days past rangeTo) is captured in base; the
+          // header Carried-Out adjustment then nets the duty portion.
+          //
+          // The extension MUST be the same whether or not the next BP is also
+          // loaded — otherwise a BP viewed on its own and the same BP viewed
+          // with its neighbour loaded would total differently (the bug this
+          // fixes). We therefore no longer cap the extension by the next BP's
+          // start date. Instead, `ownedByThisBp` excludes the *next* BP's OWN
+          // patterns (those whose pattern-start lands on/after nextBp.from) so
+          // they aren't pulled into this BP's base just because they fall
+          // inside the 7-day window. A boundary pattern that STARTS in this BP
+          // (pattern-start < nextBp.from) keeps its full spill-over.
           const matchedBpForRange = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const nextBp = rosterBPs.find(b => b.from > rangeTo);
           const extRangeToRaw = addDays(rangeTo, 7);
-          const extRangeTo = (matchedBpForRange && nextBp && nextBp.from <= extRangeToRaw)
-            ? addDays(nextBp.from, -1)
-            : extRangeToRaw;
+          const extRangeTo = extRangeToRaw;
+          // A day-entry (= one pattern, keyed at its sign-on day `patternStart`)
+          // belongs to the selected BP unless it starts in the next BP.
+          const ownedByThisBp = (patternStart) =>
+            !(matchedBpForRange && nextBp && patternStart >= nextBp.from);
           const isInBaseRange = (dateStr) => {
             return dateStr >= rangeFrom && dateStr <= (matchedBpForRange ? extRangeTo : rangeTo);
           };
@@ -3637,6 +3647,8 @@ export default function App() {
             if (!wDays) return;
             DAY_NAMES.forEach((dn, di) => {
               const tripDate = weekDate(ws, di);
+              // Skip patterns owned by the next BP (see ownedByThisBp above).
+              if (!ownedByThisBp(tripDate)) return;
               const byDate = calcAllowancesByDate(wDays[dn], role, yearIdx, tripDate);
               Object.entries(byDate).forEach(([dateStr, items]) => {
                 // Use extended range so outgoing boundary DHA (dated just past
@@ -3808,6 +3820,7 @@ export default function App() {
               const day = wDays[dn];
               if (!day || !day.sectors?.[0]?.aSignOn) return;
               const tripDate = weekDate(ws, di);
+              if (!ownedByThisBp(tripDate)) return;
               const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
               Object.entries(byDate).forEach(([dateStr, items]) => {
                 if (!isInBaseRange(dateStr)) return;
@@ -3995,6 +4008,7 @@ export default function App() {
               const day = wDays[dn];
               if (!day || (!day.sectors?.[0]?.aSignOn && !day.sectors?.[0]?.isAnnualLeave)) return;
               const tripDate = weekDate(ws, di);
+              if (!ownedByThisBp(tripDate)) return;
               // Track this day's credit so an OL13 reserve-activation floor of
               // 4h can be applied at the end if the natural credit falls short.
               const dayStartIdx = creditItems.length;
