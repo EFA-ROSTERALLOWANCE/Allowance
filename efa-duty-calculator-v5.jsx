@@ -99,6 +99,14 @@ const PILOT_LIST = [
 ["DUVOISIN","L","2025-08-22"],["SINGH","A","2025-08-22"],["MICHAEL","J","2025-09-25"],
 ["SINAC","J","2025-09-25"],["BAYLISS","J","2025-10-03"],["KIRKHAM","M","2025-10-24"],
 ["CARSTAIRS","B","2025-10-24"],["BOYD","D","2025-11-21"],["COLEMAN","L","2025-11-21"],
+// Joined after 1 Jan 2026 → no YOS bracket bump (computeYosTier handles this
+// via joiningDate <= PAID_BRACKET_FREEZE_DATE). Added from EFA Pilot List
+// valid 1 Jul 2026 (EA cl. 4.8).
+["BYLHOUWER","J","2026-01-16"],["WILSHER","P","2026-01-16"],["WELLS","A","2026-02-13"],
+["BULLARD","C","2026-02-13"],["WILSON","J","2026-02-13"],["JOSEPH","M","2026-02-13"],
+["JONES","T","2026-03-13"],["TIAN","D","2026-03-13"],["JONES","J","2026-04-10"],
+["TUCKER","S","2026-04-10"],["CROSBIE","L","2026-05-08"],["VINCENT","N","2026-05-08"],
+["NEAH","O","2026-06-05"],["OTHMAN","B","2026-06-05"],
 ];
 
 // Look up a pilot by surname + first initial. Returns {joiningDate} or null.

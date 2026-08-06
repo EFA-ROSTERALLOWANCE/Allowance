@@ -273,6 +273,23 @@ const PILOT_LIST = [
   { surname:"Carstairs",     firstName:"Benjamin",        fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2025-10-24" },
   { surname:"Boyd",          firstName:"Dylan",           fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2025-11-21" },
   { surname:"Coleman",       firstName:"Lewis",           fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2025-11-21" },
+  // Joined after 1 Jan 2026 → no YOS bracket bump (paidBracketIdxFromAnchor
+  // handles this via joinISO <= PAID_BRACKET_FREEZE_DATE). Added from EFA
+  // Pilot List valid 1 Jul 2026 (EA cl. 4.8).
+  { surname:"Bylhouwer",     firstName:"Julian",          fleet:"A321", rank:"F/O",  base:"SYD", joinDate:"2026-01-16" },
+  { surname:"Wilsher",       firstName:"Paul",            fleet:"A321", rank:"F/O",  base:"BNE", joinDate:"2026-01-16" },
+  { surname:"Wells",         firstName:"Andrew",          fleet:"A321", rank:"F/O",  base:"BNE", joinDate:"2026-02-13" },
+  { surname:"Bullard",       firstName:"Charles",         fleet:"A321", rank:"F/O",  base:"SYD", joinDate:"2026-02-13" },
+  { surname:"Wilson",        firstName:"Jason",           fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2026-02-13" },
+  { surname:"Joseph",        firstName:"Mark",            fleet:"A321", rank:"F/O",  base:"SYD", joinDate:"2026-02-13" },
+  { surname:"Jones",         firstName:"Thomas",          fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2026-03-13" },
+  { surname:"Tian",          firstName:"David",           fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2026-03-13" },
+  { surname:"Jones",         firstName:"Joel",            fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2026-04-10" },
+  { surname:"Tucker",        firstName:"Sean",            fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2026-04-10" },
+  { surname:"Crosbie",       firstName:"Lachlan",         fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2026-05-08" },
+  { surname:"Vincent",       firstName:"Nathan",          fleet:"A321", rank:"F/O",  base:"MEL", joinDate:"2026-05-08" },
+  { surname:"Neah",          firstName:"Oponokali",       fleet:"A321", rank:"F/O",  base:"SYD", joinDate:"2026-06-05" },
+  { surname:"Othman",        firstName:"Bilal",           fleet:"A321", rank:"F/O",  base:"SYD", joinDate:"2026-06-05" },
 ];
 
 // Pre-built lookup index — strips parens, captures surname variants and first initial
