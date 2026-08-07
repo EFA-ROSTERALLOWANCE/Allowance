@@ -4029,19 +4029,19 @@ export default function App() {
                 if (!isInBaseRange(secDate)) return;
                 dayInRange = true;
 
+                // CC, CCR and MD days attract DHA only (DHA is paid in
+                // calcAllowancesByDate) — they earn NO credit hours, so they do
+                // not count toward the 70h overtime threshold or flight pay.
+                if (/^(CCR|CC|MD)\d*\b/i.test(sec.flightNo || "")) return;
+
                 if (sec.isAnnualLeave) {
                   // Annual leave = flat 2.5h credit per day
                   creditItems.push({ date: secDate, label: "Annual Leave", credit: 2.5, type: "Leave" });
                 } else if (sec.reservePeriod) {
                   // Reserve = flat 4h credit
                   creditItems.push({ date: secDate, label: sec.flightNo || "Reserve", credit: 4, type: "Reserve" });
-                } else if (/^MD\b/i.test(sec.flightNo)) {
-                  // MD (management/meeting day) — flat 4h credit regardless of
-                  // sign-on/sign-off. Unlike SIM/EF/CC which are capped at 4h
-                  // (short duty → less credit), MD always pays 4h.
-                  creditItems.push({ date: secDate, label: sec.flightNo, credit: 4, type: "Ground" });
-                } else if (sec.isGroundDuty || /^(CC|SIM|EF)\d*/i.test(sec.flightNo)) {
-                  // SIM/EF/CC = min(duty hours, 4)
+                } else if (sec.isGroundDuty || /^(SIM|EF)\d*/i.test(sec.flightNo)) {
+                  // SIM/EF and other ground duties = min(duty hours, 4)
                   const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
                   if (on == null || off == null) return;
                   let mins = off - on; if (mins < 0) mins += 1440;

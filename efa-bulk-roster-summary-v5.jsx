@@ -1469,13 +1469,15 @@ function calcCreditHoursForWeeks(weeks, rangeFrom, rangeTo) {
         if (!isInRange(secDate)) return;
         dayInRange = true;
 
+        // CC, CCR and MD days attract DHA only — no credit hours (so they do
+        // not count toward the 70h overtime threshold or flight pay). DHA is
+        // paid separately in calcAllowancesByDate.
+        if (/^(CCR|CC|MD)\d*\b/i.test(sec.flightNo || "")) return;
+
         if (sec.isAnnualLeave) {
           dayCredit += 2.5; dayCat.leave += 2.5; counts.leaveDays += 1;
         } else if (sec.reservePeriod) {
           dayCredit += 4; dayCat.reserve += 4; counts.reserveDays += 1;
-        } else if (/^MD\b/i.test(sec.flightNo)) {
-          // MD = flat 4h credit regardless of duty duration.
-          dayCredit += 4; dayCat.ground += 4; counts.groundDuties += 1;
         } else if (sec.isGroundDuty) {
           const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
           if (on == null || off == null) return;
