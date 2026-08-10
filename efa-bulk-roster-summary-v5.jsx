@@ -1868,7 +1868,7 @@ function HelpModal({ onClose }) {
     <div onClick={onClose}
       style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(20,24,32,0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
       <div onClick={e => e.stopPropagation()}
-        style={{ background: COL.bg, border: `1px solid ${COL.accent}`, borderRadius: 16, maxWidth: 640, width: "100%", maxHeight: "100%", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+        style={{ background: COL.bg, border: `1px solid ${COL.accent}`, borderRadius: 16, maxWidth: 640, width: "100%", maxHeight: "calc(100dvh - 32px)", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 22px", borderBottom: `1px solid ${COL.borderSoft}`, flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 800, color: COL.text, letterSpacing: -0.5 }}>How to use this tool</div>
@@ -1877,7 +1877,7 @@ function HelpModal({ onClose }) {
           <button onClick={onClose} aria-label="Close"
             style={{ background: COL.card, border: `1px solid ${COL.border}`, borderRadius: 8, color: COL.muted, fontSize: 16, cursor: "pointer", padding: "4px 11px", fontFamily: mono, lineHeight: 1, flexShrink: 0 }}>✕</button>
         </div>
-        <div style={{ padding: "14px 22px 22px", overflowY: "auto", minHeight: 0 }}>
+        <div style={{ padding: "14px 22px 22px", overflowY: "auto", minHeight: 0, WebkitOverflowScrolling: "touch" }}>
           {steps.map(([title, body], i) => (
             <div key={i} style={{ display: "flex", gap: 13, padding: "11px 0", borderBottom: i < steps.length - 1 ? `1px solid ${COL.borderSoft}` : "none" }}>
               <div style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", background: COL.accentSoft, border: `1px solid ${COL.accent}`, color: COL.accent, fontFamily: mono, fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
