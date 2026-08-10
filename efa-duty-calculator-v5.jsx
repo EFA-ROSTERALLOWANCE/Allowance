@@ -1620,6 +1620,59 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
+// Step-by-step "how to use" guide, shown when the header "?" button is tapped.
+function HelpModal({ onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  const steps = [
+    ["Set who you are", "Pick your rank (Captain / F/Officer) and aircraft (A330 / A320) in the top bar. When you upload a roster these are detected automatically, so you usually don't need to touch them."],
+    ["Choose the pay year", "The EBA year selector applies the right indexation to every rate. Leave it on “EBA Commencement” for current pay, or pick a future year to project."],
+    ["Upload your roster", "Tap 📄 ROSTER and choose your Qantas SH bid-period .txt file. You can upload several BP files one after another to view multiple bid periods together — boundary trips that span two BPs are handled for you."],
+    ["Work through the tabs", "DAY SUMMARY — every sector and allowance for one day. MEAL RATES — the reference meal-rate table. WEEK SUMMARY — totals for a week. MONTH / ROSTER — totals across a whole bid period."],
+    ["See a bid period's total", "On MONTH / ROSTER, click a BP chip (e.g. “BP 3761”) to show that bid period's total allowances and overtime. A BP shows the same total whether it's loaded on its own or alongside its neighbour."],
+    ["Or use a custom range", "Set the Custom range dates for any window you like. Custom ranges show just the allowances captured in those dates — overtime and the Qantas header duty/credit carry are deliberately excluded."],
+    ["Set Years of Service", "Overtime pay needs your years of service. It's filled in automatically when your name is found in the pilot list; otherwise pick it from the selector."],
+    ["Dig into the detail", "Expand the DHA, meal, credit-hour and pattern breakdowns to see every line item and how each figure is built. Use Export CSV to save a copy."],
+    ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster data and resets everything."],
+  ];
+
+  return (
+    <div onClick={onClose}
+      style={{position:"fixed",inset:0,zIndex:9000,background:"rgba(20,24,32,0.55)",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"24px 16px",overflowY:"auto"}}>
+      <div onClick={e=>e.stopPropagation()}
+        style={{background:"#FAF7F2",border:"1px solid #8BAFCF",borderRadius:16,maxWidth:640,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.3)",margin:"auto"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"18px 22px",borderBottom:"1px solid #E8E2D9",position:"sticky",top:0,background:"#FAF7F2",borderRadius:"16px 16px 0 0"}}>
+          <div>
+            <div style={{fontFamily:heading,fontSize:22,fontWeight:700,color:"#1A1A2E"}}>How to use this calculator</div>
+            <div style={{fontSize:11,letterSpacing:1.5,color:"#4A4F57",fontFamily:mono,marginTop:2}}>EFA DUTY / ALLOWANCE CALCULATOR</div>
+          </div>
+          <button onClick={onClose} aria-label="Close"
+            style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,color:"#4A4F57",fontSize:16,cursor:"pointer",padding:"4px 11px",fontFamily:mono,lineHeight:1,flexShrink:0}}>✕</button>
+        </div>
+        <div style={{padding:"14px 22px 22px"}}>
+          {steps.map(([title,body],i)=>(
+            <div key={i} style={{display:"flex",gap:13,padding:"11px 0",borderBottom:i<steps.length-1?"1px solid #EFE9E1":"none"}}>
+              <div style={{flexShrink:0,width:26,height:26,borderRadius:"50%",background:"#E0EAF5",border:"1px solid #1E8AC0",color:"#1E8AC0",fontFamily:mono,fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center"}}>{i+1}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:14,fontWeight:700,color:"#1A1A2E",marginBottom:2}}>{title}</div>
+                <div style={{fontSize:13,color:"#2D3239",lineHeight:1.55}}>{body}</div>
+              </div>
+            </div>
+          ))}
+          <button onClick={onClose}
+            style={{marginTop:16,width:"100%",background:"#1E8AC0",border:"none",borderRadius:8,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",padding:"10px",fontFamily:mono,letterSpacing:0.5}}>Got it</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Helper to build a sector with pre-filled fields for roster import
 function bldSec(flightNo, dep, arr, signOn, signOff, sectorDate, extra={}) {
   return { ...newSector(dep, arr), flightNo, aSignOn:signOn, aSignOff:signOff, sectorDate:sectorDate||"", ...extra };
@@ -2302,6 +2355,7 @@ export default function App() {
   const [active,setActive]=useState("MON");
   const [tab,setTab]=useState("entry");
   const [darkMode,setDarkMode]=useState(false);
+  const [showHelp,setShowHelp]=useState(false);
   const [clock,setClock]=useState(new Date());
   const [confirmReset,setConfirmReset]=useState(false);
   const [confirmClearRoster,setConfirmClearRoster]=useState(false);
@@ -2866,7 +2920,12 @@ export default function App() {
           style={{background:darkMode?"#1F3144":"#F0EBE3",border:`1px solid ${darkMode?"#3B82D6":"#D4CCC0"}`,borderRadius:8,color:darkMode?"#F0E68C":"#1E8AC0",padding:"6px 10px",fontSize:14,cursor:"pointer",fontFamily:mono,flexShrink:0,minWidth:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
           {darkMode?"☀":"☾"}
         </button>
+        <button onClick={()=>setShowHelp(true)} title="How to use this calculator"
+          style={{background:"#F0EBE3",border:"1px solid #1E8AC0",borderRadius:8,color:"#1E8AC0",padding:"6px 10px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,minWidth:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          ?
+        </button>
       </div>
+      {showHelp && <HelpModal onClose={()=>setShowHelp(false)} />}
 
       {/* ── Tab bar ── */}
       <div style={{background:"#FAF7F2",borderBottom:"1px solid #D4CCC0",display:"flex",padding:"0 20px",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>

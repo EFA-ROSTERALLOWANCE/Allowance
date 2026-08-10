@@ -1,4 +1,4 @@
-import { useState, useMemo, Fragment } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
 
 // ─── EA 2025 ──────────────────────────────────────────────────────────────────
 const INDEX_YEARS = [
@@ -1843,6 +1843,58 @@ function bracketFg(id) {
   return { B0: "#A85D04", B1: "#8A4A06", B2: "#1672A4", B3: "#1F7A4A" }[id] || "#4A4F57";
 }
 
+// ─── How-to-use guide ─────────────────────────────────────────────────────────
+// Step-by-step guide, shown when the header "?" button is tapped.
+function HelpModal({ onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+
+  const steps = [
+    ["Set the pay year", "Choose the EBA INDEXATION year. It applies the matching indexation to every allowance, salary and overtime rate for all pilots at once."],
+    ["Upload the rosters", "Tap SELECT .TXT FILES and pick up to 200 EFA webCIS bid-period .txt files — typically one bid period's rosters for many pilots. Each pilot's name, rank, fleet and base are read from the file header."],
+    ["Let it process", "A progress bar shows files being parsed. Each pilot is matched against the EFA pilot list to set their years-of-service bracket (pilots who joined after 1 Jan 2026 don't receive the one-time tier bump)."],
+    ["Read the summary table", "The SUMMARY view lists one row per pilot: allowances (DHA, meals, day-off, DVA), credit hours, overtime / credit-hour pay and the grand total. Click any column heading to sort."],
+    ["Open a pilot's detail", "Click a pilot's row to expand a full breakdown — every allowance type, credit-hour category and their salary bracket for the selected year."],
+    ["Compare with STATS", "Switch to the STATS view for a chart across all bid periods — toggle the series on and off, flip the x-axis between BP and pilot name, and click a bar segment for its detail."],
+    ["Export & housekeeping", "EXPORT CSV saves the whole table, ⤓ DOWNLOAD APP saves a standalone offline copy of this tool, and CLEAR removes all loaded rosters."],
+  ];
+
+  return (
+    <div onClick={onClose}
+      style={{ position: "fixed", inset: 0, zIndex: 9000, background: "rgba(20,24,32,0.55)", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 16px", overflowY: "auto" }}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ background: COL.bg, border: `1px solid ${COL.accent}`, borderRadius: 16, maxWidth: 640, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)", margin: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "18px 22px", borderBottom: `1px solid ${COL.borderSoft}`, position: "sticky", top: 0, background: COL.bg, borderRadius: "16px 16px 0 0" }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: COL.text, letterSpacing: -0.5 }}>How to use this tool</div>
+            <div style={{ fontSize: 11, letterSpacing: 1.5, color: COL.muted, fontFamily: mono, marginTop: 2 }}>EFA BULK ROSTER SUMMARY</div>
+          </div>
+          <button onClick={onClose} aria-label="Close"
+            style={{ background: COL.card, border: `1px solid ${COL.border}`, borderRadius: 8, color: COL.muted, fontSize: 16, cursor: "pointer", padding: "4px 11px", fontFamily: mono, lineHeight: 1, flexShrink: 0 }}>✕</button>
+        </div>
+        <div style={{ padding: "14px 22px 22px" }}>
+          {steps.map(([title, body], i) => (
+            <div key={i} style={{ display: "flex", gap: 13, padding: "11px 0", borderBottom: i < steps.length - 1 ? `1px solid ${COL.borderSoft}` : "none" }}>
+              <div style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", background: COL.accentSoft, border: `1px solid ${COL.accent}`, color: COL.accent, fontFamily: mono, fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: COL.text, marginBottom: 2 }}>{title}</div>
+                <div style={{ fontSize: 13, color: COL.muted, lineHeight: 1.55 }}>{body}</div>
+              </div>
+            </div>
+          ))}
+          <button onClick={onClose}
+            style={{ marginTop: 16, width: "100%", background: COL.accent, border: "none", borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", padding: "10px", fontFamily: mono, letterSpacing: 0.5 }}>Got it</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Per-pilot breakdown panel ────────────────────────────────────────────────
 function BreakdownPanel({ r }) {
   const b = r.breakdown || {};
@@ -2138,6 +2190,7 @@ export default function App() {
   // Active view: "summary" (per-pilot allowance table) or "stats" (chart of
   // allowances $ on the right vs hours on the left for every BP).
   const [view, setView] = useState("summary");
+  const [showHelp, setShowHelp] = useState(false);
   // Stats page interactivity: the currently selected bar segment renders a
   // tooltip bubble. Cleared by clicking outside any segment.
   const [activeSegment, setActiveSegment] = useState(null);
@@ -2326,17 +2379,26 @@ export default function App() {
     }}>
       <div style={{ maxWidth: 1240, margin: "0 auto" }}>
         {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{
-            fontSize: 10, letterSpacing: 3, color: COL.muted, fontFamily: mono, marginBottom: 6,
-          }}>EFA · BULK ROSTER PROCESSOR</div>
-          <h1 style={{
-            fontSize: 32, fontWeight: 800, margin: 0, color: COL.text, letterSpacing: -0.5,
-          }}>Pilot Roster Summary</h1>
-          <div style={{ fontSize: 13, color: COL.muted, marginTop: 6 }}>
-            Upload up to 200 EFA webCIS BP roster .txt files. Pilot names pulled from each roster header.
+        <div style={{ marginBottom: 24, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+          <div>
+            <div style={{
+              fontSize: 10, letterSpacing: 3, color: COL.muted, fontFamily: mono, marginBottom: 6,
+            }}>EFA · BULK ROSTER PROCESSOR</div>
+            <h1 style={{
+              fontSize: 32, fontWeight: 800, margin: 0, color: COL.text, letterSpacing: -0.5,
+            }}>Pilot Roster Summary</h1>
+            <div style={{ fontSize: 13, color: COL.muted, marginTop: 6 }}>
+              Upload up to 200 EFA webCIS BP roster .txt files. Pilot names pulled from each roster header.
+            </div>
           </div>
+          <button onClick={() => setShowHelp(true)} title="How to use this tool"
+            style={{
+              flexShrink: 0, background: COL.card, border: `1px solid ${COL.accent}`, borderRadius: 8,
+              color: COL.accent, fontFamily: mono, fontSize: 16, fontWeight: 700, cursor: "pointer",
+              width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>?</button>
         </div>
+        {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
         {/* Controls */}
         <div style={{
