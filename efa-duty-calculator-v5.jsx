@@ -1647,7 +1647,7 @@ function HelpModal({ onClose }) {
 
   const steps = [
     ["Set who you are", "Pick your rank (Captain / F/Officer) and aircraft (A330 / A320) in the top bar. When you upload a roster these are detected automatically, so you usually don't need to touch them."],
-    ["Choose the pay year", "The EBA year selector applies the right indexation to every rate. Leave it on “EBA Commencement” for current pay, or pick a future year to project."],
+    ["Choose the pay year", "The EBA year selector applies the right indexation to every rate. When you upload a roster it's set automatically from the bid period's start date — and updates as you click between BP chips — so you usually don't need to touch it. You can still pick a year to project."],
     ["Upload your roster", "Tap 📄 ROSTER and choose your Qantas SH bid-period .txt file. You can upload several BP files one after another to view multiple bid periods together — boundary trips that span two BPs are handled for you."],
     ["Work through the tabs", "DAY SUMMARY — every sector and allowance for one day. MEAL RATES — the reference meal-rate table. WEEK SUMMARY — totals for a week. MONTH / ROSTER — totals across a whole bid period."],
     ["See a bid period's total", "On MONTH / ROSTER, click a BP chip (e.g. “BP 3761”) to show that bid period's total allowances and overtime. A BP shows the same total whether it's loaded on its own or alongside its neighbour."],

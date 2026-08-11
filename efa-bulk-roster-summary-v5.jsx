@@ -1868,7 +1868,7 @@ function HelpModal({ onClose }) {
   }, [onClose]);
 
   const steps = [
-    ["Set the pay year", "Choose the EBA INDEXATION year. It applies the matching indexation to every allowance, salary and overtime rate for all pilots at once."],
+    ["Set the pay year", "The EBA INDEXATION year applies the matching indexation to every allowance, salary and overtime rate for all pilots at once. When you upload rosters it's selected automatically from the earliest bid period's start date, so you usually don't need to touch it — you can still override it."],
     ["Upload the rosters", "Tap SELECT .TXT FILES and pick up to 200 EFA webCIS bid-period .txt files — typically one bid period's rosters for many pilots. Each pilot's name, rank, fleet and base are read from the file header."],
     ["Let it process", "A progress bar shows files being parsed. Each pilot is matched against the EFA pilot list to set their years-of-service bracket (pilots who joined after 1 Jan 2026 don't receive the one-time tier bump)."],
     ["Read the summary table", "The SUMMARY view lists one row per pilot: allowances (DHA, meals, day-off, DVA), credit hours, overtime / credit-hour pay and the grand total. Click any column heading to sort."],
