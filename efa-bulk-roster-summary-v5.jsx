@@ -11,6 +11,19 @@ const RATES = {
   DVA_CPT:400, DVA_FO:250, DDO_CPT:1231, DDO_FO:837,
   DHA_CPT:17.51, DHA_FO:11.39, MISSED_MEAL:83.40, ACCOM_OPTOUT:75,
 };
+// Pick the EBA indexation year (INDEX_YEARS index) that applies to a date.
+// Rates step up on each EBA anniversary (1 Jan 2027 / 2028 / 2029), derived
+// from the year in each INDEX_YEARS label — the last entry whose effective
+// 1-Jan date is on/before `dateStr` wins.
+function ebaYearIdxForDate(dateStr) {
+  if (!dateStr) return 0;
+  let idx = 0;
+  INDEX_YEARS.forEach((y, i) => {
+    const m = /(\d{4})/.exec(y.label);
+    if (m && dateStr >= `${m[1]}-01-01`) idx = i;
+  });
+  return idx;
+}
 
 // ─── Airports ─────────────────────────────────────────────────────────────────
 const AIRPORTS = [
@@ -2215,12 +2228,29 @@ export default function App() {
     setError("");
     setProcessing(true);
     setProgress({ done: 0, total: files.length });
+
+    // Read every file up front and auto-select the EBA indexation year from
+    // the earliest bid-period start date in the batch, so the rates applied
+    // match when the rosters actually run (rates step up on 1 Jan 2027/28/29).
+    const loaded = [];
+    let earliestFrom = null;
+    for (const f of files) {
+      let text = null;
+      try { text = await f.text(); } catch { /* keep null; handled below */ }
+      let rf = null;
+      if (text != null) { try { rf = parseQantasRoster(text).rangeFrom; } catch { /* ignore */ } }
+      if (rf && (!earliestFrom || rf < earliestFrom)) earliestFrom = rf;
+      loaded.push({ f, text });
+    }
+    const targetYear = earliestFrom != null ? ebaYearIdxForDate(earliestFrom) : yearIdx;
+    if (targetYear !== yearIdx) setYearIdx(targetYear);
+
     const out = [];
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
+    for (let i = 0; i < loaded.length; i++) {
+      const { f, text } = loaded[i];
       try {
-        const text = await f.text();
-        const res = processRoster(text, yearIdx, f.name.replace(/\.txt$/i, ""));
+        if (text == null) throw new Error("could not read file");
+        const res = processRoster(text, targetYear, f.name.replace(/\.txt$/i, ""));
         res._fileName = f.name;
         out.push(res);
       } catch (e) {

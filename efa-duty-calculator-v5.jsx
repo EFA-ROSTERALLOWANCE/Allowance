@@ -183,6 +183,21 @@ function computeYosTier(joiningDate, refDate, pilotRole) {
   return capped;
 }
 
+// Pick the EBA indexation year (INDEX_YEARS index) that applies to a given
+// date. Rates step up on each EBA anniversary (1 Jan 2027 / 2028 / 2029),
+// derived from the year in each INDEX_YEARS label — the last entry whose
+// effective 1-Jan date is on/before `dateStr` wins. "EBA Commencement" (no
+// year in its label) is the idx-0 base for anything before the first step.
+function ebaYearIdxForDate(dateStr) {
+  if (!dateStr) return 0;
+  let idx = 0;
+  INDEX_YEARS.forEach((y, i) => {
+    const m = /(\d{4})/.exec(y.label);
+    if (m && dateStr >= `${m[1]}-01-01`) idx = i;
+  });
+  return idx;
+}
+
 // ─── Airports ─────────────────────────────────────────────────────────────────
 const AIRPORTS = [
   { code:"SYD", name:"Sydney",      flag:"🇦🇺", tz:"Australia/Sydney",    utcOffset:10 },
@@ -2617,6 +2632,9 @@ export default function App() {
         setCustomFrom(earliestFrom);
         setCustomTo(latestTo);
         setMonthView(earliestFrom.slice(0, 7));
+        // Auto-select the EBA indexation year matching the anchored BP's
+        // start date (BP chip clicks re-apply this per selected BP).
+        setYearIdx(ebaYearIdxForDate(earliestFrom));
       }
 
       const summary = parsedFileCount === 1
@@ -4277,7 +4295,7 @@ export default function App() {
                       style={{background:"#F0EBE3",border:`1px solid ${useCustom?"#1E8AC0":"#D4CCC0"}`,borderRadius:6,color:customTo?"#1A1A2E":"#4A4F57",padding:"4px 8px",fontFamily:mono,fontSize:12,colorScheme:"light",cursor:"pointer"}}/>
                     {rosterBPs.map(b=>{
                       const isActive = customFrom===b.from && customTo===b.to;
-                      return <button key={b.bp} onClick={()=>{setCustomFrom(b.from);setCustomTo(b.to);setMonthView(b.from.slice(0,7));}}
+                      return <button key={b.bp} onClick={()=>{setCustomFrom(b.from);setCustomTo(b.to);setMonthView(b.from.slice(0,7));setYearIdx(ebaYearIdxForDate(b.from));}}
                         style={{background:isActive?"#E0EAF5":"#F0EBE3",border:`1px solid ${isActive?"#1E8AC0":"#D4CCC0"}`,borderRadius:6,color:isActive?"#1E8AC0":"#2D3239",fontSize:11,fontWeight:700,cursor:"pointer",padding:"4px 10px",fontFamily:mono,letterSpacing:0.5}}>
                         BP {b.bp}
                       </button>;
