@@ -4663,6 +4663,10 @@ export default function App() {
           );
         })()}
       </div>
+      <footer style={{maxWidth:980,margin:"6px auto 30px",padding:"0 20px",textAlign:"center",fontSize:10,lineHeight:1.7,color:"#8A8577",fontFamily:mono,letterSpacing:0.3}}>
+        For personal use only · Estimates only — use at your own risk.<br/>
+        © 2026 Thomas Pappin · All rights reserved.
+      </footer>
     </div>
   );
 }

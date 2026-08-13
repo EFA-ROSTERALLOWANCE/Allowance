@@ -3470,6 +3470,10 @@ export default function App() {
             <div style={{ fontSize: 12 }}>Upload one or more Qantas SH Flight Crew Roster .txt files to begin.</div>
           </div>
         )}
+        <footer style={{ marginTop: 26, textAlign: "center", fontSize: 11, lineHeight: 1.7, color: COL.muted, fontFamily: mono, letterSpacing: 0.3 }}>
+          For personal use only · Estimates only — use at your own risk.<br/>
+          © 2026 Thomas Pappin · All rights reserved.
+        </footer>
       </div>
     </div>
   );
