@@ -12,7 +12,7 @@ const INDEX_YEARS = [
 ];
 const RATES = {
   DVA_CPT:400, DVA_FO:250, DDO_CPT:1231, DDO_FO:837,
-  DHA_CPT:17.51, DHA_FO:11.39, MISSED_MEAL:83.40, ACCOM_OPTOUT:75,
+  DHA_CPT:17.51, DHA_FO:11.41, MISSED_MEAL:83.40, ACCOM_OPTOUT:75,
 };
 // Salary table per FFPP column index (matches INDEX_YEARS order)
 // YOS tiers: 0=<3y, 1=3-5y, 2=5-7y, 3=7+y
