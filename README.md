@@ -7,8 +7,8 @@ EA 2025 enterprise agreement:
 - **`index2.html`** — Bulk Roster Summary across many pilots (source: `efa-bulk-roster-summary-v5.jsx`)
 
 An unofficial estimation aid — figures are estimates only, not a statement of
-entitlement. Not affiliated with or endorsed by Qantas, EFA, or any pilot
-association.
+entitlement. Not affiliated with or endorsed by any airline, operator, employer,
+or pilot association.
 
 ## Licence
 
