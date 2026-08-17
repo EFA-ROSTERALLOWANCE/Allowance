@@ -2176,12 +2176,10 @@ function parseQantasRoster(text) {
           if (nextRptMin != null && nextDepMin != null && nextRptMin > nextDepMin) {
             checkOutDate = addDays(nextFirstFlight.sectorDate, -1);
           }
-          // Apply transit-time shift so the recorded hotelCheckIn/hotelCheckOut
-          // represent the time AT the hotel, not the time AT the airport. From
-          // TRANSIT_REMOVAL_DATE onwards the shift is suppressed.
-          const slipAirport = lastSecInPeriod.arrAirport || "";
-          const rawTransit = HOTEL_TRANSIT_MIN[slipAirport] ?? 30;
-          const transit = (checkInDate >= TRANSIT_REMOVAL_DATE) ? 0 : rawTransit;
+          // Transit-time allowance removed for all ports: the recorded
+          // hotelCheckIn/hotelCheckOut match airport sign-off/sign-on exactly
+          // (no slip-window shrink). A zero shift leaves the times unchanged.
+          const transit = 0;
           const ciAdj = applyTransitShift(checkInDate,  lastSecInPeriod.aSignOff, +transit);
           const coAdj = applyTransitShift(checkOutDate, nextPeriod.rpt.signOn,    -transit);
           hotels.push({
