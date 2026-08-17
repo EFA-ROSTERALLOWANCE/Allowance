@@ -251,7 +251,7 @@ const HOTEL_TRANSIT_MIN = {
 };
 // From this date onwards (inclusive), the transit-time shift is NOT applied —
 // hotel check-in/out match airport sign-off/sign-on exactly.
-const TRANSIT_REMOVAL_DATE = "2026-06-30";
+const TRANSIT_REMOVAL_DATE = "2026-06-14";
 // Apply a +/- minute transit shift to a (date, "HH:MM") pair. Handles day
 // rollover when the shift crosses midnight (e.g. sign-off 23:55 + 30 min = 00:25
 // next day; sign-on 00:15 - 30 min = 23:45 previous day).
@@ -2176,10 +2176,12 @@ function parseQantasRoster(text) {
           if (nextRptMin != null && nextDepMin != null && nextRptMin > nextDepMin) {
             checkOutDate = addDays(nextFirstFlight.sectorDate, -1);
           }
-          // Transit-time allowance removed for all ports: the recorded
-          // hotelCheckIn/hotelCheckOut match airport sign-off/sign-on exactly
-          // (no slip-window shrink). A zero shift leaves the times unchanged.
-          const transit = 0;
+          // Apply transit-time shift so the recorded hotelCheckIn/hotelCheckOut
+          // represent the time AT the hotel, not the time AT the airport. From
+          // TRANSIT_REMOVAL_DATE onwards the shift is suppressed.
+          const slipAirport = lastSecInPeriod.arrAirport || "";
+          const rawTransit = HOTEL_TRANSIT_MIN[slipAirport] ?? 30;
+          const transit = (checkInDate >= TRANSIT_REMOVAL_DATE) ? 0 : rawTransit;
           const ciAdj = applyTransitShift(checkInDate,  lastSecInPeriod.aSignOff, +transit);
           const coAdj = applyTransitShift(checkOutDate, nextPeriod.rpt.signOn,    -transit);
           hotels.push({
