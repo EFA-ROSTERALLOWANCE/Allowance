@@ -1925,11 +1925,11 @@ function parseQantasRoster(text) {
       }
       lastDay = dayNum;
 
-      // Check for OL48/OL06/OL13/AS48 BEFORE any skip logic — these markers
-      // can appear on pattern-label rows. OL48 and OL06 both trigger a day-off
-      // payment for that day; AS48 triggers a Duty Variation Allowance. Any
-      // may be prefixed with a count.
-      const ddoRegex = /\b(\d*)OL(?:48|06)\b/g;
+      // Check for OL48/OL13/AS48 BEFORE any skip logic — these markers can
+      // appear on pattern-label rows. OL48 triggers a day-off payment for that
+      // day (OL06 does NOT); AS48 triggers a Duty Variation Allowance. Any may
+      // be prefixed with a count.
+      const ddoRegex = /\b(\d*)OL48\b/g;
       let ddoMatch;
       while ((ddoMatch = ddoRegex.exec(rest)) !== null) {
         const count = parseInt(ddoMatch[1] || "1", 10) || 1;

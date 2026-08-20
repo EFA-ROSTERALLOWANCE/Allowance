@@ -1066,12 +1066,12 @@ function parseQantasRoster(text) {
         if (topMonth > 11) { topMonth = 0; topYear++; }
       }
       lastDay = dayNum;
-      // Check for OL48/OL06/OL13 BEFORE any skip logic — these markers can
-      // appear on pattern-label rows (which the parser otherwise ignores).
-      // Both OL48 and OL06 trigger a day-off payment for that day; either
-      // may be prefixed with a count (e.g. "2OL48" → 2 day-off payments).
-      // Bare codes count as 1. Multiple matches per line accumulate.
-      const ddoRegex = /\b(\d*)OL(?:48|06)\b/g;
+      // Check for OL48/OL13 BEFORE any skip logic — these markers can appear
+      // on pattern-label rows (which the parser otherwise ignores). OL48
+      // triggers a day-off payment for that day (OL06 does NOT); it may be
+      // prefixed with a count (e.g. "2OL48" → 2 day-off payments). A bare code
+      // counts as 1. Multiple matches per line accumulate.
+      const ddoRegex = /\b(\d*)OL48\b/g;
       let ddoMatch;
       while ((ddoMatch = ddoRegex.exec(rest)) !== null) {
         const count = parseInt(ddoMatch[1] || "1", 10) || 1;
