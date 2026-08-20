@@ -79,7 +79,7 @@ const HOTEL_TRANSIT_MIN = {
 // From this date onwards (inclusive), the transit-time shift is NOT applied —
 // hotel check-in/out match airport sign-off/sign-on exactly. Trips with a
 // check-in dated 2026-06-30 or later therefore use the airport times directly.
-const TRANSIT_REMOVAL_DATE = "2026-06-14";
+const TRANSIT_REMOVAL_DATE = "2026-06-30";
 // Apply a +/- minute transit shift to a (date, "HH:MM") pair. Handles day
 // rollover when the shift crosses midnight (e.g. sign-off 23:55 + 30 min = 00:25
 // next day; sign-on 00:15 - 30 min = 23:45 previous day).
