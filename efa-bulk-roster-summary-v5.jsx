@@ -105,7 +105,7 @@ const MEAL_RATE_YEARS = [
   // From 1 July 2026: new domestic AU meal + incidental schedule (announced
   // company-side; international brackets carry forward unchanged as the
   // upper-tier ATO TD2025/4 amounts).
-  { label: "From 1 Jul 2026", from: "2026-07-01", rates: {
+  { label: "From 1 July 2026 - Paid from 15 June", from: "2026-06-15", rates: {
     domestic: {breakfast:43.65, lunch:61.70, dinner:86.35, incidental:36.30},
     group_4:  {breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_5:  {breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
