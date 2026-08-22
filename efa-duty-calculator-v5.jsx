@@ -1691,12 +1691,14 @@ function HelpModal({ onClose }) {
     ["Set who you are", "Pick your rank (Captain / F/Officer) and aircraft (A330 / A320) in the top bar. When you upload a roster these are detected automatically, so you usually don't need to touch them."],
     ["Choose the pay year", "The EBA year selector applies the right indexation to every rate. When you upload a roster it's set automatically from the bid period's start date — and updates as you click between BP chips — so you usually don't need to touch it. You can still pick a year to project."],
     ["Upload your roster", "Tap 📄 ROSTER and choose your Qantas SH bid-period .txt file. You can upload several BP files one after another to view multiple bid periods together — boundary trips that span two BPs are handled for you."],
-    ["Work through the tabs", "DAY SUMMARY — every sector and allowance for one day. MEAL RATES — the reference meal-rate table. WEEK SUMMARY — totals for a week. MONTH / ROSTER — totals across a whole bid period."],
+    ["Work through the tabs", "DAY SUMMARY — every sector and allowance for one day. MEAL RATES — the reference meal-rate table. WEEK SUMMARY — totals for a week. MONTH / ROSTER — totals across a whole bid period. PAY CHECK — compare what you were actually paid against those totals."],
     ["See a bid period's total", "On MONTH / ROSTER, click a BP chip (e.g. “BP 3761”) to show that bid period's total allowances and overtime. A BP shows the same total whether it's loaded on its own or alongside its neighbour."],
     ["Or use a custom range", "Set the Custom range dates for any window you like. Custom ranges show just the allowances captured in those dates — overtime and the Qantas header duty/credit carry are deliberately excluded."],
     ["Set Years of Service", "Overtime pay needs your years of service. It's filled in automatically when your name is found in the pilot list; otherwise pick it from the selector."],
     ["Dig into the detail", "Expand the DHA, meal, credit-hour and pattern breakdowns to see every line item and how each figure is built. Use Export CSV to save a copy."],
-    ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster data and resets everything."],
+    ["Check your payslip", "PAY CHECK compares what you were actually paid against the figures above. Select a BP chip first, then type in the earnings lines from your payslip — each CR MEALS ATO date range and amount, DUTY HOUR AL, any call-in or DVA, and overtime. “Pre-fill from this roster” adds a meal line per hotel stay with the dates already filled, so you only type the amounts."],
+    ["Reading the result", "Every line shows the calculator's own figure beside yours, with a ✓ or the dollar difference. The headline is the total variance. It also flags a stay with no matching payslip line — an unpaid trip — and a payment the calculator says you weren't owed. A difference is a prompt to check, not proof of an error: these are estimates."],
+    ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster data and resets everything. Payslip figures you type into PAY CHECK are not saved — they clear when you reload."],
   ];
 
   return (
