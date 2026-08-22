@@ -1409,6 +1409,48 @@ function SHead({children}) {
   return <div style={{fontSize:11,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:12}}>{children}</div>;
 }
 
+// ─── Pay Check widgets ────────────────────────────────────────────────────────
+function MInput({label,value,onChange,width=120}) {
+  return (
+    <div style={{display:"flex",flexDirection:"column"}}>
+      <Lbl t={label}/>
+      <input type="text" inputMode="decimal" value={value} placeholder="0.00"
+        onChange={e=>onChange(e.target.value)} style={{
+        background:"#FAF7F2", border:"1px solid #D4CCC0", borderRadius:6,
+        color:value?"#1A1A2E":"#4A4F57", padding:"5px 8px",
+        fontFamily:mono, fontSize:14, width:"100%", maxWidth:width, minWidth:90,
+      }}/>
+    </div>
+  );
+}
+
+// Reads out one payslip line against the calculator's own figure.
+function Delta({paid,calc,off}) {
+  if (paid == null) return <span style={{fontSize:11,color:"#8A8577",fontFamily:mono}}>enter an amount</span>;
+  const d = paid - calc;
+  return (
+    <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
+      <span style={{fontSize:11,color:"#4A4F57",fontFamily:mono}}>calc ${fmtAUD(calc)}</span>
+      <span style={{fontSize:12,fontWeight:700,fontFamily:mono,color:off?"#CC2E2E":"#1FA06E"}}>
+        {off ? `${d>0?"+":"−"}$${fmtAUD(Math.abs(d))}` : "✓ match"}
+      </span>
+    </div>
+  );
+}
+
+function PayRowShell({children,onRemove}) {
+  return (
+    <ICard style={{marginBottom:8}}>
+      <div style={{display:"flex",gap:12,alignItems:"flex-end",flexWrap:"wrap"}}>
+        {children}
+        <button onClick={onRemove} title="Remove line" style={{
+          background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#CC2E2E",
+          fontSize:11,cursor:"pointer",padding:"4px 9px",fontFamily:mono,marginLeft:"auto"}}>Remove</button>
+      </div>
+    </ICard>
+  );
+}
+
 // ─── SectorCard component ─────────────────────────────────────────────────────
 function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddHotelAfter, hasHotelAfter, showHotelBtn, totalSectors, isLastSector, isFirstSector }) {
   const col = SECTOR_COLORS[idx % SECTOR_COLORS.length];
@@ -2352,6 +2394,731 @@ function parseQantasRoster(text) {
   return { weeks, firstWeekStart, rangeFrom, rangeTo, detectedRole, detectedAircraft, detectedYos, detectedJoiningDate, detectedBP: bpMatch ? parseInt(bpMatch[1],10) : null, headerCarry, errors };
 }
 
+// Derive every figure the Month/Roster and Pay Check views need for one date
+// range. Pure - depends only on state values, never on JSX - so both tabs read
+// the same numbers instead of each maintaining its own copy of this maths.
+function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+                        pilotJoiningDate, customFrom, customTo, monthView }) {
+          // Parse monthView "YYYY-MM" to get year and month
+          const [mvYear,mvMonth]=monthView.split("-").map(Number);
+          const monthName=new Date(mvYear,mvMonth-1,1).toLocaleString("en-AU",{month:"long"});
+
+          // Determine effective date range: custom or month
+          const useCustom = customFrom && customTo;
+          const rangeFrom = useCustom ? customFrom : `${mvYear}-${String(mvMonth).padStart(2,"0")}-01`;
+          const rangeTo = useCustom ? customTo : (() => { const d = new Date(mvYear, mvMonth, 0); return `${mvYear}-${String(mvMonth).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
+          const rangeLabel = useCustom ? `${fmtFull(customFrom)} — ${fmtFull(customTo)}` : `${monthName} ${mvYear}`;
+
+          const isInRange = (dateStr) => {
+            return dateStr >= rangeFrom && dateStr <= rangeTo;
+          };
+          // For DHA/credit base calc when a BP chip is selected: extend the
+          // upper bound so THIS BP's own outgoing boundary pattern (whose
+          // duty/meals sit 1–3 days past rangeTo) is captured in base; the
+          // header Carried-Out adjustment then nets the duty portion.
+          //
+          // The extension MUST be the same whether or not the next BP is also
+          // loaded — otherwise a BP viewed on its own and the same BP viewed
+          // with its neighbour loaded would total differently (the bug this
+          // fixes). We therefore no longer cap the extension by the next BP's
+          // start date. Instead, `ownedByThisBp` excludes the *next* BP's OWN
+          // patterns (those whose pattern-start lands on/after nextBp.from) so
+          // they aren't pulled into this BP's base just because they fall
+          // inside the 7-day window. A boundary pattern that STARTS in this BP
+          // (pattern-start < nextBp.from) keeps its full spill-over.
+          const matchedBpForRange = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
+          const nextBp = rosterBPs.find(b => b.from > rangeTo);
+          const extRangeToRaw = addDays(rangeTo, 7);
+          const extRangeTo = extRangeToRaw;
+          // A day-entry (= one pattern, keyed at its sign-on day `patternStart`)
+          // belongs to the selected BP unless it starts in the next BP.
+          const ownedByThisBp = (patternStart) =>
+            !(matchedBpForRange && nextBp && patternStart >= nextBp.from);
+          const isInBaseRange = (dateStr) => {
+            return dateStr >= rangeFrom && dateStr <= (matchedBpForRange ? extRangeTo : rangeTo);
+          };
+
+          // Find all weeks that overlap the range
+          const weeksInRange=Object.keys(allWeeks).filter(ws=>{
+            for(let i=0;i<7;i++){
+              const dt=addDays(ws,i);
+              if(isInRange(dt)) return true;
+            }
+            return false;
+          }).sort();
+
+          // Also include previous weeks for spill-over (trips starting before range whose
+          // allowances land inside the range). Check up to 3 weeks back to cover long trips.
+          const allWeeksToProcess = [...weeksInRange];
+          if (weeksInRange.length > 0) {
+            const earliest = weeksInRange[0];
+            for (let w = 1; w <= 3; w++) {
+              const prevWs = addDays(earliest, -7 * w);
+              if (allWeeks[prevWs] && !allWeeksToProcess.includes(prevWs)) allWeeksToProcess.unshift(prevWs);
+            }
+          }
+
+          const monthDateMap = {};
+          allWeeksToProcess.forEach(ws => {
+            const wDays = allWeeks[ws];
+            if (!wDays) return;
+            DAY_NAMES.forEach((dn, di) => {
+              const tripDate = weekDate(ws, di);
+              // Skip patterns owned by the next BP (see ownedByThisBp above).
+              if (!ownedByThisBp(tripDate)) return;
+              const byDate = calcAllowancesByDate(wDays[dn], role, yearIdx, tripDate);
+              Object.entries(byDate).forEach(([dateStr, items]) => {
+                // Use extended range so outgoing boundary DHA (dated just past
+                // rangeTo) is included in base; header COut then subtracts it.
+                if (!isInBaseRange(dateStr)) return;
+                if (!monthDateMap[dateStr]) monthDateMap[dateStr] = [];
+                monthDateMap[dateStr].push(...items);
+              });
+            });
+          });
+
+          // Compute per-week totals (only for dates in range)
+          const weekData=weeksInRange.map(ws=>{
+            let wTotal = 0;
+            const wItems = [];
+            for (let i = 0; i < 7; i++) {
+              const dt = addDays(ws, i);
+              if (isInRange(dt) && monthDateMap[dt]) {
+                monthDateMap[dt].forEach(item => { wTotal += item.amount; wItems.push(item); });
+              }
+            }
+            const byType={};
+            wItems.forEach(item=>{
+              const key = item.label;
+              if(!byType[key]) byType[key]={...item,count:0,total:0};
+              byType[key].count++;byType[key].total+=item.amount;
+            });
+            return {ws,wTotal,byType,wDays:allWeeks[ws]};
+          });
+
+          const monthTotalRaw = Object.values(monthDateMap).flat().reduce((s, i) => s + i.amount, 0);
+          // Apply the DHA portion of the header-carry adjustment. Header carry
+          // values are per-BP, so only apply when a BP is selected. Meals,
+          // day-off pay, and DVA are unaffected — only duty hours shift at
+          // boundaries.
+          const dhaRateForAdj = (role === "cpt" ? RATES.DHA_CPT : RATES.DHA_FO) * INDEX_YEARS[yearIdx].mult;
+          const hm2hLocal = (s) => {
+            if (!s || typeof s !== "string") return 0;
+            const parts = s.trim().split(":").map(n => parseInt(n, 10));
+            if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0;
+            return parts[0] + parts[1] / 60;
+          };
+          const selectedBpForDha = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
+          const bpHdrDha = selectedBpForDha?.headerCarry;
+          const headerDutyDeltaHrs = bpHdrDha ? hm2hLocal(bpHdrDha.carriedInDuty) - hm2hLocal(bpHdrDha.carriedOutDuty) : 0;
+          const monthTotal = monthTotalRaw + headerDutyDeltaHrs * dhaRateForAdj;
+
+          const monthByType={};
+          Object.values(monthDateMap).flat().forEach(item=>{
+            const isDHA = /Duty Hour Allowance/.test(item.label);
+            const key = isDHA ? "Duty Hour Allowance" : item.label.replace(/\s*\((pre|post)-midnight\)\s*$/,"");
+            if(!monthByType[key]) monthByType[key]={...item,label:key,count:0,total:0};
+            monthByType[key].count++;
+            monthByType[key].total+=item.amount;
+          });
+          const monthTypes=Object.values(monthByType).sort((a,b)=>b.total-a.total);
+
+          // Build per-PATTERN data. Each entry day with sectors is one BP
+          // pattern. A pattern is attributed to the bid period in which it
+          // STARTS (its sign-on day), and its total is the FULL allowance for
+          // the whole pattern across every date — not just the dollars that
+          // happen to fall inside the viewed month. This is what "totals for
+          // all patterns on the BP file" means, and it makes a boundary
+          // pattern (one that spans two BPs) appear under exactly ONE bid
+          // period, so loading two adjacent BP files never counts it twice.
+          const trips = [];
+          const seenPatternKeys = new Set();
+          allWeeksToProcess.forEach(ws => {
+            const wDays = allWeeks[ws];
+            if (!wDays) return;
+            DAY_NAMES.forEach((dn, di) => {
+              const day = wDays[dn];
+              if (!day || !day.sectors?.[0]?.aSignOn) return;
+              const tripDate = weekDate(ws, di);
+              // tripDate is the pattern's sign-on day (its entry-day key). Own
+              // the pattern to the BP/month that contains that day. A pattern
+              // that starts in the previous period but spills allowances into
+              // this one is NOT this period's pattern, so it is skipped here.
+              if (!isInRange(tripDate)) return;
+              const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
+              // Full pattern total — every rated date, not clipped to range.
+              const allItems = Object.values(byDate).reduce((acc, items) => acc.concat(items), []);
+              if (allItems.length === 0) return;
+              const tripTotal = allItems.reduce((s, i) => s + i.amount, 0);
+              const secs = day.sectors;
+              const first = secs[0], last = secs[secs.length - 1];
+              const depPort = first?.depAirport || "";
+              const arrPort = last?.arrAirport || "";
+              const route = depPort && arrPort ? `${depPort} → ${arrPort}` : "";
+              const secDates = secs.map(s => s.sectorDate).filter(Boolean).sort();
+              const tripFrom = tripDate;
+              const tripTo = secDates[secDates.length - 1] || tripDate;
+              // De-dup guard: if the same boundary pattern is present in two
+              // overlapping BP uploads, skip the repeat. (The parser already
+              // merges same-day entries; this keys on start-date + route +
+              // sector count as a belt-and-braces safety net.)
+              const pKey = `${tripFrom}|${depPort}|${arrPort}|${secs.length}`;
+              if (seenPatternKeys.has(pKey)) return;
+              seenPatternKeys.add(pKey);
+              trips.push({
+                ws, dn, tripFrom, tripTo, route,
+                depPort, arrPort,
+                sectorCount: secs.length, tripTotal,
+                isReserve: !!secs[0]?.reservePeriod,
+                items: allItems,
+              });
+            });
+          });
+          trips.sort((a,b) => a.tripFrom.localeCompare(b.tripFrom));
+
+          // Merge consecutive-day continuations. If day-B starts the day
+          // after day-A ends AND day-B's departure airport is where day-A
+          // ended AND that port is NOT day-A's original start (i.e. the
+          // pilot has NOT returned to their base yet), day-B is really the
+          // same trip — typically a mid-pattern ground school day at an
+          // outstation. This keeps a BKK trip with CC/MS ground school days
+          // showing as ONE trip line rather than four.
+          {
+            const merged = [];
+            for (const trip of trips) {
+              const prev = merged[merged.length - 1];
+              const continues = prev && !prev.isReserve && !trip.isReserve
+                && prev.arrPort && prev.arrPort === trip.depPort
+                && addDays(prev.tripTo, 1) === trip.tripFrom
+                && prev.arrPort !== prev.depPortRoot; // haven't returned to trip's origin
+              if (continues) {
+                prev.tripTo = trip.tripTo;
+                prev.arrPort = trip.arrPort;
+                prev.route = `${prev.depPort} → ${trip.arrPort}`;
+                prev.sectorCount += trip.sectorCount;
+                prev.tripTotal += trip.tripTotal;
+                prev.items = prev.items.concat(trip.items);
+              } else {
+                merged.push({ ...trip, depPortRoot: trip.depPort });
+              }
+            }
+            trips.length = 0;
+            merged.forEach(m => trips.push(m));
+          }
+
+          // Aggregate items per trip into a display byType map (post-merge).
+          trips.forEach(trip => {
+            const tripByType = {};
+            trip.items.forEach(item => {
+              // For DHA items: collapse ALL variants (per-sector, continuous, pre/post-midnight)
+              // into a single "Duty Hour Allowance" entry per trip.
+              const isDHA = /Duty Hour Allowance/.test(item.label);
+              const cleanLabel = isDHA
+                ? "Duty Hour Allowance"
+                : item.label.replace(/\s*\((pre|post)-midnight\)\s*$/,"");
+              const key = cleanLabel;
+              if (!tripByType[key]) tripByType[key] = {...item, label: cleanLabel, count: 0, total: 0};
+              tripByType[key].count++;
+              tripByType[key].total += item.amount;
+            });
+            trip.byType = Object.values(tripByType).sort((a,b)=>b.total-a.total);
+            delete trip.items;
+            delete trip.depPort;
+            delete trip.arrPort;
+            delete trip.depPortRoot;
+          });
+
+          // Build a flat list of DHA items across every duty in range (sectors, reserve, ground duties)
+          const dhaItems = [];
+          allWeeksToProcess.forEach(ws => {
+            const wDays = allWeeks[ws];
+            if (!wDays) return;
+            DAY_NAMES.forEach((dn, di) => {
+              const day = wDays[dn];
+              if (!day || !day.sectors?.[0]?.aSignOn) return;
+              const tripDate = weekDate(ws, di);
+              if (!ownedByThisBp(tripDate)) return;
+              const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
+              Object.entries(byDate).forEach(([dateStr, items]) => {
+                if (!isInBaseRange(dateStr)) return;
+                items.forEach(item => {
+                  if (/Duty Hour Allowance/.test(item.label)) {
+                    dhaItems.push({...item, date: dateStr});
+                  }
+                });
+              });
+            });
+          });
+          dhaItems.sort((a,b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label));
+          const dhaTotalRaw = dhaItems.reduce((s,i) => s + i.amount, 0);
+          // Apply the DHA portion of the header-carry adjustment for the
+          // currently-selected BP (matches what monthTotal already includes).
+          const dhaRateForItems = (role === "cpt" ? RATES.DHA_CPT : RATES.DHA_FO) * INDEX_YEARS[yearIdx].mult;
+          const hm2hDha = (s) => {
+            if (!s || typeof s !== "string") return 0;
+            const parts = s.trim().split(":").map(n => parseInt(n, 10));
+            if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0;
+            return parts[0] + parts[1] / 60;
+          };
+          const selectedBpForItems = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
+          const bpHdrItems = selectedBpForItems?.headerCarry;
+          const dhaCarryInHrs  = bpHdrItems ? hm2hDha(bpHdrItems.carriedInDuty)  : 0;
+          const dhaCarryOutHrs = bpHdrItems ? hm2hDha(bpHdrItems.carriedOutDuty) : 0;
+          const dhaCarryDeltaHrs = dhaCarryInHrs - dhaCarryOutHrs;
+          const dhaTotal = dhaTotalRaw + dhaCarryDeltaHrs * dhaRateForItems;
+
+          // Build flat list of meal/incidental items in range AND group them
+          // by hotel stay. One "stay" = one hotel record. Items are assigned:
+          //   • Hotel meals (meal_b_<hi>/l_<hi>/d_<hi>)  → by hotel index
+          //   • Ground-duty meals (meal_<x>_g<idx>)     → by sectorDate falling
+          //         inside a hotel's [hotelFrom..hotelTo] window
+          //   • Per-port incidentals (meal_i_<PORT>_<n>) → by incidental date
+          //         falling inside a same-port hotel's window
+          // Items that don't match any hotel (ground duty before/after the
+          // hotel chain, or trips with no hotels) go in a fallback bucket so
+          // they remain visible in the breakdown.
+          const buildStays = (dateFilter, requireOwned) => {
+          const mealItems = [];
+          const stays = [];  // [{ key, label, ports, startDate, endDate, items, total }]
+          allWeeksToProcess.forEach(ws => {
+            const wDays = allWeeks[ws];
+            if (!wDays) return;
+            DAY_NAMES.forEach((dn, di) => {
+              const day = wDays[dn];
+              if (!day || !day.sectors?.[0]?.aSignOn) return;
+              const tripDate = weekDate(ws, di);
+              if (requireOwned && !ownedByThisBp(tripDate)) return;
+              const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
+
+              // Build buckets for each hotel + one "unassigned" bucket
+              const hotelList = getHotels(day);
+              const buckets = hotelList.map((h, hi) => ({
+                key: `${tripDate}_h${hi}`,
+                hi,
+                hotel: h,
+                port: (() => {
+                  const sec = day.sectors[h.afterSectorIdx ?? 0];
+                  return sec?.arrAirport || h.hotelFrom;
+                })(),
+                from: h.hotelFrom,
+                to: h.hotelTo,
+                items: [],
+              }));
+              const unassigned = { key: `${tripDate}_unassigned`, hi: -1, port: null, items: [] };
+
+              // Helper: assign item to a hotel bucket by date+port
+              const assignByDate = (item, date, port) => {
+                // Prefer port-matching hotel
+                if (port) {
+                  const sameAirport = buckets.filter(b => b.port === port);
+                  for (const b of sameAirport) {
+                    if (date >= b.from && date <= b.to) return b.items.push(item);
+                  }
+                  if (sameAirport.length) return sameAirport[0].items.push(item);
+                }
+                // Otherwise any hotel whose window contains the date
+                for (const b of buckets) {
+                  if (date >= b.from && date <= b.to) return b.items.push(item);
+                }
+                unassigned.items.push(item);
+              };
+
+              Object.entries(byDate).forEach(([dateStr, items]) => {
+                if (!dateFilter(dateStr)) return;
+                items.forEach(item => {
+                  if (!/meal_|Breakfast|Lunch|Dinner|Incidental/.test(item.id + item.label)) return;
+                  const enriched = { ...item, date: dateStr };
+                  mealItems.push(enriched);
+
+                  // Hotel meal: id like meal_b_<hi>_<date>
+                  const hotelMealMatch = item.id.match(/^meal_[bld]_(\d+)_/);
+                  if (hotelMealMatch) {
+                    const hi = parseInt(hotelMealMatch[1], 10);
+                    if (buckets[hi]) {
+                      buckets[hi].items.push(enriched);
+                    } else {
+                      unassigned.items.push(enriched);
+                    }
+                    return;
+                  }
+
+                  // Ground-duty meal: id like meal_<bld>_g<sectorIdx>_<date>
+                  const groundMealMatch = item.id.match(/^meal_[bld]_g\d+_/);
+                  if (groundMealMatch) {
+                    assignByDate(enriched, dateStr, null);
+                    return;
+                  }
+
+                  // Per-port incidental: id like meal_i_<PORT>_<n>_<idx>
+                  const incMatch = item.id.match(/^meal_i_([A-Z]{3,4})_/);
+                  if (incMatch) {
+                    assignByDate(enriched, dateStr, incMatch[1]);
+                    return;
+                  }
+
+                  // Fallback
+                  assignByDate(enriched, dateStr, null);
+                });
+              });
+
+              // Emit non-empty buckets as stays
+              buckets.forEach(b => {
+                if (b.items.length === 0) return;
+                const dates = b.items.map(i => i.date).sort();
+                stays.push({
+                  key: b.key,
+                  port: b.port,
+                  label: b.port || "Hotel",
+                  startDate: b.from || dates[0],
+                  endDate: b.to || dates[dates.length - 1],
+                  items: b.items,
+                  total: b.items.reduce((s, i) => s + i.amount, 0),
+                });
+              });
+              if (unassigned.items.length > 0) {
+                const dates = unassigned.items.map(i => i.date).sort();
+                stays.push({
+                  key: unassigned.key,
+                  port: null,
+                  label: "Ground duties (no hotel)",
+                  startDate: dates[0],
+                  endDate: dates[dates.length - 1],
+                  items: unassigned.items,
+                  total: unassigned.items.reduce((s, i) => s + i.amount, 0),
+                });
+              }
+            });
+          });
+          // Merge consecutive-day stays at the SAME port so multi-hotel slips
+          // (e.g. BKK ground school split across CC and MS days each producing
+          // a separate hotel bucket) present as one line "9 May – 12 May BKK".
+          // Rule: if the next stay's startDate is within 1 day of prev's
+          // endDate AND both are at the same port, combine. "Ground duties
+          // (no hotel)" buckets (port === null) never merge.
+          stays.sort((a,b) => a.startDate.localeCompare(b.startDate));
+          {
+            const mergedStays = [];
+            for (const stay of stays) {
+              const prev = mergedStays[mergedStays.length - 1];
+              const canMerge = prev
+                && prev.port && stay.port
+                && prev.port === stay.port
+                && daysBetween(prev.endDate, stay.startDate) <= 1;
+              if (canMerge) {
+                prev.endDate = stay.endDate > prev.endDate ? stay.endDate : prev.endDate;
+                prev.items = prev.items.concat(stay.items);
+                prev.total += stay.total;
+              } else {
+                mergedStays.push({ ...stay });
+              }
+            }
+            stays.length = 0;
+            mergedStays.forEach(s => stays.push(s));
+          }
+          mealItems.sort((a,b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label));
+          return { mealItems, stays, mealTotal: mealItems.reduce((s,i) => s + i.amount, 0) };
+          };
+          const { mealItems, stays, mealTotal } = buildStays(isInRange, false);
+          // Pay Check: the same stay grouping over the EXTENDED BP window, so a
+          // stay checking out after the BP ends (hotel 11-13 Jul in a BP ending
+          // 12 Jul) keeps its whole meal total - which is what payroll pays as a
+          // single line. ownedByThisBp keeps the next BP's own trips out. Feeds
+          // the Pay Check tab only; DHA and credit hours are untouched.
+          const payStays = buildStays(isInBaseRange, true).stays;
+
+          // Build flat list of credit hour items
+          const creditItems = [];
+          allWeeksToProcess.forEach(ws => {
+            const wDays = allWeeks[ws];
+            if (!wDays) return;
+            DAY_NAMES.forEach((dn, di) => {
+              const day = wDays[dn];
+              if (!day || (!day.sectors?.[0]?.aSignOn && !day.sectors?.[0]?.isAnnualLeave)) return;
+              const tripDate = weekDate(ws, di);
+              if (!ownedByThisBp(tripDate)) return;
+              // Track this day's credit so an OL13 reserve-activation floor of
+              // 4h can be applied at the end if the natural credit falls short.
+              const dayStartIdx = creditItems.length;
+              let dayInRange = false;
+              day.sectors.forEach((sec, si) => {
+                const secDate = sec.sectorDate || tripDate;
+                // Attribute credit by sectorDate. Cross-BP boundary shifts are
+                // handled downstream by the Month/Roster totalizer applying
+                // the roster header's Carried In/Out credit values.
+                if (!isInBaseRange(secDate)) return;
+                dayInRange = true;
+
+                // CC, CCR and MD days attract DHA only (DHA is paid in
+                // calcAllowancesByDate) — they earn NO credit hours, so they do
+                // not count toward the 70h overtime threshold or flight pay.
+                if (/^(CCR|CC|MD)\d*\b/i.test(sec.flightNo || "")) return;
+
+                if (sec.isAnnualLeave) {
+                  // Annual leave = flat 2.5h credit per day
+                  creditItems.push({ date: secDate, label: "Annual Leave", credit: 2.5, type: "Leave" });
+                } else if (sec.reservePeriod) {
+                  // Reserve = flat 4h credit
+                  creditItems.push({ date: secDate, label: sec.flightNo || "Reserve", credit: 4, type: "Reserve" });
+                } else if (sec.isGroundDuty || /^(SIM|EF)\d*/i.test(sec.flightNo)) {
+                  // SIM/EF and other ground duties = min(duty hours, 4)
+                  const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
+                  if (on == null || off == null) return;
+                  let mins = off - on; if (mins < 0) mins += 1440;
+                  creditItems.push({ date: secDate, label: sec.flightNo, credit: Math.min(mins / 60, 4), type: "Ground" });
+                } else {
+                  // Flight sector — compute block time from flight dep/arr times.
+                  // For sectors imported from a BP roster (`flightDepTime` set),
+                  // we use those times directly. For MANUAL sectors we derive a
+                  // notional block window from sign-on / sign-off:
+                  //   • Operating: signOn + 60 min  →  signOff − 15 min
+                  //   • Positioning/pax: signOn + 30 min → signOff − 15 min
+                  const isManual = !sec.flightDepTime;
+                  const preOffset = isManual ? (sec.isPositioning ? 30 : 60) : 0;
+                  const postOffset = isManual ? 15 : 0;
+                  const shiftHHMM = (hhmm, deltaMin) => {
+                    const m = parseTime(hhmm);
+                    if (m == null) return hhmm;
+                    let t = m + deltaMin;
+                    while (t < 0)    t += 1440;
+                    while (t >= 1440) t -= 1440;
+                    return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+                  };
+                  const depTime = isManual
+                    ? shiftHHMM(sec.aSignOn, +preOffset)
+                    : sec.flightDepTime;
+                  const arrTime = isManual
+                    ? shiftHHMM(sec.aSignOff, -postOffset)
+                    : sec.flightArrTime;
+                  const depCode = sec.depAirport, arrCode = sec.arrAirport;
+                  if (!depTime || !arrTime || !depCode || !arrCode) return;
+                  const depAp = AIRPORTS.find(a => a.code === depCode);
+                  const arrAp = AIRPORTS.find(a => a.code === arrCode);
+                  if (!depAp || !arrAp) return;
+                  const depMin = parseTime(depTime), arrMin = parseTime(arrTime);
+                  if (depMin == null || arrMin == null) return;
+                  // Convert to UTC using DST-aware offsets
+                  const depOffsetH = getUtcOffsetHours(depCode, sec.flightDepDate || secDate);
+                  const arrOffsetH = getUtcOffsetHours(arrCode, sec.flightDepDate || secDate);
+                  const depUtc = depMin - depOffsetH * 60;
+                  const arrUtc = arrMin - arrOffsetH * 60;
+                  let blockMins = arrUtc - depUtc;
+                  if (blockMins < 0) blockMins += 1440;
+                  const blockHrs = blockMins / 60;
+                  const mult = sec.isPositioning ? 0.5 : 1.0;
+                  const credit = blockHrs * mult;
+                  const tag = sec.isPositioning ? " (pax 0.5×)" : "";
+                  creditItems.push({
+                    date: secDate,
+                    label: `${sec.flightNo} ${depCode}→${arrCode}${tag}`,
+                    credit,
+                    type: sec.isPositioning ? "Positioning" : "Operating",
+                    blockHrs,
+                  });
+                }
+              });
+              // OL13 reserve activation: bump this day's credit to 4h if the
+              // natural sum is below the floor. Booked as a synthetic reserve
+              // item so the user can see why the bump appears in the breakdown.
+              if (day.ol13Reserve && dayInRange) {
+                const daySum = creditItems.slice(dayStartIdx)
+                  .reduce((s, it) => s + it.credit, 0);
+                if (daySum < 4) {
+                  creditItems.push({
+                    date: tripDate,
+                    label: "OL13 Reserve activation (4h floor)",
+                    credit: 4 - daySum,
+                    type: "Reserve",
+                  });
+                }
+              }
+            });
+          });
+          creditItems.sort((a,b) => a.date.localeCompare(b.date));
+          const creditTotalRaw = creditItems.reduce((s,i) => s + i.credit, 0);
+          // Apply Qantas's authoritative boundary-attribution values from the
+          // roster header of the currently-selected BP (if any). CIn − COut
+          // shifts hours into/out of this BP for pay purposes; sectors we
+          // attribute by raw sectorDate get corrected here.
+          const hm2h = (s) => {
+            if (!s || typeof s !== "string") return 0;
+            const parts = s.trim().split(":").map(n => parseInt(n, 10));
+            if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0;
+            return parts[0] + parts[1] / 60;
+          };
+          const selectedBpEntry = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
+          const bpHdr = selectedBpEntry?.headerCarry;
+          const headerDutyDelta   = bpHdr ? hm2h(bpHdr.carriedInDuty)   - hm2h(bpHdr.carriedOutDuty)   : 0;
+          const headerCreditDelta = bpHdr ? hm2h(bpHdr.carriedInCredit) - hm2h(bpHdr.carriedOutCredit) : 0;
+          const creditTotal = creditTotalRaw + headerCreditDelta;
+          // Overtime hours and hourly rate are rounded to 2 dp before multiplying
+          // so the displayed values (e.g. "3.87h × $231.85/h = $897.26") reconcile.
+          // See the detail panel further down — same rounding applied there.
+          const overtimeHrs = creditTotal > 70 ? Math.round((creditTotal - 70) * 100) / 100 : 0;
+          // Derive the effective YOS for THIS view's date range. The static
+          // `yos` state is set at upload time and reflects whichever roster
+          // file was processed last — which is wrong when multiple BPs span
+          // the 1 Jan 2026 freeze date: clicking a pre-freeze BP shouldn't
+          // pay OT at the post-freeze bumped salary. We re-derive based on
+          // the matched pilot's join date and the current range here.
+          //   • Past BP (range ends before today) → use range start
+          //   • Current/future BP                → use today
+          //   • Custom range (no matching BP)    → use range start, same rule
+          const todayISO = new Date().toISOString().slice(0, 10);
+          const effRefDate = (customTo && customTo < todayISO)
+            ? (customFrom || todayISO)
+            : todayISO;
+          const effectiveYos = pilotJoiningDate
+            ? computeYosTier(pilotJoiningDate, effRefDate, role)
+            : yos;
+          const useYos = effectiveYos >= 0 ? effectiveYos : yos;
+          const overtimePay = (overtimeHrs > 0 && useYos >= 0)
+            ? overtimeHrs * (Math.round((SALARY[aircraft][role][useYos][yearIdx] / 750) * 100) / 100)
+            : 0;
+          // Overtime is only meaningful over a whole BP (the 70h threshold is a
+          // per-BP figure). Include it in the headline total only when a BP is
+          // selected (custom range exactly matches one of the uploaded BPs).
+          // Hide it for arbitrary custom ranges or month views — otherwise the
+          // total would be misleading.
+          const isBpSelected = useCustom && rosterBPs.some(b => b.from === customFrom && b.to === customTo);
+          const includeOvertime = isBpSelected;
+          const monthGrandTotal = monthTotal + (includeOvertime ? overtimePay : 0);
+          return { mvYear, mvMonth, monthName, useCustom, rangeFrom, rangeTo, rangeLabel,
+                   weeksInRange, monthTotal, monthTypes, trips, monthDateMap,
+                   dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaRateForItems,
+                   mealItems, mealTotal, stays, payStays,
+                   creditItems, creditTotal, headerCreditDelta, bpHdr,
+                   overtimeHrs, overtimePay, effectiveYos, useYos,
+                   selectedBpForItems, bpHdrItems,
+                   isBpSelected, includeOvertime, monthGrandTotal };
+}
+
+// ─── Pay Check ────────────────────────────────────────────────────────────────
+// Compare the figures typed off a payslip against what derivePeriod computed
+// for the same bid period.
+//
+// A "CR MEALS ATO" line is one hotel stay, identified by the date span payroll
+// prints on it (check-in date / check-out date; a same-day slip prints one
+// date). We match on that span, so this reads `payStays` — the stay grouping
+// taken over the extended BP window — rather than the month view's `stays`,
+// which clips at the BP end and would under-report a trip that checks out
+// after the period closes.
+const PC_DAY_OFF = /^(ddo|extra_ddo|ddo_rp)/;
+const PC_DVA     = /^(dva|extra_dva|dva_rp)/;
+let _payRowId = 0;
+
+function pcMoney(s) {
+  if (s == null || String(s).trim() === "") return null;
+  const n = parseFloat(String(s).replace(/[$,\s]/g, ""));
+  return Number.isFinite(n) ? n : null;
+}
+
+function derivePayCheck(paySlip, d) {
+  // Sub-cent differences are float noise, not a payroll error.
+  const differs = (a, b) => Math.abs(a - b) >= 0.005;
+  const cmp = (paid, calc) => ({ paid, calc, delta: paid - calc, off: differs(paid, calc) });
+
+  // ── Meals: payslip line ↔ hotel stay ──
+  const stays = (d.payStays || []).map((s, i) => ({ ...s, _i: i }));
+  const taken = new Set();
+  const mealRows = (paySlip.meals || []).map(line => {
+    const paid = pcMoney(line.amount);
+    const from = line.from, to = line.to || line.from;
+    // Exact span first — the normal case, and unambiguous.
+    let stay = stays.find(s => !taken.has(s._i) && s.startDate === from && s.endDate === to);
+    if (!stay && from) {
+      // Otherwise the unclaimed stay overlapping this line by the most days.
+      let best = null, bestOverlap = 0;
+      for (const s of stays) {
+        if (taken.has(s._i)) continue;
+        const lo = s.startDate > from ? s.startDate : from;
+        const hi = s.endDate < to ? s.endDate : to;
+        if (lo > hi) continue;
+        const overlap = daysBetween(lo, hi) + 1;
+        if (overlap > bestOverlap) { bestOverlap = overlap; best = s; }
+      }
+      stay = best;
+    }
+    if (stay) taken.add(stay._i);
+    return {
+      id: line.id, from, to, paid, stay,
+      ...(stay && paid != null ? cmp(paid, stay.total) : { calc: stay ? stay.total : null, delta: null, off: false }),
+    };
+  });
+  const unmatchedStays = stays.filter(s => !taken.has(s._i));
+
+  // ── Dated one-off items (day off / call-in, DVA) ──
+  const itemsById = (re) => {
+    const out = [];
+    Object.entries(d.monthDateMap || {}).forEach(([date, items]) => {
+      items.forEach(it => { if (re.test(it.id)) out.push({ ...it, date }); });
+    });
+    return out.sort((a, b) => a.date.localeCompare(b.date));
+  };
+  const matchDated = (lines, calcItems) => {
+    const used = new Set();
+    const rows = (lines || []).map(line => {
+      const paid = pcMoney(line.amount);
+      let idx = calcItems.findIndex((it, i) => !used.has(i) && it.date === line.date);
+      // Payroll sometimes dates one of these a day either side of the pattern
+      // it belongs to, so allow a near miss — but never pair across the period.
+      if (idx < 0 && line.date) {
+        let best = -1, bestGap = 3;
+        calcItems.forEach((it, i) => {
+          if (used.has(i)) return;
+          const gap = Math.abs(daysBetween(it.date < line.date ? it.date : line.date,
+                                           it.date < line.date ? line.date : it.date));
+          if (gap <= bestGap) { bestGap = gap; best = i; }
+        });
+        idx = best;
+      }
+      const item = idx >= 0 ? calcItems[idx] : null;
+      if (idx >= 0) used.add(idx);
+      return {
+        id: line.id, date: line.date, paid, item,
+        ...(item && paid != null ? cmp(paid, item.amount)
+          : paid != null ? cmp(paid, 0) : { calc: item ? item.amount : 0, delta: null, off: false }),
+      };
+    });
+    return { rows, unmatched: calcItems.filter((_, i) => !used.has(i)) };
+  };
+
+  const dayOffCalc = itemsById(PC_DAY_OFF);
+  const dvaCalc    = itemsById(PC_DVA);
+  const callIns = matchDated(paySlip.callIns, dayOffCalc);
+  const dvas    = matchDated(paySlip.dvas,    dvaCalc);
+
+  const dhaPaid = pcMoney(paySlip.dha);
+  const otPaid  = pcMoney(paySlip.overtime);
+  const dha = dhaPaid != null ? cmp(dhaPaid, d.dhaTotal)   : null;
+  const ot  = otPaid  != null ? cmp(otPaid,  d.overtimePay) : null;
+
+  const sum = (ns) => ns.reduce((a, b) => a + b, 0);
+  const paidTotal = sum([
+    ...mealRows.map(r => r.paid || 0), ...callIns.rows.map(r => r.paid || 0),
+    ...dvas.rows.map(r => r.paid || 0), dhaPaid || 0, otPaid || 0,
+  ]);
+  // Only count the app's side of lines the payslip actually declared, so the
+  // grand total compares like with like.
+  const calcTotal = sum([
+    ...mealRows.map(r => (r.stay ? r.stay.total : 0)),
+    ...unmatchedStays.map(s => s.total),
+    ...callIns.rows.map(r => (r.item ? r.item.amount : 0)),
+    ...callIns.unmatched.map(i => i.amount),
+    ...dvas.rows.map(r => (r.item ? r.item.amount : 0)),
+    ...dvas.unmatched.map(i => i.amount),
+    dhaPaid != null ? d.dhaTotal : 0,
+    otPaid  != null ? d.overtimePay : 0,
+  ]);
+
+  const anyInput = mealRows.length || callIns.rows.length || dvas.rows.length
+    || dhaPaid != null || otPaid != null;
+  return {
+    mealRows, unmatchedStays, callIns, dvas, dha, ot, anyInput,
+    paidTotal, calcTotal, delta: paidTotal - calcTotal,
+    off: differs(paidTotal, calcTotal),
+  };
+}
+
 export default function App() {
   const today=new Date().toISOString().slice(0,10);
   const [weekStart,setWeekStart]=useState(()=>getMon(today));
@@ -2387,6 +3154,16 @@ export default function App() {
   const [showCreditHours,setShowCreditHours]=useState(false);
   const [showRosterView,setShowRosterView]=useState(false);
   const [mealRateYear,setMealRateYear]=useState(0);
+  // What the payslip actually paid, for the Pay Check tab. Not persisted —
+  // nothing in this app is, and a saved payslip would outlive its roster.
+  const [paySlip,setPaySlip]=useState({dha:"",overtime:"",meals:[],callIns:[],dvas:[]});
+
+  const setPayField = (field,val) => setPaySlip(p=>({...p,[field]:val}));
+  const addPayRow = (listKey,row) => setPaySlip(p=>({...p,[listKey]:[...p[listKey],{id:`p${++_payRowId}`,...row}]}));
+  const updPayRow = (listKey,id,field,val) =>
+    setPaySlip(p=>({...p,[listKey]:p[listKey].map(r=>r.id===id?{...r,[field]:val}:r)}));
+  const removePayRow = (listKey,id) =>
+    setPaySlip(p=>({...p,[listKey]:p[listKey].filter(r=>r.id!==id)}));
 
   // Current week's days
   const days = allWeeks[weekStart] ?? Object.fromEntries(DAY_NAMES.map(k=>[k,emptyDay()]));
@@ -2947,7 +3724,7 @@ export default function App() {
 
       {/* ── Tab bar ── */}
       <div style={{background:"#FAF7F2",borderBottom:"1px solid #D4CCC0",display:"flex",padding:"0 20px",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
-        {[["entry","DAY SUMMARY"],["rates","MEAL RATES"],["summary","WEEK SUMMARY"],["monthly","MONTH / ROSTER"]].map(([id,lbl])=>(
+        {[["entry","DAY SUMMARY"],["rates","MEAL RATES"],["summary","WEEK SUMMARY"],["monthly","MONTH / ROSTER"],["paycheck","PAY CHECK"]].map(([id,lbl])=>(
           <button key={id} onClick={()=>setTab(id)} style={{background:"transparent",border:"none",color:tab===id?"#1E8AC0":"#4A4F57",borderBottom:tab===id?"2px solid #1E8AC0":"2px solid transparent",padding:"0 16px",height:44,fontSize:12,fontWeight:700,letterSpacing:1.5,fontFamily:mono,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{lbl}</button>
         ))}
       </div>
@@ -3667,579 +4444,14 @@ export default function App() {
 
         {/* ══ MONTHLY SUMMARY ══ */}
         {tab==="monthly"&&(()=>{
-          // Parse monthView "YYYY-MM" to get year and month
-          const [mvYear,mvMonth]=monthView.split("-").map(Number);
-          const monthName=new Date(mvYear,mvMonth-1,1).toLocaleString("en-AU",{month:"long"});
-
-          // Determine effective date range: custom or month
-          const useCustom = customFrom && customTo;
-          const rangeFrom = useCustom ? customFrom : `${mvYear}-${String(mvMonth).padStart(2,"0")}-01`;
-          const rangeTo = useCustom ? customTo : (() => { const d = new Date(mvYear, mvMonth, 0); return `${mvYear}-${String(mvMonth).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; })();
-          const rangeLabel = useCustom ? `${fmtFull(customFrom)} — ${fmtFull(customTo)}` : `${monthName} ${mvYear}`;
-
-          const isInRange = (dateStr) => {
-            return dateStr >= rangeFrom && dateStr <= rangeTo;
-          };
-          // For DHA/credit base calc when a BP chip is selected: extend the
-          // upper bound so THIS BP's own outgoing boundary pattern (whose
-          // duty/meals sit 1–3 days past rangeTo) is captured in base; the
-          // header Carried-Out adjustment then nets the duty portion.
-          //
-          // The extension MUST be the same whether or not the next BP is also
-          // loaded — otherwise a BP viewed on its own and the same BP viewed
-          // with its neighbour loaded would total differently (the bug this
-          // fixes). We therefore no longer cap the extension by the next BP's
-          // start date. Instead, `ownedByThisBp` excludes the *next* BP's OWN
-          // patterns (those whose pattern-start lands on/after nextBp.from) so
-          // they aren't pulled into this BP's base just because they fall
-          // inside the 7-day window. A boundary pattern that STARTS in this BP
-          // (pattern-start < nextBp.from) keeps its full spill-over.
-          const matchedBpForRange = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
-          const nextBp = rosterBPs.find(b => b.from > rangeTo);
-          const extRangeToRaw = addDays(rangeTo, 7);
-          const extRangeTo = extRangeToRaw;
-          // A day-entry (= one pattern, keyed at its sign-on day `patternStart`)
-          // belongs to the selected BP unless it starts in the next BP.
-          const ownedByThisBp = (patternStart) =>
-            !(matchedBpForRange && nextBp && patternStart >= nextBp.from);
-          const isInBaseRange = (dateStr) => {
-            return dateStr >= rangeFrom && dateStr <= (matchedBpForRange ? extRangeTo : rangeTo);
-          };
-
-          // Find all weeks that overlap the range
-          const weeksInRange=Object.keys(allWeeks).filter(ws=>{
-            for(let i=0;i<7;i++){
-              const dt=addDays(ws,i);
-              if(isInRange(dt)) return true;
-            }
-            return false;
-          }).sort();
-
-          // Also include previous weeks for spill-over (trips starting before range whose
-          // allowances land inside the range). Check up to 3 weeks back to cover long trips.
-          const allWeeksToProcess = [...weeksInRange];
-          if (weeksInRange.length > 0) {
-            const earliest = weeksInRange[0];
-            for (let w = 1; w <= 3; w++) {
-              const prevWs = addDays(earliest, -7 * w);
-              if (allWeeks[prevWs] && !allWeeksToProcess.includes(prevWs)) allWeeksToProcess.unshift(prevWs);
-            }
-          }
-
-          const monthDateMap = {};
-          allWeeksToProcess.forEach(ws => {
-            const wDays = allWeeks[ws];
-            if (!wDays) return;
-            DAY_NAMES.forEach((dn, di) => {
-              const tripDate = weekDate(ws, di);
-              // Skip patterns owned by the next BP (see ownedByThisBp above).
-              if (!ownedByThisBp(tripDate)) return;
-              const byDate = calcAllowancesByDate(wDays[dn], role, yearIdx, tripDate);
-              Object.entries(byDate).forEach(([dateStr, items]) => {
-                // Use extended range so outgoing boundary DHA (dated just past
-                // rangeTo) is included in base; header COut then subtracts it.
-                if (!isInBaseRange(dateStr)) return;
-                if (!monthDateMap[dateStr]) monthDateMap[dateStr] = [];
-                monthDateMap[dateStr].push(...items);
-              });
-            });
-          });
-
-          // Compute per-week totals (only for dates in range)
-          const weekData=weeksInRange.map(ws=>{
-            let wTotal = 0;
-            const wItems = [];
-            for (let i = 0; i < 7; i++) {
-              const dt = addDays(ws, i);
-              if (isInRange(dt) && monthDateMap[dt]) {
-                monthDateMap[dt].forEach(item => { wTotal += item.amount; wItems.push(item); });
-              }
-            }
-            const byType={};
-            wItems.forEach(item=>{
-              const key = item.label;
-              if(!byType[key]) byType[key]={...item,count:0,total:0};
-              byType[key].count++;byType[key].total+=item.amount;
-            });
-            return {ws,wTotal,byType,wDays:allWeeks[ws]};
-          });
-
-          const monthTotalRaw = Object.values(monthDateMap).flat().reduce((s, i) => s + i.amount, 0);
-          // Apply the DHA portion of the header-carry adjustment. Header carry
-          // values are per-BP, so only apply when a BP is selected. Meals,
-          // day-off pay, and DVA are unaffected — only duty hours shift at
-          // boundaries.
-          const dhaRateForAdj = (role === "cpt" ? RATES.DHA_CPT : RATES.DHA_FO) * INDEX_YEARS[yearIdx].mult;
-          const hm2hLocal = (s) => {
-            if (!s || typeof s !== "string") return 0;
-            const parts = s.trim().split(":").map(n => parseInt(n, 10));
-            if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0;
-            return parts[0] + parts[1] / 60;
-          };
-          const selectedBpForDha = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
-          const bpHdrDha = selectedBpForDha?.headerCarry;
-          const headerDutyDeltaHrs = bpHdrDha ? hm2hLocal(bpHdrDha.carriedInDuty) - hm2hLocal(bpHdrDha.carriedOutDuty) : 0;
-          const monthTotal = monthTotalRaw + headerDutyDeltaHrs * dhaRateForAdj;
-
-          const monthByType={};
-          Object.values(monthDateMap).flat().forEach(item=>{
-            const isDHA = /Duty Hour Allowance/.test(item.label);
-            const key = isDHA ? "Duty Hour Allowance" : item.label.replace(/\s*\((pre|post)-midnight\)\s*$/,"");
-            if(!monthByType[key]) monthByType[key]={...item,label:key,count:0,total:0};
-            monthByType[key].count++;
-            monthByType[key].total+=item.amount;
-          });
-          const monthTypes=Object.values(monthByType).sort((a,b)=>b.total-a.total);
-
-          // Build per-PATTERN data. Each entry day with sectors is one BP
-          // pattern. A pattern is attributed to the bid period in which it
-          // STARTS (its sign-on day), and its total is the FULL allowance for
-          // the whole pattern across every date — not just the dollars that
-          // happen to fall inside the viewed month. This is what "totals for
-          // all patterns on the BP file" means, and it makes a boundary
-          // pattern (one that spans two BPs) appear under exactly ONE bid
-          // period, so loading two adjacent BP files never counts it twice.
-          const trips = [];
-          const seenPatternKeys = new Set();
-          allWeeksToProcess.forEach(ws => {
-            const wDays = allWeeks[ws];
-            if (!wDays) return;
-            DAY_NAMES.forEach((dn, di) => {
-              const day = wDays[dn];
-              if (!day || !day.sectors?.[0]?.aSignOn) return;
-              const tripDate = weekDate(ws, di);
-              // tripDate is the pattern's sign-on day (its entry-day key). Own
-              // the pattern to the BP/month that contains that day. A pattern
-              // that starts in the previous period but spills allowances into
-              // this one is NOT this period's pattern, so it is skipped here.
-              if (!isInRange(tripDate)) return;
-              const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
-              // Full pattern total — every rated date, not clipped to range.
-              const allItems = Object.values(byDate).reduce((acc, items) => acc.concat(items), []);
-              if (allItems.length === 0) return;
-              const tripTotal = allItems.reduce((s, i) => s + i.amount, 0);
-              const secs = day.sectors;
-              const first = secs[0], last = secs[secs.length - 1];
-              const depPort = first?.depAirport || "";
-              const arrPort = last?.arrAirport || "";
-              const route = depPort && arrPort ? `${depPort} → ${arrPort}` : "";
-              const secDates = secs.map(s => s.sectorDate).filter(Boolean).sort();
-              const tripFrom = tripDate;
-              const tripTo = secDates[secDates.length - 1] || tripDate;
-              // De-dup guard: if the same boundary pattern is present in two
-              // overlapping BP uploads, skip the repeat. (The parser already
-              // merges same-day entries; this keys on start-date + route +
-              // sector count as a belt-and-braces safety net.)
-              const pKey = `${tripFrom}|${depPort}|${arrPort}|${secs.length}`;
-              if (seenPatternKeys.has(pKey)) return;
-              seenPatternKeys.add(pKey);
-              trips.push({
-                ws, dn, tripFrom, tripTo, route,
-                depPort, arrPort,
-                sectorCount: secs.length, tripTotal,
-                isReserve: !!secs[0]?.reservePeriod,
-                items: allItems,
-              });
-            });
-          });
-          trips.sort((a,b) => a.tripFrom.localeCompare(b.tripFrom));
-
-          // Merge consecutive-day continuations. If day-B starts the day
-          // after day-A ends AND day-B's departure airport is where day-A
-          // ended AND that port is NOT day-A's original start (i.e. the
-          // pilot has NOT returned to their base yet), day-B is really the
-          // same trip — typically a mid-pattern ground school day at an
-          // outstation. This keeps a BKK trip with CC/MS ground school days
-          // showing as ONE trip line rather than four.
-          {
-            const merged = [];
-            for (const trip of trips) {
-              const prev = merged[merged.length - 1];
-              const continues = prev && !prev.isReserve && !trip.isReserve
-                && prev.arrPort && prev.arrPort === trip.depPort
-                && addDays(prev.tripTo, 1) === trip.tripFrom
-                && prev.arrPort !== prev.depPortRoot; // haven't returned to trip's origin
-              if (continues) {
-                prev.tripTo = trip.tripTo;
-                prev.arrPort = trip.arrPort;
-                prev.route = `${prev.depPort} → ${trip.arrPort}`;
-                prev.sectorCount += trip.sectorCount;
-                prev.tripTotal += trip.tripTotal;
-                prev.items = prev.items.concat(trip.items);
-              } else {
-                merged.push({ ...trip, depPortRoot: trip.depPort });
-              }
-            }
-            trips.length = 0;
-            merged.forEach(m => trips.push(m));
-          }
-
-          // Aggregate items per trip into a display byType map (post-merge).
-          trips.forEach(trip => {
-            const tripByType = {};
-            trip.items.forEach(item => {
-              // For DHA items: collapse ALL variants (per-sector, continuous, pre/post-midnight)
-              // into a single "Duty Hour Allowance" entry per trip.
-              const isDHA = /Duty Hour Allowance/.test(item.label);
-              const cleanLabel = isDHA
-                ? "Duty Hour Allowance"
-                : item.label.replace(/\s*\((pre|post)-midnight\)\s*$/,"");
-              const key = cleanLabel;
-              if (!tripByType[key]) tripByType[key] = {...item, label: cleanLabel, count: 0, total: 0};
-              tripByType[key].count++;
-              tripByType[key].total += item.amount;
-            });
-            trip.byType = Object.values(tripByType).sort((a,b)=>b.total-a.total);
-            delete trip.items;
-            delete trip.depPort;
-            delete trip.arrPort;
-            delete trip.depPortRoot;
-          });
-
-          // Build a flat list of DHA items across every duty in range (sectors, reserve, ground duties)
-          const dhaItems = [];
-          allWeeksToProcess.forEach(ws => {
-            const wDays = allWeeks[ws];
-            if (!wDays) return;
-            DAY_NAMES.forEach((dn, di) => {
-              const day = wDays[dn];
-              if (!day || !day.sectors?.[0]?.aSignOn) return;
-              const tripDate = weekDate(ws, di);
-              if (!ownedByThisBp(tripDate)) return;
-              const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
-              Object.entries(byDate).forEach(([dateStr, items]) => {
-                if (!isInBaseRange(dateStr)) return;
-                items.forEach(item => {
-                  if (/Duty Hour Allowance/.test(item.label)) {
-                    dhaItems.push({...item, date: dateStr});
-                  }
-                });
-              });
-            });
-          });
-          dhaItems.sort((a,b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label));
-          const dhaTotalRaw = dhaItems.reduce((s,i) => s + i.amount, 0);
-          // Apply the DHA portion of the header-carry adjustment for the
-          // currently-selected BP (matches what monthTotal already includes).
-          const dhaRateForItems = (role === "cpt" ? RATES.DHA_CPT : RATES.DHA_FO) * INDEX_YEARS[yearIdx].mult;
-          const hm2hDha = (s) => {
-            if (!s || typeof s !== "string") return 0;
-            const parts = s.trim().split(":").map(n => parseInt(n, 10));
-            if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0;
-            return parts[0] + parts[1] / 60;
-          };
-          const selectedBpForItems = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
-          const bpHdrItems = selectedBpForItems?.headerCarry;
-          const dhaCarryInHrs  = bpHdrItems ? hm2hDha(bpHdrItems.carriedInDuty)  : 0;
-          const dhaCarryOutHrs = bpHdrItems ? hm2hDha(bpHdrItems.carriedOutDuty) : 0;
-          const dhaCarryDeltaHrs = dhaCarryInHrs - dhaCarryOutHrs;
-          const dhaTotal = dhaTotalRaw + dhaCarryDeltaHrs * dhaRateForItems;
-
-          // Build flat list of meal/incidental items in range AND group them
-          // by hotel stay. One "stay" = one hotel record. Items are assigned:
-          //   • Hotel meals (meal_b_<hi>/l_<hi>/d_<hi>)  → by hotel index
-          //   • Ground-duty meals (meal_<x>_g<idx>)     → by sectorDate falling
-          //         inside a hotel's [hotelFrom..hotelTo] window
-          //   • Per-port incidentals (meal_i_<PORT>_<n>) → by incidental date
-          //         falling inside a same-port hotel's window
-          // Items that don't match any hotel (ground duty before/after the
-          // hotel chain, or trips with no hotels) go in a fallback bucket so
-          // they remain visible in the breakdown.
-          const mealItems = [];
-          const stays = [];  // [{ key, label, ports, startDate, endDate, items, total }]
-          allWeeksToProcess.forEach(ws => {
-            const wDays = allWeeks[ws];
-            if (!wDays) return;
-            DAY_NAMES.forEach((dn, di) => {
-              const day = wDays[dn];
-              if (!day || !day.sectors?.[0]?.aSignOn) return;
-              const tripDate = weekDate(ws, di);
-              const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
-
-              // Build buckets for each hotel + one "unassigned" bucket
-              const hotelList = getHotels(day);
-              const buckets = hotelList.map((h, hi) => ({
-                key: `${tripDate}_h${hi}`,
-                hi,
-                hotel: h,
-                port: (() => {
-                  const sec = day.sectors[h.afterSectorIdx ?? 0];
-                  return sec?.arrAirport || h.hotelFrom;
-                })(),
-                from: h.hotelFrom,
-                to: h.hotelTo,
-                items: [],
-              }));
-              const unassigned = { key: `${tripDate}_unassigned`, hi: -1, port: null, items: [] };
-
-              // Helper: assign item to a hotel bucket by date+port
-              const assignByDate = (item, date, port) => {
-                // Prefer port-matching hotel
-                if (port) {
-                  const sameAirport = buckets.filter(b => b.port === port);
-                  for (const b of sameAirport) {
-                    if (date >= b.from && date <= b.to) return b.items.push(item);
-                  }
-                  if (sameAirport.length) return sameAirport[0].items.push(item);
-                }
-                // Otherwise any hotel whose window contains the date
-                for (const b of buckets) {
-                  if (date >= b.from && date <= b.to) return b.items.push(item);
-                }
-                unassigned.items.push(item);
-              };
-
-              Object.entries(byDate).forEach(([dateStr, items]) => {
-                if (!isInRange(dateStr)) return;
-                items.forEach(item => {
-                  if (!/meal_|Breakfast|Lunch|Dinner|Incidental/.test(item.id + item.label)) return;
-                  const enriched = { ...item, date: dateStr };
-                  mealItems.push(enriched);
-
-                  // Hotel meal: id like meal_b_<hi>_<date>
-                  const hotelMealMatch = item.id.match(/^meal_[bld]_(\d+)_/);
-                  if (hotelMealMatch) {
-                    const hi = parseInt(hotelMealMatch[1], 10);
-                    if (buckets[hi]) {
-                      buckets[hi].items.push(enriched);
-                    } else {
-                      unassigned.items.push(enriched);
-                    }
-                    return;
-                  }
-
-                  // Ground-duty meal: id like meal_<bld>_g<sectorIdx>_<date>
-                  const groundMealMatch = item.id.match(/^meal_[bld]_g\d+_/);
-                  if (groundMealMatch) {
-                    assignByDate(enriched, dateStr, null);
-                    return;
-                  }
-
-                  // Per-port incidental: id like meal_i_<PORT>_<n>_<idx>
-                  const incMatch = item.id.match(/^meal_i_([A-Z]{3,4})_/);
-                  if (incMatch) {
-                    assignByDate(enriched, dateStr, incMatch[1]);
-                    return;
-                  }
-
-                  // Fallback
-                  assignByDate(enriched, dateStr, null);
-                });
-              });
-
-              // Emit non-empty buckets as stays
-              buckets.forEach(b => {
-                if (b.items.length === 0) return;
-                const dates = b.items.map(i => i.date).sort();
-                stays.push({
-                  key: b.key,
-                  port: b.port,
-                  label: b.port || "Hotel",
-                  startDate: b.from || dates[0],
-                  endDate: b.to || dates[dates.length - 1],
-                  items: b.items,
-                  total: b.items.reduce((s, i) => s + i.amount, 0),
-                });
-              });
-              if (unassigned.items.length > 0) {
-                const dates = unassigned.items.map(i => i.date).sort();
-                stays.push({
-                  key: unassigned.key,
-                  port: null,
-                  label: "Ground duties (no hotel)",
-                  startDate: dates[0],
-                  endDate: dates[dates.length - 1],
-                  items: unassigned.items,
-                  total: unassigned.items.reduce((s, i) => s + i.amount, 0),
-                });
-              }
-            });
-          });
-          // Merge consecutive-day stays at the SAME port so multi-hotel slips
-          // (e.g. BKK ground school split across CC and MS days each producing
-          // a separate hotel bucket) present as one line "9 May – 12 May BKK".
-          // Rule: if the next stay's startDate is within 1 day of prev's
-          // endDate AND both are at the same port, combine. "Ground duties
-          // (no hotel)" buckets (port === null) never merge.
-          stays.sort((a,b) => a.startDate.localeCompare(b.startDate));
-          {
-            const mergedStays = [];
-            for (const stay of stays) {
-              const prev = mergedStays[mergedStays.length - 1];
-              const canMerge = prev
-                && prev.port && stay.port
-                && prev.port === stay.port
-                && daysBetween(prev.endDate, stay.startDate) <= 1;
-              if (canMerge) {
-                prev.endDate = stay.endDate > prev.endDate ? stay.endDate : prev.endDate;
-                prev.items = prev.items.concat(stay.items);
-                prev.total += stay.total;
-              } else {
-                mergedStays.push({ ...stay });
-              }
-            }
-            stays.length = 0;
-            mergedStays.forEach(s => stays.push(s));
-          }
-          mealItems.sort((a,b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label));
-          const mealTotal = mealItems.reduce((s,i) => s + i.amount, 0);
-
-          // Build flat list of credit hour items
-          const creditItems = [];
-          allWeeksToProcess.forEach(ws => {
-            const wDays = allWeeks[ws];
-            if (!wDays) return;
-            DAY_NAMES.forEach((dn, di) => {
-              const day = wDays[dn];
-              if (!day || (!day.sectors?.[0]?.aSignOn && !day.sectors?.[0]?.isAnnualLeave)) return;
-              const tripDate = weekDate(ws, di);
-              if (!ownedByThisBp(tripDate)) return;
-              // Track this day's credit so an OL13 reserve-activation floor of
-              // 4h can be applied at the end if the natural credit falls short.
-              const dayStartIdx = creditItems.length;
-              let dayInRange = false;
-              day.sectors.forEach((sec, si) => {
-                const secDate = sec.sectorDate || tripDate;
-                // Attribute credit by sectorDate. Cross-BP boundary shifts are
-                // handled downstream by the Month/Roster totalizer applying
-                // the roster header's Carried In/Out credit values.
-                if (!isInBaseRange(secDate)) return;
-                dayInRange = true;
-
-                // CC, CCR and MD days attract DHA only (DHA is paid in
-                // calcAllowancesByDate) — they earn NO credit hours, so they do
-                // not count toward the 70h overtime threshold or flight pay.
-                if (/^(CCR|CC|MD)\d*\b/i.test(sec.flightNo || "")) return;
-
-                if (sec.isAnnualLeave) {
-                  // Annual leave = flat 2.5h credit per day
-                  creditItems.push({ date: secDate, label: "Annual Leave", credit: 2.5, type: "Leave" });
-                } else if (sec.reservePeriod) {
-                  // Reserve = flat 4h credit
-                  creditItems.push({ date: secDate, label: sec.flightNo || "Reserve", credit: 4, type: "Reserve" });
-                } else if (sec.isGroundDuty || /^(SIM|EF)\d*/i.test(sec.flightNo)) {
-                  // SIM/EF and other ground duties = min(duty hours, 4)
-                  const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
-                  if (on == null || off == null) return;
-                  let mins = off - on; if (mins < 0) mins += 1440;
-                  creditItems.push({ date: secDate, label: sec.flightNo, credit: Math.min(mins / 60, 4), type: "Ground" });
-                } else {
-                  // Flight sector — compute block time from flight dep/arr times.
-                  // For sectors imported from a BP roster (`flightDepTime` set),
-                  // we use those times directly. For MANUAL sectors we derive a
-                  // notional block window from sign-on / sign-off:
-                  //   • Operating: signOn + 60 min  →  signOff − 15 min
-                  //   • Positioning/pax: signOn + 30 min → signOff − 15 min
-                  const isManual = !sec.flightDepTime;
-                  const preOffset = isManual ? (sec.isPositioning ? 30 : 60) : 0;
-                  const postOffset = isManual ? 15 : 0;
-                  const shiftHHMM = (hhmm, deltaMin) => {
-                    const m = parseTime(hhmm);
-                    if (m == null) return hhmm;
-                    let t = m + deltaMin;
-                    while (t < 0)    t += 1440;
-                    while (t >= 1440) t -= 1440;
-                    return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
-                  };
-                  const depTime = isManual
-                    ? shiftHHMM(sec.aSignOn, +preOffset)
-                    : sec.flightDepTime;
-                  const arrTime = isManual
-                    ? shiftHHMM(sec.aSignOff, -postOffset)
-                    : sec.flightArrTime;
-                  const depCode = sec.depAirport, arrCode = sec.arrAirport;
-                  if (!depTime || !arrTime || !depCode || !arrCode) return;
-                  const depAp = AIRPORTS.find(a => a.code === depCode);
-                  const arrAp = AIRPORTS.find(a => a.code === arrCode);
-                  if (!depAp || !arrAp) return;
-                  const depMin = parseTime(depTime), arrMin = parseTime(arrTime);
-                  if (depMin == null || arrMin == null) return;
-                  // Convert to UTC using DST-aware offsets
-                  const depOffsetH = getUtcOffsetHours(depCode, sec.flightDepDate || secDate);
-                  const arrOffsetH = getUtcOffsetHours(arrCode, sec.flightDepDate || secDate);
-                  const depUtc = depMin - depOffsetH * 60;
-                  const arrUtc = arrMin - arrOffsetH * 60;
-                  let blockMins = arrUtc - depUtc;
-                  if (blockMins < 0) blockMins += 1440;
-                  const blockHrs = blockMins / 60;
-                  const mult = sec.isPositioning ? 0.5 : 1.0;
-                  const credit = blockHrs * mult;
-                  const tag = sec.isPositioning ? " (pax 0.5×)" : "";
-                  creditItems.push({
-                    date: secDate,
-                    label: `${sec.flightNo} ${depCode}→${arrCode}${tag}`,
-                    credit,
-                    type: sec.isPositioning ? "Positioning" : "Operating",
-                    blockHrs,
-                  });
-                }
-              });
-              // OL13 reserve activation: bump this day's credit to 4h if the
-              // natural sum is below the floor. Booked as a synthetic reserve
-              // item so the user can see why the bump appears in the breakdown.
-              if (day.ol13Reserve && dayInRange) {
-                const daySum = creditItems.slice(dayStartIdx)
-                  .reduce((s, it) => s + it.credit, 0);
-                if (daySum < 4) {
-                  creditItems.push({
-                    date: tripDate,
-                    label: "OL13 Reserve activation (4h floor)",
-                    credit: 4 - daySum,
-                    type: "Reserve",
-                  });
-                }
-              }
-            });
-          });
-          creditItems.sort((a,b) => a.date.localeCompare(b.date));
-          const creditTotalRaw = creditItems.reduce((s,i) => s + i.credit, 0);
-          // Apply Qantas's authoritative boundary-attribution values from the
-          // roster header of the currently-selected BP (if any). CIn − COut
-          // shifts hours into/out of this BP for pay purposes; sectors we
-          // attribute by raw sectorDate get corrected here.
-          const hm2h = (s) => {
-            if (!s || typeof s !== "string") return 0;
-            const parts = s.trim().split(":").map(n => parseInt(n, 10));
-            if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return 0;
-            return parts[0] + parts[1] / 60;
-          };
-          const selectedBpEntry = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
-          const bpHdr = selectedBpEntry?.headerCarry;
-          const headerDutyDelta   = bpHdr ? hm2h(bpHdr.carriedInDuty)   - hm2h(bpHdr.carriedOutDuty)   : 0;
-          const headerCreditDelta = bpHdr ? hm2h(bpHdr.carriedInCredit) - hm2h(bpHdr.carriedOutCredit) : 0;
-          const creditTotal = creditTotalRaw + headerCreditDelta;
-          // Overtime hours and hourly rate are rounded to 2 dp before multiplying
-          // so the displayed values (e.g. "3.87h × $231.85/h = $897.26") reconcile.
-          // See the detail panel further down — same rounding applied there.
-          const overtimeHrs = creditTotal > 70 ? Math.round((creditTotal - 70) * 100) / 100 : 0;
-          // Derive the effective YOS for THIS view's date range. The static
-          // `yos` state is set at upload time and reflects whichever roster
-          // file was processed last — which is wrong when multiple BPs span
-          // the 1 Jan 2026 freeze date: clicking a pre-freeze BP shouldn't
-          // pay OT at the post-freeze bumped salary. We re-derive based on
-          // the matched pilot's join date and the current range here.
-          //   • Past BP (range ends before today) → use range start
-          //   • Current/future BP                → use today
-          //   • Custom range (no matching BP)    → use range start, same rule
-          const todayISO = new Date().toISOString().slice(0, 10);
-          const effRefDate = (customTo && customTo < todayISO)
-            ? (customFrom || todayISO)
-            : todayISO;
-          const effectiveYos = pilotJoiningDate
-            ? computeYosTier(pilotJoiningDate, effRefDate, role)
-            : yos;
-          const useYos = effectiveYos >= 0 ? effectiveYos : yos;
-          const overtimePay = (overtimeHrs > 0 && useYos >= 0)
-            ? overtimeHrs * (Math.round((SALARY[aircraft][role][useYos][yearIdx] / 750) * 100) / 100)
-            : 0;
-          // Overtime is only meaningful over a whole BP (the 70h threshold is a
-          // per-BP figure). Include it in the headline total only when a BP is
-          // selected (custom range exactly matches one of the uploaded BPs).
-          // Hide it for arbitrary custom ranges or month views — otherwise the
-          // total would be misleading.
-          const isBpSelected = useCustom && rosterBPs.some(b => b.from === customFrom && b.to === customTo);
-          const includeOvertime = isBpSelected;
-          const monthGrandTotal = monthTotal + (includeOvertime ? overtimePay : 0);
+          const { mvYear, mvMonth, monthName, useCustom, rangeLabel, weeksInRange,
+                  monthTypes, trips, dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaRateForItems,
+                  mealItems, mealTotal, stays, creditItems, creditTotal, headerCreditDelta,
+                  bpHdr, overtimeHrs, overtimePay, effectiveYos, useYos,
+                  selectedBpForItems, bpHdrItems,
+                  isBpSelected, includeOvertime, monthGrandTotal }
+            = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+                             pilotJoiningDate, customFrom, customTo, monthView });
 
           return (
             <div className="fadein">
@@ -4659,6 +4871,217 @@ export default function App() {
                   )}
                 </>
               )}
+            </div>
+          );
+        })()}
+
+        {/* ══ PAY CHECK ══ */}
+        {tab==="paycheck"&&(()=>{
+          const d = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+                                   pilotJoiningDate, customFrom, customTo, monthView });
+          const bp = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
+          const pc = derivePayCheck(paySlip, d);
+
+          const Header = (
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>PAYSLIP RECONCILIATION</div>
+              <div style={{fontFamily:heading,fontSize:25,fontWeight:700,color:"#1A1A2E"}}>
+                Pay Check{bp ? ` — BP ${bp.bp}` : ""}
+              </div>
+            </div>
+          );
+
+          if (!bp) {
+            return (
+              <div className="fadein">
+                {Header}
+                <Card>
+                  <div style={{fontSize:13,color:"#2D3239",lineHeight:1.7}}>
+                    Select a bid period first — open <strong>MONTH / ROSTER</strong> and click a BP chip.
+                    <div style={{fontSize:11,color:"#4A4F57",marginTop:8,fontFamily:mono,lineHeight:1.6}}>
+                      A payslip is only comparable against a whole bid period: the 70-hour overtime
+                      threshold and the roster header's carried in/out hours both settle per BP, so an
+                      arbitrary date range cannot be reconciled.
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            );
+          }
+
+          return (
+            <div className="fadein">
+              {Header}
+
+              {/* Headline */}
+              <Card style={{marginBottom:18,textAlign:"center",padding:"18px"}}>
+                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:6}}>
+                  {fmtFull(bp.from)} — {fmtFull(bp.to)}
+                </div>
+                {pc.anyInput ? (
+                  <>
+                    <div style={{fontFamily:mono,fontSize:34,fontWeight:700,letterSpacing:-1.2,
+                      color:pc.off?"#CC2E2E":"#1FA06E"}}>
+                      {pc.off ? `${pc.delta>0?"+":"−"}$${fmtAUD(Math.abs(pc.delta))}` : "✓ All matched"}
+                    </div>
+                    <div style={{fontSize:11,color:"#4A4F57",fontFamily:mono,marginTop:6}}>
+                      payslip ${fmtAUD(pc.paidTotal)} · calculated ${fmtAUD(pc.calcTotal)}
+                      {pc.off && <span style={{color:"#CC2E2E"}}> · {pc.delta>0?"paid more than calculated":"paid less than calculated"}</span>}
+                    </div>
+                  </>
+                ) : (
+                  <div style={{fontSize:13,color:"#4A4F57",lineHeight:1.7}}>
+                    Enter what your payslip actually paid, below. Each line is matched to this bid
+                    period's own figures and any difference is shown.
+                  </div>
+                )}
+              </Card>
+
+              {/* ── CR MEALS ATO ── */}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
+                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>CR MEALS ATO — {d.payStays.length} STAY{d.payStays.length!==1?"S":""} THIS BP</div>
+                <button className="addBtn" onClick={()=>addPayRow("meals",{from:"",to:"",amount:""})}
+                  style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#1E8AC0",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>+ Add meal line</button>
+              </div>
+              <Card style={{marginBottom:18}}>
+                {paySlip.meals.length===0 && (
+                  <div style={{fontSize:12,color:"#4A4F57",lineHeight:1.7}}>
+                    Add one line per <span style={{fontFamily:mono}}>CR MEALS ATO</span> row on the payslip —
+                    its date range and amount. Leave the "to" date blank for a same-day slip.
+                    <button onClick={()=>d.payStays.forEach(s=>addPayRow("meals",{from:s.startDate,to:s.endDate===s.startDate?"":s.endDate,amount:""}))}
+                      style={{display:"block",marginTop:10,background:"transparent",border:"1px solid #8BAFCF",borderRadius:6,color:"#1E8AC0",fontSize:11,cursor:"pointer",padding:"5px 10px",fontFamily:mono}}>
+                      Pre-fill {d.payStays.length} line{d.payStays.length!==1?"s":""} from this roster
+                    </button>
+                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid #D4CCC0"}}>
+                      <div style={{fontSize:10,letterSpacing:1,color:"#8A8577",fontFamily:mono,marginBottom:5}}>THIS BID PERIOD'S STAYS</div>
+                      {d.payStays.map(s=>(
+                        <div key={s.key} style={{fontSize:11,color:"#4A4F57",fontFamily:mono,lineHeight:1.8}}>
+                          {s.port||"—"} · {fmtShort(s.startDate)}–{fmtShort(s.endDate)} · ${fmtAUD(s.total)}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {paySlip.meals.map(line=>{
+                  const row = pc.mealRows.find(r=>r.id===line.id);
+                  return (
+                    <PayRowShell key={line.id} onRemove={()=>removePayRow("meals",line.id)}>
+                      <DInput label="FROM" value={line.from} onChange={v=>updPayRow("meals",line.id,"from",v)}/>
+                      <DInput label="TO" value={line.to} onChange={v=>updPayRow("meals",line.id,"to",v)}/>
+                      <MInput label="PAID $" value={line.amount} onChange={v=>updPayRow("meals",line.id,"amount",v)}/>
+                      <div style={{minWidth:190,paddingBottom:4}}>
+                        {row?.stay ? (
+                          <>
+                            <div style={{fontSize:11,color:"#2D3239",fontFamily:mono,marginBottom:3}}>
+                              {row.stay.port||"—"} · {fmtShort(row.stay.startDate)}–{fmtShort(row.stay.endDate)}
+                            </div>
+                            <Delta paid={row.paid} calc={row.stay.total} off={row.off}/>
+                          </>
+                        ) : (
+                          <span style={{fontSize:11,color:"#CC2E2E",fontFamily:mono}}>no matching stay in this BP</span>
+                        )}
+                      </div>
+                    </PayRowShell>
+                  );
+                })}
+                {paySlip.meals.length>0 && pc.unmatchedStays.length>0 && (
+                  <div style={{marginTop:10,padding:"10px 12px",background:"#CC2E2E10",border:"1px solid #CC2E2E40",borderRadius:8}}>
+                    <div style={{fontSize:11,fontWeight:700,color:"#CC2E2E",fontFamily:mono,marginBottom:5}}>
+                      {pc.unmatchedStays.length} STAY{pc.unmatchedStays.length!==1?"S":""} WITH NO PAYSLIP LINE
+                    </div>
+                    {pc.unmatchedStays.map(s=>(
+                      <div key={s.key} style={{fontSize:11,color:"#2D3239",fontFamily:mono,lineHeight:1.8}}>
+                        {s.port||"—"} · {fmtShort(s.startDate)}–{fmtShort(s.endDate)} · ${fmtAUD(s.total)}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              {/* ── DUTY HOUR AL + OVERTIME ── */}
+              <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:9}}>DUTY HOURS &amp; OVERTIME</div>
+              <Card style={{marginBottom:18}}>
+                <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap",marginBottom:12}}>
+                  <MInput label="DUTY HOUR AL — PAID $" value={paySlip.dha} onChange={v=>setPayField("dha",v)} width={140}/>
+                  <div style={{paddingBottom:4}}>
+                    <Delta paid={pc.dha?.paid ?? null} calc={d.dhaTotal} off={pc.dha?.off}/>
+                    <div style={{fontSize:10,color:"#8A8577",fontFamily:mono,marginTop:3}}>
+                      {(d.dhaTotal/((role==="cpt"?RATES.DHA_CPT:RATES.DHA_FO)*INDEX_YEARS[yearIdx].mult)).toFixed(2)}h
+                      {d.dhaCarryDeltaHrs!==0 && ` (incl. ${d.dhaCarryDeltaHrs>0?"+":""}${d.dhaCarryDeltaHrs.toFixed(2)}h header carry)`}
+                    </div>
+                  </div>
+                </div>
+                <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap"}}>
+                  <MInput label="OVERTIME — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={140}/>
+                  <div style={{paddingBottom:4}}>
+                    <Delta paid={pc.ot?.paid ?? null} calc={d.overtimePay} off={pc.ot?.off}/>
+                    <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"#CC2E2E":"#8A8577",fontFamily:mono,marginTop:3}}>
+                      {d.useYos<0&&d.overtimeHrs>0
+                        ? "select Years of Service to resolve overtime"
+                        : `${d.creditTotal.toFixed(2)}h credit · ${d.overtimeHrs.toFixed(2)}h over 70h`}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* ── CALL IN / DAY OFF ── */}
+              {[["callIns","CALL IN / DAY OFF WORKED","+ Add call-in",pc.callIns],
+                ["dvas","DUTY VARIATION ALLOWANCE","+ Add DVA",pc.dvas]].map(([key,title,addLbl,res])=>(
+                <div key={key}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
+                    <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>{title}</div>
+                    <button className="addBtn" onClick={()=>addPayRow(key,{date:"",amount:""})}
+                      style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#1E8AC0",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>{addLbl}</button>
+                  </div>
+                  <Card style={{marginBottom:18}}>
+                    {paySlip[key].length===0 && res.unmatched.length===0 && (
+                      <div style={{fontSize:12,color:"#4A4F57"}}>Nothing on the payslip and nothing calculated for this BP.</div>
+                    )}
+                    {paySlip[key].map(line=>{
+                      const row = res.rows.find(r=>r.id===line.id);
+                      return (
+                        <PayRowShell key={line.id} onRemove={()=>removePayRow(key,line.id)}>
+                          <DInput label="DATE" value={line.date} onChange={v=>updPayRow(key,line.id,"date",v)}/>
+                          <MInput label="PAID $" value={line.amount} onChange={v=>updPayRow(key,line.id,"amount",v)}/>
+                          <div style={{minWidth:190,paddingBottom:4}}>
+                            {row?.item ? (
+                              <>
+                                <div style={{fontSize:11,color:"#2D3239",fontFamily:mono,marginBottom:3}}>
+                                  {row.item.icon} {fmtShort(row.item.date)} · {row.item.label}
+                                </div>
+                                <Delta paid={row.paid} calc={row.item.amount} off={row.off}/>
+                              </>
+                            ) : (
+                              <>
+                                <div style={{fontSize:11,color:"#CC2E2E",fontFamily:mono,marginBottom:3}}>the calculator pays nothing here</div>
+                                <Delta paid={row?.paid ?? null} calc={0} off={row?.off}/>
+                              </>
+                            )}
+                          </div>
+                        </PayRowShell>
+                      );
+                    })}
+                    {res.unmatched.length>0 && (
+                      <div style={{marginTop:paySlip[key].length?10:0,padding:"10px 12px",background:"#CC2E2E10",border:"1px solid #CC2E2E40",borderRadius:8}}>
+                        <div style={{fontSize:11,fontWeight:700,color:"#CC2E2E",fontFamily:mono,marginBottom:5}}>
+                          CALCULATED BUT NOT ON THE PAYSLIP
+                        </div>
+                        {res.unmatched.map((i,n)=>(
+                          <div key={n} style={{fontSize:11,color:"#2D3239",fontFamily:mono,lineHeight:1.8}}>
+                            {i.icon} {fmtShort(i.date)} · {i.label} · ${fmtAUD(i.amount)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                </div>
+              ))}
+
+              <div style={{fontSize:10,color:"#8A8577",fontFamily:mono,lineHeight:1.7,marginBottom:20}}>
+                Meal lines are matched to hotel stays by date span, over a window that extends past the
+                bid period so a stay checking out after the BP ends keeps its whole total. Duty hours and
+                credit hours are unaffected by that window.
+              </div>
             </div>
           );
         })()}

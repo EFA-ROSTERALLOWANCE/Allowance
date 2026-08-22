@@ -47,6 +47,26 @@ Known intentional differences (NOT allowance drift — leave as-is):
 After ANY allowance-logic change, re-verify parity, e.g. diff the shared
 constants/functions between the two sources.
 
+## `derivePeriod` (main calculator only)
+
+All the Month/Roster maths — range resolution, `trips`, `dhaItems`, meal
+`stays`, `creditItems`, overtime — lives in the module-level `derivePeriod()`
+in `efa-duty-calculator-v5.jsx`, not inline in the render. Both the
+MONTH / ROSTER and PAY CHECK tabs call it, so they cannot disagree. Add a
+field to its return object rather than recomputing anything in a tab.
+
+It returns meal stays twice, and the difference matters:
+
+- `stays` — clipped to the viewed range. What MONTH / ROSTER shows.
+- `payStays` — the same grouping over the BP window extended 7 days
+  (`isInBaseRange`) and filtered by `ownedByThisBp`. A trip that checks out
+  after the BP ends keeps its whole meal total, which is what payroll pays on
+  one `CR MEALS ATO` line. Used by PAY CHECK only — it must never feed DHA or
+  credit hours, which settle via the roster header's carried in/out values.
+
+This function is main-calculator-only and is NOT part of the parity surface
+above; the bulk app has its own aggregation.
+
 ## Build
 
 Both html files are produced the same way (React pinned to the version already
