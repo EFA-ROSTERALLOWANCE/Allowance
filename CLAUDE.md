@@ -65,7 +65,41 @@ It returns meal stays twice, and the difference matters:
   credit hours, which settle via the roster header's carried in/out values.
 
 This function is main-calculator-only and is NOT part of the parity surface
-above; the bulk app has its own aggregation.
+above; the bulk app has its own aggregation. `derivePayCheck()` sits alongside
+it and matches typed payslip lines to what it produced — meal lines to
+`payStays` by date span, call-in/DVA lines to `monthDateMap` items by date.
+
+## Payslip PDF reader (`pc*` functions, main calculator only)
+
+PAY CHECK can read the earnings table straight out of a payslip PDF. A Qantas
+payslip is generated text, not a scan, so this is hand-rolled in ~200 lines
+with **no library and no network call** — keeping the app dependency-free.
+`pcInflate` → `pcTokens` → `pcPlaceText` → `pcPdfRows` → `pcParsePayslip`.
+
+PDF places text by coordinate, not by row, so `pcPlaceText` replays the text
+operators (`Tm`/`Td`/`TD`/`T*`/`Tj`/`TJ`) to recover each string's position and
+`pcPdfRows` buckets those into visual rows. Three things will bite you:
+
+- **`endstream` contains `stream`.** The stream-finding regex must exclude a
+  preceding letter, or every match lands inside the previous terminator and the
+  real content stream is skipped entirely (the failure looks like "no readable
+  text", not a crash).
+- **Trailing EOL breaks inflate.** The span up to `endstream` usually has a
+  trailing newline that `DecompressionStream` rejects as trailing junk — unlike
+  Node's `zlib`, which tolerates it. Use the declared `/Length` where it is a
+  plain integer, and trim trailing whitespace otherwise.
+- **A payslip is two columns.** One visual row can hold an earnings line *and*
+  unrelated text from the other column at the same height. `pcParsePayslip`
+  therefore locates codes by position within the row and reads only the cells
+  to the right of each — never assume the code is `cells[0]`.
+
+`PC_CODES` maps payslip codes to what the calculator compares. Anything else is
+collected in `ignored` and shown to the user as skipped rather than dropped
+silently. Add a code there rather than loosening the parser.
+
+The reader depends on `DecompressionStream` (guarded, with a manual-entry
+fallback message) and is browser-only — it is not exercised by any build step,
+so test it by loading a real payslip through the UI.
 
 ## Build
 
@@ -78,6 +112,11 @@ esbuild <src>/main.jsx --bundle --minify --format=iife --jsx=automatic \
 ```
 
 where `main.jsx` is `import App from "./App.jsx"; createRoot(#root).render(<App/>)`.
-The bundle is then wrapped in the existing HTML shell (lines 1–37 of the current
-html: `<head>` + loading-spinner script), closed with `</script></body></html>`.
-Keep that shell byte-for-byte; only the `<script>` bundle changes between builds.
+
+The bundle is then wrapped in the existing HTML shell — **lines 1–38** of the
+current html: `<head>`, the loading-spinner script, and the opening `<script>`
+on line 38 that the bundle goes inside. Close with `</script></body></html>`.
+Keep that shell byte-for-byte (it is CRLF; only the bundle is LF); only the
+`<script>` bundle changes between builds. Assert on line 38 being exactly
+`<script>` before writing, so a shell edit fails the build instead of silently
+emitting a bundle that sits outside any script tag.
