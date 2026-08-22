@@ -1696,7 +1696,8 @@ function HelpModal({ onClose }) {
     ["Or use a custom range", "Set the Custom range dates for any window you like. Custom ranges show just the allowances captured in those dates — overtime and the Qantas header duty/credit carry are deliberately excluded."],
     ["Set Years of Service", "Overtime pay needs your years of service. It's filled in automatically when your name is found in the pilot list; otherwise pick it from the selector."],
     ["Dig into the detail", "Expand the DHA, meal, credit-hour and pattern breakdowns to see every line item and how each figure is built. Use Export CSV to save a copy."],
-    ["Check your payslip", "PAY CHECK compares what you were actually paid against the figures above. Select a BP chip first, then type in the earnings lines from your payslip — each CR MEALS ATO date range and amount, DUTY HOUR AL, any call-in or DVA, and overtime. “Pre-fill from this roster” adds a meal line per hotel stay with the dates already filled, so you only type the amounts."],
+    ["Check your payslip", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA and overtime — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
+    ["Or enter it by hand", "No PDF, or a payslip it can't read? Select a BP chip and type the lines in yourself. “Pre-fill from this roster” adds a meal line per hotel stay with the dates already filled, so you only type the amounts. Anything read from a PDF stays editable."],
     ["Reading the result", "Every line shows the calculator's own figure beside yours, with a ✓ or the dollar difference. The headline is the total variance. It also flags a stay with no matching payslip line — an unpaid trip — and a payment the calculator says you weren't owed. A difference is a prompt to check, not proof of an error: these are estimates."],
     ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster data and resets everything. Payslip figures you type into PAY CHECK are not saved — they clear when you reload."],
   ];
@@ -3014,6 +3015,226 @@ function pcMoney(s) {
   return Number.isFinite(n) ? n : null;
 }
 
+// ─── Payslip PDF reader ───────────────────────────────────────────────────────
+// Reads the earnings table straight out of a payslip PDF, entirely in the
+// browser — the file is never uploaded anywhere. A Qantas payslip is generated
+// text (not a scan), so the words are in the file and no OCR is involved.
+//
+// PDF lays text out by position, not by row: each string carries its own
+// coordinates. So we replay the text operators to get (x, y, text), bucket by
+// y into visual rows, sort each row by x, and read the columns off that.
+
+// PDF "FlateDecode" is zlib, which DecompressionStream("deflate") handles.
+// Some writers emit raw deflate instead, so fall back to that.
+async function pcInflate(bytes) {
+  for (const fmt of ["deflate", "deflate-raw"]) {
+    try {
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream(fmt));
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    } catch { /* try the next format */ }
+  }
+  return null;
+}
+
+// Minimal content-stream tokenizer. Only what text extraction needs: numbers,
+// (strings) with escapes and balanced parens, [arrays], /names and operators.
+function pcTokens(s) {
+  const out = [];
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (c === "(") {                                   // string
+      let depth = 1, j = i + 1, buf = "";
+      while (j < s.length && depth > 0) {
+        const ch = s[j];
+        if (ch === "\\") {
+          const n = s[j + 1];
+          const esc = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f" };
+          if (n in esc) { buf += esc[n]; j += 2; }
+          else if (n >= "0" && n <= "7") {             // \ddd octal
+            const m = s.slice(j + 1).match(/^[0-7]{1,3}/)[0];
+            buf += String.fromCharCode(parseInt(m, 8)); j += 1 + m.length;
+          } else { buf += n; j += 2; }
+          continue;
+        }
+        if (ch === "(") depth++;
+        if (ch === ")") { depth--; if (depth === 0) { j++; break; } }
+        buf += ch; j++;
+      }
+      out.push({ k: "str", v: buf }); i = j; continue;
+    }
+    if (c === "<" && s[i + 1] === "<") { out.push({ k: "op", v: "<<" }); i += 2; continue; }
+    if (c === ">" && s[i + 1] === ">") { out.push({ k: "op", v: ">>" }); i += 2; continue; }
+    if (c === "<") {                                   // <hex> string
+      const j = s.indexOf(">", i);
+      const hex = s.slice(i + 1, j < 0 ? s.length : j).replace(/\s/g, "");
+      let buf = "";
+      for (let h = 0; h + 1 < hex.length; h += 2) buf += String.fromCharCode(parseInt(hex.substr(h, 2), 16));
+      out.push({ k: "str", v: buf }); i = (j < 0 ? s.length : j + 1); continue;
+    }
+    if (c === "[" || c === "]") { out.push({ k: c }); i++; continue; }
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === "%") { while (i < s.length && s[i] !== "\n") i++; continue; }
+    const rest = s.slice(i);
+    let m = rest.match(/^[-+]?[\d.]+/);
+    if (m && /\d/.test(m[0])) { out.push({ k: "num", v: parseFloat(m[0]) }); i += m[0].length; continue; }
+    m = rest.match(/^\/[^\s/[\]()<>]*/);
+    if (m) { out.push({ k: "name", v: m[0] }); i += m[0].length; continue; }
+    m = rest.match(/^[A-Za-z'"*][A-Za-z0-9*'"]*/);
+    if (m) { out.push({ k: "op", v: m[0] }); i += m[0].length; continue; }
+    i++;                                               // unknown byte, skip
+  }
+  return out;
+}
+
+// Replay the text operators, emitting one entry per drawn string.
+function pcPlaceText(content) {
+  const toks = pcTokens(content);
+  const items = [];
+  let x = 0, y = 0, lx = 0, ly = 0, leading = 0;
+  const stack = [];
+  const emit = (t) => { if (t.trim()) items.push({ x, y, t }); };
+  for (let i = 0; i < toks.length; i++) {
+    const tk = toks[i];
+    if (tk.k === "[") { stack.length = 0; continue; }
+    if (tk.k === "num" || tk.k === "str") { stack.push(tk); continue; }
+    if (tk.k !== "op") continue;
+    const nums = stack.filter(s => s.k === "num").map(s => s.v);
+    const strs = stack.filter(s => s.k === "str").map(s => s.v);
+    switch (tk.v) {
+      case "BT": x = y = lx = ly = 0; break;
+      case "Tm": if (nums.length >= 6) { lx = x = nums[nums.length-2]; ly = y = nums[nums.length-1]; } break;
+      case "TD": if (nums.length >= 2) leading = -nums[nums.length-1];  // falls through
+      case "Td": if (nums.length >= 2) { lx += nums[nums.length-2]; ly += nums[nums.length-1]; x = lx; y = ly; } break;
+      case "TL": if (nums.length) leading = nums[nums.length-1]; break;
+      case "T*": ly -= leading; x = lx; y = ly; break;
+      case "Tj": case "'": case "\"":
+        if (tk.v !== "Tj") { ly -= leading; x = lx; y = ly; }
+        if (strs.length) emit(strs[strs.length-1]);
+        break;
+      case "TJ": emit(strs.join("")); break;   // kerning offsets don't matter here
+      default: break;
+    }
+    stack.length = 0;
+  }
+  return items;
+}
+
+// Pull every inflatable stream out of the PDF and turn it into visual rows.
+async function pcPdfRows(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let raw = "";
+  for (let i = 0; i < bytes.length; i += 8192)
+    raw += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+  if (!raw.startsWith("%PDF")) throw new Error("that doesn't look like a PDF");
+  if (/\/Encrypt\b/.test(raw)) throw new Error("this PDF is password-protected");
+
+  const items = [];
+  // The keyword must not be the tail of "endstream", or each match would land
+  // inside the previous stream's terminator and the real content be skipped.
+  const re = /(?:^|[^A-Za-z])stream\r?\n?/g;
+  let m;
+  while ((m = re.exec(raw))) {
+    const start = m.index + m[0].length;
+    const end = raw.indexOf("endstream", start);
+    if (end < 0) break;
+    const dict = raw.slice(Math.max(0, m.index - 400), m.index);
+    // The span up to "endstream" usually carries a trailing EOL, which
+    // DecompressionStream rejects as trailing junk. Prefer the declared
+    // /Length (ignoring indirect "N 0 R" forms) and fall back to trimming.
+    let stop = end;
+    const lm = dict.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
+    if (lm) {
+      const declared = start + parseInt(lm[1], 10);
+      if (declared > start && declared <= end) stop = declared;
+    }
+    while (stop > start && /[\s\0]/.test(raw[stop - 1])) stop--;
+    let text = null;
+    if (/\/FlateDecode/.test(dict)) {
+      const out = await pcInflate(bytes.subarray(start, stop));
+      if (out) text = new TextDecoder("latin1").decode(out);
+    } else {
+      text = raw.slice(start, stop);                   // uncompressed content stream
+    }
+    if (text && /\bT[jJ]\b/.test(text)) items.push(...pcPlaceText(text));
+    re.lastIndex = end + "endstream".length;
+  }
+  if (!items.length) throw new Error("no readable text — this PDF may be a scan or an image");
+
+  // Bucket into rows: same visual line if the baselines are within 2 units.
+  const rows = [];
+  items.sort((a, b) => b.y - a.y || a.x - b.x);
+  for (const it of items) {
+    const row = rows.find(r => Math.abs(r.y - it.y) <= 2);
+    if (row) row.cells.push(it); else rows.push({ y: it.y, cells: [it] });
+  }
+  rows.forEach(r => r.cells.sort((a, b) => a.x - b.x));
+  return rows;
+}
+
+// Earnings codes we can reconcile. Anything else on the payslip is ignored.
+const PC_CODES = [
+  { re: /^DUTY\s*HOUR/i,               kind: "dha" },
+  { re: /^CR\s*MEALS/i,                kind: "meal" },
+  { re: /^CALL\s*IN\b/i,               kind: "callIn" },
+  { re: /^(DAY\s*OFF|DDO)\b/i,         kind: "callIn" },
+  { re: /^(DUTY\s*VAR|DVA)\b/i,        kind: "dva" },
+  { re: /^(OVERTIME|O\/?TIME|OT)\b/i,  kind: "overtime" },
+];
+const PC_DATE = /^(\d{2})-(\d{2})-(\d{2})$/;
+
+// DD-MM-YY as printed on the payslip → the ISO dates the calculator uses.
+function pcDate(s) {
+  const m = String(s).trim().replace(/^\/\s*/, "").match(PC_DATE);
+  return m ? `20${m[3]}-${m[2]}-${m[1]}` : null;
+}
+
+function pcParsePayslip(rows) {
+  const out = { meals: [], callIns: [], dvas: [], dha: null, overtime: null, periodEnd: null, ignored: [] };
+  for (const row of rows) {
+    const cells = row.cells.map(c => c.t.trim()).filter(Boolean);
+    if (!cells.length) continue;
+
+    const pe = cells.join(" ").match(/PERIOD ENDING\s+(\d{2}-\d{2}-\d{2})/i);
+    if (pe) out.periodEnd = pcDate(pe[1]);
+
+    // A payslip prints two columns side by side, so a single visual row can
+    // hold an earnings line AND unrelated text from the other column at the
+    // same height. Locate the code cells by position and read only the cells
+    // to the right of each, up to wherever the next code starts.
+    const marks = [];
+    cells.forEach((t, i) => {
+      const hit = PC_CODES.find(c => c.re.test(t));
+      if (hit) marks.push({ i, kind: hit.kind });
+    });
+    if (!marks.length) {
+      const code = cells[0];
+      if (/^[A-Z][A-Z &/.-]{2,}$/.test(code) && cells.some(c => pcMoney(c) != null))
+        out.ignored.push(code);
+      continue;
+    }
+    marks.forEach((mk, mi) => {
+      const seg = cells.slice(mk.i + 1, mi + 1 < marks.length ? marks[mi + 1].i : cells.length);
+      const dates = seg.map(pcDate).filter(Boolean);
+      // The amount is the rightmost money value that isn't a date.
+      let amount = null;
+      for (let i = seg.length - 1; i >= 0; i--) {
+        if (PC_DATE.test(seg[i].replace(/^\/\s*/, ""))) continue;
+        const v = pcMoney(seg[i]);
+        if (v != null) { amount = v; break; }
+      }
+      if (amount == null) return;
+      const amt = amount.toFixed(2);
+      if (mk.kind === "meal")          out.meals.push({ from: dates[0] || "", to: dates[1] || "", amount: amt });
+      else if (mk.kind === "callIn")   out.callIns.push({ date: dates[0] || "", amount: amt });
+      else if (mk.kind === "dva")      out.dvas.push({ date: dates[0] || "", amount: amt });
+      else if (mk.kind === "dha")      out.dha = { amount: amt, from: dates[0] || "", to: dates[1] || "" };
+      else if (mk.kind === "overtime") out.overtime = { amount: amt };
+    });
+  }
+  return out;
+}
+
 function derivePayCheck(paySlip, d) {
   // Sub-cent differences are float noise, not a payroll error.
   const differs = (a, b) => Math.abs(a - b) >= 0.005;
@@ -3159,6 +3380,49 @@ export default function App() {
   // What the payslip actually paid, for the Pay Check tab. Not persisted —
   // nothing in this app is, and a saved payslip would outlive its roster.
   const [paySlip,setPaySlip]=useState({dha:"",overtime:"",meals:[],callIns:[],dvas:[]});
+  const [payPdf,setPayPdf]=useState(null);   // {busy|ok|err, …} — PDF read result
+
+  // Read the earnings table straight out of a payslip PDF. Everything happens
+  // in the browser: the file is read with FileReader/arrayBuffer and parsed
+  // here — it is never sent anywhere.
+  async function handlePayslipUpload(fileList) {
+    const file = fileList && fileList[0];
+    if (!file) return;
+    setPayPdf({ busy:true, name:file.name });
+    try {
+      if (typeof DecompressionStream === "undefined")
+        throw new Error("this browser can't decompress PDFs — enter the lines by hand");
+      const parsed = pcParsePayslip(await pcPdfRows(await file.arrayBuffer()));
+      const found = parsed.meals.length + parsed.callIns.length + parsed.dvas.length
+                  + (parsed.dha?1:0) + (parsed.overtime?1:0);
+      if (!found) throw new Error("no earnings lines recognised — is this a Qantas payslip?");
+      setPaySlip({
+        dha:      parsed.dha ? parsed.dha.amount : "",
+        overtime: parsed.overtime ? parsed.overtime.amount : "",
+        meals:    parsed.meals.map(m=>({id:`p${++_payRowId}`,from:m.from,to:m.to,amount:m.amount})),
+        callIns:  parsed.callIns.map(c=>({id:`p${++_payRowId}`,date:c.date,amount:c.amount})),
+        dvas:     parsed.dvas.map(c=>({id:`p${++_payRowId}`,date:c.date,amount:c.amount})),
+      });
+      // The DUTY HOUR AL line states the bid period it paid for, so the right
+      // BP can be selected automatically instead of hunting for the chip.
+      let picked = null;
+      if (parsed.dha && parsed.dha.from && parsed.dha.to) {
+        const bp = rosterBPs.find(b=>b.from===parsed.dha.from && b.to===parsed.dha.to);
+        if (bp) {
+          setCustomFrom(bp.from); setCustomTo(bp.to);
+          setMonthView(bp.from.slice(0,7)); setYearIdx(ebaYearIdxForDate(bp.from));
+          picked = bp.bp;
+        }
+      }
+      setPayPdf({ ok:true, name:file.name, periodEnd:parsed.periodEnd, picked,
+                  dhaPeriod: parsed.dha && parsed.dha.from ? [parsed.dha.from, parsed.dha.to] : null,
+                  counts:{ meals:parsed.meals.length, callIns:parsed.callIns.length,
+                           dvas:parsed.dvas.length, dha:!!parsed.dha, overtime:!!parsed.overtime },
+                  ignored:[...new Set(parsed.ignored)] });
+    } catch (err) {
+      setPayPdf({ err: (err && err.message) || "could not read that PDF", name:file.name });
+    }
+  }
 
   const setPayField = (field,val) => setPaySlip(p=>({...p,[field]:val}));
   const addPayRow = (listKey,row) => setPaySlip(p=>({...p,[listKey]:[...p[listKey],{id:`p${++_payRowId}`,...row}]}));
@@ -4893,13 +5157,67 @@ export default function App() {
             </div>
           );
 
+          // Upload a payslip PDF and have every line read off it. Offered in
+          // both states: with no BP chosen yet, the PDF's DUTY HOUR AL period
+          // says which bid period it belongs to and selects it.
+          const UploadPanel = (
+            <Card style={{marginBottom:18}}>
+              <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+                <label style={{background:"#E0EAF5",border:"1px solid #1E8AC0",borderRadius:8,color:"#1E8AC0",padding:"8px 13px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:mono,letterSpacing:0.5,flexShrink:0}}
+                  title="Read a payslip PDF">
+                  📄 Upload payslip PDF
+                  <input type="file" accept=".pdf,application/pdf"
+                    onChange={e=>{handlePayslipUpload(e.target.files);e.target.value="";}}
+                    style={{display:"none"}}/>
+                </label>
+                <div style={{fontSize:11,color:"#4A4F57",fontFamily:mono,lineHeight:1.6,flex:1,minWidth:200}}>
+                  Reads the earnings lines straight off the PDF and fills everything in.
+                  <br/>The file is read in your browser — it is never uploaded anywhere.
+                </div>
+              </div>
+              {payPdf && (
+                <div style={{marginTop:12,paddingTop:11,borderTop:"1px solid #D4CCC0",fontSize:11,fontFamily:mono,lineHeight:1.7}}>
+                  {payPdf.busy && <span style={{color:"#4A4F57"}}>Reading {payPdf.name}…</span>}
+                  {payPdf.err && (
+                    <span style={{color:"#CC2E2E"}}>
+                      ✕ {payPdf.name}: {payPdf.err}
+                      <br/><span style={{color:"#4A4F57"}}>You can still enter the lines by hand below.</span>
+                    </span>
+                  )}
+                  {payPdf.ok && (
+                    <span style={{color:"#2D3239"}}>
+                      <span style={{color:"#1FA06E",fontWeight:700}}>✓ Read {payPdf.name}</span>
+                      {payPdf.periodEnd && ` · period ending ${fmtFull(payPdf.periodEnd)}`}
+                      <br/>
+                      {[payPdf.counts.dha && "duty hour allowance",
+                        payPdf.counts.meals && `${payPdf.counts.meals} meal line${payPdf.counts.meals!==1?"s":""}`,
+                        payPdf.counts.callIns && `${payPdf.counts.callIns} call-in`,
+                        payPdf.counts.dvas && `${payPdf.counts.dvas} DVA`,
+                        payPdf.counts.overtime && "overtime"].filter(Boolean).join(" · ")}
+                      {payPdf.picked
+                        ? <><br/><span style={{color:"#1E8AC0"}}>Selected BP {payPdf.picked} from the duty hour allowance period.</span></>
+                        : payPdf.dhaPeriod
+                          ? <><br/><span style={{color:"#CC2E2E"}}>Paid for {fmtShort(payPdf.dhaPeriod[0])}–{fmtShort(payPdf.dhaPeriod[1])} — that bid period isn't loaded. Upload its roster to compare.</span></>
+                          : null}
+                      {payPdf.ignored.length>0 && (
+                        <><br/><span style={{color:"#8A8577"}}>Not compared: {payPdf.ignored.join(", ")}.</span></>
+                      )}
+                    </span>
+                  )}
+                </div>
+              )}
+            </Card>
+          );
+
           if (!bp) {
             return (
               <div className="fadein">
                 {Header}
+                {UploadPanel}
                 <Card>
                   <div style={{fontSize:13,color:"#2D3239",lineHeight:1.7}}>
-                    Select a bid period first — open <strong>MONTH / ROSTER</strong> and click a BP chip.
+                    Select a bid period — open <strong>MONTH / ROSTER</strong> and click a BP chip, or
+                    upload a payslip above and the right one is chosen for you.
                     <div style={{fontSize:11,color:"#4A4F57",marginTop:8,fontFamily:mono,lineHeight:1.6}}>
                       A payslip is only comparable against a whole bid period: the 70-hour overtime
                       threshold and the roster header's carried in/out hours both settle per BP, so an
@@ -4914,6 +5232,7 @@ export default function App() {
           return (
             <div className="fadein">
               {Header}
+              {UploadPanel}
 
               {/* Headline */}
               <Card style={{marginBottom:18,textAlign:"center",padding:"18px"}}>
