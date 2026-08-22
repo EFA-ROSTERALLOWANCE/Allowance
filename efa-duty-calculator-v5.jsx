@@ -1699,7 +1699,7 @@ function HelpModal({ onClose }) {
     ["Check your payslip", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA and overtime — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
     ["Or enter it by hand", "No PDF, or a payslip it can't read? Select a BP chip and type the lines in yourself. “Pre-fill from this roster” adds a meal line per hotel stay with the dates already filled, so you only type the amounts. Anything read from a PDF stays editable."],
     ["Reading the result", "Every line shows the calculator's own figure beside yours, with a ✓ or the dollar difference. The headline is the total variance. It also flags a stay with no matching payslip line — an unpaid trip — and a payment the calculator says you weren't owed. A difference is a prompt to check, not proof of an error: these are estimates."],
-    ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster data and resets everything. Payslip figures you type into PAY CHECK are not saved — they clear when you reload."],
+    ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster and payslip data and resets everything. On PAY CHECK, 🗑 CLEAR PAYSLIP drops just the payslip figures and keeps your roster. Nothing is saved between sessions — it all clears when you reload."],
   ];
 
   return (
@@ -3009,6 +3009,8 @@ const PC_DAY_OFF = /^(ddo|extra_ddo|ddo_rp)/;
 const PC_DVA     = /^(dva|extra_dva|dva_rp)/;
 let _payRowId = 0;
 
+const emptyPaySlip = () => ({ dha:"", overtime:"", meals:[], callIns:[], dvas:[] });
+
 function pcMoney(s) {
   if (s == null || String(s).trim() === "") return null;
   const n = parseFloat(String(s).replace(/[$,\s]/g, ""));
@@ -3379,8 +3381,17 @@ export default function App() {
   const [mealRateYear,setMealRateYear]=useState(0);
   // What the payslip actually paid, for the Pay Check tab. Not persisted —
   // nothing in this app is, and a saved payslip would outlive its roster.
-  const [paySlip,setPaySlip]=useState({dha:"",overtime:"",meals:[],callIns:[],dvas:[]});
+  const [paySlip,setPaySlip]=useState(emptyPaySlip);
   const [payPdf,setPayPdf]=useState(null);   // {busy|ok|err, …} — PDF read result
+  const [confirmClearPay,setConfirmClearPay]=useState(false);
+
+  // Drop everything read from or typed into a payslip. Called on its own from
+  // PAY CHECK, and by clearRoster so 🗑 CLEAR leaves no pay data behind.
+  function clearPaySlip() {
+    setPaySlip(emptyPaySlip());
+    setPayPdf(null);
+    setConfirmClearPay(false);
+  }
 
   // Read the earnings table straight out of a payslip PDF. Everything happens
   // in the browser: the file is read with FileReader/arrayBuffer and parsed
@@ -3705,6 +3716,8 @@ export default function App() {
     setConfirmClearRoster(false);
     setRosterBPs([]);
     setPilotJoiningDate(null);
+    // Payslip figures are personal pay data — they must not survive a CLEAR.
+    clearPaySlip();
   }
 
   function toggleSlip(dayKey,val) {
@@ -5160,6 +5173,8 @@ export default function App() {
           // Upload a payslip PDF and have every line read off it. Offered in
           // both states: with no BP chosen yet, the PDF's DUTY HOUR AL period
           // says which bid period it belongs to and selects it.
+          const hasPayData = !!payPdf || !!paySlip.dha || !!paySlip.overtime
+            || paySlip.meals.length > 0 || paySlip.callIns.length > 0 || paySlip.dvas.length > 0;
           const UploadPanel = (
             <Card style={{marginBottom:18}}>
               <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
@@ -5174,6 +5189,24 @@ export default function App() {
                   Reads the earnings lines straight off the PDF and fills everything in.
                   <br/>The file is read in your browser — it is never uploaded anywhere.
                 </div>
+                {hasPayData && (confirmClearPay ? (
+                  <div style={{display:"flex",alignItems:"center",gap:6,background:"#F5E0E0",border:"1px solid #CC2E2E60",borderRadius:8,padding:"4px 8px",flexShrink:0}}>
+                    <span style={{fontSize:11,color:"#CC2E2E",fontFamily:mono}}>Clear payslip?</span>
+                    <button onClick={clearPaySlip}
+                      style={{background:"#CC2E2E",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
+                      Yes, clear
+                    </button>
+                    <button onClick={()=>setConfirmClearPay(false)}
+                      style={{background:"transparent",border:"1px solid #4A4F57",borderRadius:5,color:"#2D3239",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={()=>setConfirmClearPay(true)} title="Remove every payslip figure on this page"
+                    style={{background:"#F0EBE3",border:"1px solid #CC2E2E30",borderRadius:8,color:"#CC2E2E",padding:"7px 11px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5}}>
+                    🗑 CLEAR PAYSLIP
+                  </button>
+                ))}
               </div>
               {payPdf && (
                 <div style={{marginTop:12,paddingTop:11,borderTop:"1px solid #D4CCC0",fontSize:11,fontFamily:mono,lineHeight:1.7}}>
