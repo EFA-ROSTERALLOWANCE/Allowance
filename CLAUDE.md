@@ -69,6 +69,14 @@ above; the bulk app has its own aggregation. `derivePayCheck()` sits alongside
 it and matches typed payslip lines to what it produced — meal lines to
 `payStays` by date span, call-in/DVA lines to `monthDateMap` items by date.
 
+**Pay state must die with a reset.** `paySlip` / `payPdf` hold the user's actual
+pay figures, so any new pay-related state has to be cleared in `clearPaySlip()`,
+which `clearRoster()` calls — 🗑 CLEAR must never leave pay data on screen for
+whoever opens the app next. The empty shape lives in `emptyPaySlip()`; use it
+for the initial state too, so adding a field can't fix one and miss the other.
+Nothing here is persisted (the app uses no `localStorage`) and a saved payslip
+would outlive the roster it was compared against — keep it that way.
+
 ## Payslip PDF reader (`pc*` functions, main calculator only)
 
 PAY CHECK can read the earnings table straight out of a payslip PDF. A Qantas
