@@ -3341,6 +3341,10 @@ function derivePayCheck(paySlip, d) {
     mealRows, unmatchedStays, callIns, dvas, dha, ot, anyInput,
     paidTotal, calcTotal, delta: paidTotal - calcTotal,
     off: differs(paidTotal, calcTotal),
+    // Expected one-off lines for this BP (day-off / call-in and DVA), exposed
+    // so the PAY CHECK tab can render the "expected payslip" preview without
+    // recomputing them.
+    dayOffCalc, dvaCalc,
   };
 }
 
@@ -5242,6 +5246,59 @@ export default function App() {
             </Card>
           );
 
+          // ── "Expected payslip" preview ──
+          // The allowance earnings lines payroll should show for this BP,
+          // derived from the roster (independent of any payslip entered).
+          // Rendered under the title once a BP is loaded.
+          const expLines = [];
+          if (d.dhaTotal > 0.005)
+            expLines.push({ code: "DUTY HOUR AL", detail: bp ? `${fmtShort(bp.from)} – ${fmtShort(bp.to)}` : "", amount: d.dhaTotal });
+          (d.payStays || []).forEach(s => expLines.push({
+            code: "CR MEALS ATO",
+            detail: `${s.port ? s.port + " · " : ""}${s.startDate === s.endDate ? fmtShort(s.startDate) : `${fmtShort(s.startDate)} – ${fmtShort(s.endDate)}`}`,
+            amount: s.total,
+          }));
+          (pc.dayOffCalc || []).forEach(it => expLines.push({ code: "CALL IN", detail: fmtShort(it.date), amount: it.amount }));
+          (pc.dvaCalc || []).forEach(it => expLines.push({ code: "DUTY VAR AL", detail: fmtShort(it.date), amount: it.amount }));
+          if (d.includeOvertime && d.overtimePay > 0.005)
+            expLines.push({ code: "OVERTIME", detail: `${d.overtimeHrs.toFixed(2)} h`, amount: d.overtimePay });
+          const expTotal = expLines.reduce((s, l) => s + l.amount, 0);
+          const expCols = "minmax(112px,1.3fr) 1fr minmax(88px,auto)";
+
+          const ExpectedPayslip = (
+            <Card style={{ marginBottom: 18, padding: 0, overflow: "hidden" }}>
+              <div style={{ background: "#1A2A3A", color: "#EAF1F8", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ fontFamily: heading, fontSize: 17, fontWeight: 700, letterSpacing: 0.3 }}>Expected Payslip</div>
+                <div style={{ fontFamily: mono, fontSize: 10, letterSpacing: 1.5, color: "#9DB4CC" }}>ESTIMATE · ALLOWANCE EARNINGS</div>
+              </div>
+              <div style={{ padding: "12px 16px" }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: "#4A4F57", letterSpacing: 0.5, marginBottom: 10 }}>
+                  BP {bp ? bp.bp : ""} · {bp ? `${fmtFull(bp.from)} – ${fmtFull(bp.to)}` : ""}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "6px 0", borderBottom: "2px solid #1A2A3A", fontFamily: mono, fontSize: 9, letterSpacing: 1, color: "#4A4F57" }}>
+                  <div>DESCRIPTION</div><div>PERIOD / DATE</div><div style={{ textAlign: "right" }}>AMOUNT</div>
+                </div>
+                {expLines.length === 0 ? (
+                  <div style={{ padding: "14px 0", fontFamily: mono, fontSize: 12, color: "#8A8577" }}>No allowance earnings expected for this bid period.</div>
+                ) : expLines.map((l, i) => (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "7px 0", borderBottom: "1px solid #EFE9E1", alignItems: "baseline" }}>
+                    <div style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: "#1A1A2E" }}>{l.code}</div>
+                    <div style={{ fontFamily: mono, fontSize: 11, color: "#4A4F57" }}>{l.detail}</div>
+                    <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "#1A1A2E", textAlign: "right" }}>${fmtAUD(l.amount)}</div>
+                  </div>
+                ))}
+                <div style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "10px 0 2px", borderTop: "2px solid #1A2A3A", alignItems: "baseline" }}>
+                  <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#1A2A3A" }}>TOTAL ALLOWANCES</div>
+                  <div/>
+                  <div style={{ fontFamily: mono, fontSize: 16, fontWeight: 700, color: "#1E8AC0", textAlign: "right" }}>${fmtAUD(expTotal)}</div>
+                </div>
+                <div style={{ fontFamily: mono, fontSize: 9.5, color: "#8A8577", marginTop: 10, lineHeight: 1.6 }}>
+                  Estimate of the allowance lines your payslip should show for this bid period — excludes base salary. Compare against your actual payslip below.
+                </div>
+              </div>
+            </Card>
+          );
+
           if (!bp) {
             return (
               <div className="fadein">
@@ -5265,6 +5322,7 @@ export default function App() {
           return (
             <div className="fadein">
               {Header}
+              {ExpectedPayslip}
               {UploadPanel}
 
               {/* Headline */}
