@@ -109,6 +109,38 @@ The reader depends on `DecompressionStream` (guarded, with a manual-entry
 fallback message) and is browser-only — it is not exercised by any build step,
 so test it by loading a real payslip through the UI.
 
+## Day / night theme (main calculator only)
+
+Colours are CSS custom properties, not hex literals. The palette is defined
+three times in the app's `<style>` block, mirroring the EFA bid optimiser
+(several tokens carry its exact values):
+
+- `:root` — the light palette, and the base.
+- `@media (prefers-color-scheme:dark) :root:not([data-theme="light"])` — dark
+  applied automatically from the OS.
+- `:root[data-theme="dark"]` — dark applied explicitly by the toggle.
+
+So the OS preference wins until the reader picks a side, and then the toggle
+wins in both directions. Theme is a display preference only: `toggleTheme` sets
+`data-theme` on `<html>` and nothing is persisted, so a reload returns to the
+OS preference. The old `.dark{filter:invert(1)}` hack is gone — it turned the
+brand blue orange and inverted the flag emojis.
+
+Rules when touching UI colour:
+
+- **Never write a hex literal in a style.** Use `var(--token)`. Add a token to
+  all three blocks if you genuinely need a new colour.
+- **Never concatenate alpha onto a colour** (`` `${c}40` `` cannot work on a
+  `var()`). Use the module-level `mix(colour, percent)` helper, which emits
+  `color-mix(in srgb, … , transparent)`.
+- The HTML shell paints a fixed light background, so the style block re-declares
+  `html,body{background:var(--bg)}` — keep that when editing the shell.
+- `color-scheme` is set on `:root` per theme; inputs use `colorScheme:"inherit"`
+  so native date pickers follow the theme.
+
+`index2.html` (bulk summary) has no theme toggle, and theme is not part of the
+allowance parity surface above.
+
 ## Build
 
 Both html files are produced the same way (React pinned to the version already

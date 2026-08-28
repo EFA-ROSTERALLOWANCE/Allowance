@@ -278,10 +278,10 @@ const MEAL_RATE_YEARS = [
   // announced). International brackets carry forward as the upper-tier
   // ATO TD2025/4 amounts.
   { label: "From 1 July 2026 - Paid from 15 June", from: "2026-06-15", rates: {
-    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"#1FA06E",breakfast:43.65, lunch:61.70, dinner:86.35, incidental:36.30},
-    group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"#3B82D6",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
-    group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"#D4458E",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
-    group_6:  {label:"Group 6 — HK/SG etc. ($475/day)",      flag:"🇸🇬",color:"#7C5CD6",breakfast:138.33,lunch:138.33,dinner:138.34,incidental:60.00},
+    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:43.65, lunch:61.70, dinner:86.35, incidental:36.30},
+    group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
+    group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
+    group_6:  {label:"Group 6 — HK/SG etc. ($475/day)",      flag:"🇸🇬",color:"var(--purple)",breakfast:138.33,lunch:138.33,dinner:138.34,incidental:60.00},
   }},
   // From 22 Feb 2026: EFA EA 2025 cl. 6.23 references ATO Taxation
   // Determination TD2025/4 Table 3 (FY 2025-26, salary $263,851+ rates,
@@ -289,25 +289,25 @@ const MEAL_RATE_YEARS = [
   // breakfast = lunch = nominal/3 rounded DOWN to the cent; dinner =
   // nominal − (breakfast + lunch).
   { label: "2026-2027", from: "2026-02-22", rates: {
-    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"#1FA06E",breakfast:42.15, lunch:59.60, dinner:83.40, incidental:35.05},
-    group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"#3B82D6",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
-    group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"#D4458E",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
-    group_6:  {label:"Group 6 — HK/SG etc. ($475/day)",      flag:"🇸🇬",color:"#7C5CD6",breakfast:138.33,lunch:138.33,dinner:138.34,incidental:60.00},
+    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:42.15, lunch:59.60, dinner:83.40, incidental:35.05},
+    group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
+    group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
+    group_6:  {label:"Group 6 — HK/SG etc. ($475/day)",      flag:"🇸🇬",color:"var(--purple)",breakfast:138.33,lunch:138.33,dinner:138.34,incidental:60.00},
   }},
   // 19 May 2025 – 21 Feb 2026: prior schedule (lower-tier amounts; same
   // B=L rounded-down / D catch-up rule so daily sums are exact).
   { label: "19 May 2025 – 21 Feb 2026", from: "2025-05-19", rates: {
-    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"#1FA06E",breakfast:37.85, lunch:53.45, dinner:75.00, incidental:35.05},
-    group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"#3B82D6",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
-    group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"#D4458E",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
-    group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"#7C5CD6",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
+    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:37.85, lunch:53.45, dinner:75.00, incidental:35.05},
+    group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
+    group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
+    group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"var(--purple)",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
   }},
   // Pre-19 May 2025: oldest schedule (fallback for any earlier date).
   { label: "Pre-19 May 2025", from: "2000-01-01", rates: {
-    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"#1FA06E",breakfast:36.90, lunch:52.10, dinner:73.10, incidental:34.25},
-    group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"#3B82D6",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
-    group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"#D4458E",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
-    group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"#7C5CD6",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
+    domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:36.90, lunch:52.10, dinner:73.10, incidental:34.25},
+    group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
+    group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
+    group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"var(--purple)",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
   }},
 ];
 // Default DESTINATIONS (latest rates) — used for display on Meal Rates page
@@ -322,15 +322,15 @@ function getDestinations(dateStr) {
   return MEAL_RATE_YEARS[MEAL_RATE_YEARS.length - 1].rates;
 }
 const MEAL_WINDOWS = [
-  {id:"b",label:"Breakfast",icon:"🍳",color:"#D4A80A",wS:7*60+30, wE:9*60+30, key:"breakfast"},
-  {id:"l",label:"Lunch",    icon:"🥗",color:"#3DA866",wS:11*60+30,wE:13*60+30,key:"lunch"},
-  {id:"d",label:"Dinner",   icon:"🍽️",color:"#C47E08",wS:17*60+30,wE:19*60+30,key:"dinner"},
+  {id:"b",label:"Breakfast",icon:"🍳",color:"var(--yellow)",wS:7*60+30, wE:9*60+30, key:"breakfast"},
+  {id:"l",label:"Lunch",    icon:"🥗",color:"var(--green)",wS:11*60+30,wE:13*60+30,key:"lunch"},
+  {id:"d",label:"Dinner",   icon:"🍽️",color:"var(--orange)",wS:17*60+30,wE:19*60+30,key:"dinner"},
 ];
 const DAY_NAMES=["MON","TUE","WED","THU","FRI","SAT","SUN"];
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 // Sector colour palette (cycles)
-const SECTOR_COLORS=["#1E8AC0","#3DA866","#D4458E","#D49B0A","#7C5CD6","#D4701A","#1FA06E","#D44545"];
+const SECTOR_COLORS=["var(--accent)","var(--green)","var(--pink)","var(--yellow2)","var(--purple)","var(--orange2)","var(--green2)","var(--red2)"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getUtcOffsetHours(code, dateStr) {
@@ -820,7 +820,7 @@ function calcAllowances(day, role, yearIdx, tripDate) {
   day.sectors.forEach((sec, idx) => {
     const label = `Sector ${idx + 1}${sec.flightNo ? ` (${sec.flightNo})` : ""}`;
     if (sec.missedMeal)
-      add(`missed_${sec.id}`, `Missed Crew Meal — ${label}`, "Cl. 23.1", "#D4701A", "🚫",
+      add(`missed_${sec.id}`, `Missed Crew Meal — ${label}`, "Cl. 23.1", "var(--orange2)", "🚫",
         RATES.MISSED_MEAL, 1, `${label} — meal not provided`);
   });
 
@@ -841,14 +841,14 @@ function calcAllowances(day, role, yearIdx, tripDate) {
         const r = role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO;
         const h = Math.floor(totalDiff / 60), m = totalDiff % 60;
         const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-        add(`dva_rp_${lastSec.id}`, "Duty Variation — vs Roster Publish", "Cl. 5.28", "#A85D04", "📝",
+        add(`dva_rp_${lastSec.id}`, "Duty Variation — vs Roster Publish", "Cl. 5.28", "var(--amber)", "📝",
           r, 1, `Sign-off ${durStr} later than roster publish (${fmtShort(rpDate)} ${fmtTime(rpOff)} → ${fmtShort(actDate)} ${fmtTime(actOff)}) — >2h buffer`);
       }
       if(totalDiff > 240) {
         const r = role === "cpt" ? RATES.DDO_CPT : RATES.DDO_FO;
         const h = Math.floor(totalDiff / 60), m = totalDiff % 60;
         const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-        add(`ddo_rp_${lastSec.id}`, "Day Off Payment — vs Roster Publish", "Cl. 5.20", "#CC2E2E", "📅",
+        add(`ddo_rp_${lastSec.id}`, "Day Off Payment — vs Roster Publish", "Cl. 5.20", "var(--red)", "📅",
           r, 1, `Sign-off ${durStr} later than roster publish (${fmtShort(rpDate)} ${fmtTime(rpOff)} → ${fmtShort(actDate)} ${fmtTime(actOff)}) — >4h buffer`);
       }
     }
@@ -870,7 +870,7 @@ function calcAllowances(day, role, yearIdx, tripDate) {
         const r = role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO;
         const h = Math.floor(totalDiff / 60), m = totalDiff % 60;
         const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-        add(`dva_rp_on_${firstSec.id}`, "Duty Variation — vs Roster Publish Sign-On", "Cl. 5.28", "#A85D04", "📝",
+        add(`dva_rp_on_${firstSec.id}`, "Duty Variation — vs Roster Publish Sign-On", "Cl. 5.28", "var(--amber)", "📝",
           r, 1, `Sign-on ${durStr} earlier than roster publish (${fmtShort(rpDate)} ${fmtTime(rpOn)} → ${fmtShort(actDate)} ${fmtTime(actOn)}) — >2h buffer`);
       }
     }
@@ -879,20 +879,20 @@ function calcAllowances(day, role, yearIdx, tripDate) {
   // ── DDO ──────────────────────────────────────────────────────────────────
   if(day.ddoInfringed) {
     const r=role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO;
-    add("ddo","Designated Day Off – Worked","Cl. 5.20/5.33","#CC2E2E","📅",r,1,"Duty infringed a rostered DDO");
+    add("ddo","Designated Day Off – Worked","Cl. 5.20/5.33","var(--red)","📅",r,1,"Duty infringed a rostered DDO");
   }
 
   // ── DVA (from AS48 in the roster, or manually-set extraDva) ──────────────
   if(day.extraDva > 0) {
     const r=role==="cpt"?RATES.DVA_CPT:RATES.DVA_FO;
     const qty = typeof day.extraDva === "number" ? day.extraDva : 1;
-    add("extra_dva",`Duty Variation Allowance${qty>1?` ×${qty}`:""}`,"Cl. 5.28","#C47E08","⚡",r,qty,`AS48 detected in schedule — ${qty}× DVA`);
+    add("extra_dva",`Duty Variation Allowance${qty>1?` ×${qty}`:""}`,"Cl. 5.28","var(--orange)","⚡",r,qty,`AS48 detected in schedule — ${qty}× DVA`);
   }
 
   // ── Extra DDO payment (manual) ───────────────────────────────────────────
   if(day.extraDdo > 0) {
     const r=role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO;
-    add("extra_ddo",`Day Off Payment (Additional) ×${day.extraDdo}`,"Cl. 5.20","#CC2E2E","📅",r,day.extraDdo,`${day.extraDdo}× manually added day off payment`);
+    add("extra_ddo",`Day Off Payment (Additional) ×${day.extraDdo}`,"Cl. 5.20","var(--red)","📅",r,day.extraDdo,`${day.extraDdo}× manually added day off payment`);
   }
 
   // ── Meal allowances — per hotel stay ────────────────────────────────────
@@ -919,9 +919,9 @@ function calcAllowances(day, role, yearIdx, tripDate) {
     });
     const stayDesc = nightsForMeals > 0 ? `${nightsForMeals}-night stay` : `same-day slip (${(tot/60).toFixed(1)}h)`;
     const tag = allHotels.length > 1 ? ` (Hotel ${hi+1})` : "";
-    if (mc.b > 0) add(`meal_b_${hi}`, `Breakfast ×${mc.b} — ${dest.label}${tag}`, "Cl. 6.24(a)", "#D4A80A", "🍳", dest.breakfast, mc.b, `${dest.flag} ${mc.b}× — ${stayDesc} (0730–0930)`);
-    if (mc.l > 0) add(`meal_l_${hi}`, `Lunch ×${mc.l} — ${dest.label}${tag}`, "Cl. 6.24(b)", "#3DA866", "🥗", dest.lunch, mc.l, `${dest.flag} ${mc.l}× — ${stayDesc} (1130–1330)`);
-    if (mc.d > 0) add(`meal_d_${hi}`, `Dinner ×${mc.d} — ${dest.label}${tag}`, "Cl. 6.24(c)", "#C47E08", "🍽️", dest.dinner, mc.d, `${dest.flag} ${mc.d}× — ${stayDesc} (1730–1930)`);
+    if (mc.b > 0) add(`meal_b_${hi}`, `Breakfast ×${mc.b} — ${dest.label}${tag}`, "Cl. 6.24(a)", "var(--yellow)", "🍳", dest.breakfast, mc.b, `${dest.flag} ${mc.b}× — ${stayDesc} (0730–0930)`);
+    if (mc.l > 0) add(`meal_l_${hi}`, `Lunch ×${mc.l} — ${dest.label}${tag}`, "Cl. 6.24(b)", "var(--green)", "🥗", dest.lunch, mc.l, `${dest.flag} ${mc.l}× — ${stayDesc} (1130–1330)`);
+    if (mc.d > 0) add(`meal_d_${hi}`, `Dinner ×${mc.d} — ${dest.label}${tag}`, "Cl. 6.24(c)", "var(--orange)", "🍽️", dest.dinner, mc.d, `${dest.flag} ${mc.d}× — ${stayDesc} (1730–1930)`);
     // (Per-hotel incidentals removed — see trip-level calc after ground meals.)
   });
 
@@ -934,9 +934,9 @@ function calcAllowances(day, role, yearIdx, tripDate) {
   // overlapping morning ground school.
   const GROUND_MEAL_EXCLUDE = /^(MD|V\d|AX|LJ|LA|CLRD|LZR|LZ|LW)\b/i;
   const MEAL_WINDOW_LABELS = {
-    b: { label: "Breakfast", clause: "Cl. 6.24(a)", color: "#D4A80A", icon: "🍳", win: "(0730–0930)" },
-    l: { label: "Lunch",     clause: "Cl. 6.24(b)", color: "#3DA866", icon: "🥗", win: "(1130–1330)" },
-    d: { label: "Dinner",    clause: "Cl. 6.24(c)", color: "#C47E08", icon: "🍽️", win: "(1730–1930)" },
+    b: { label: "Breakfast", clause: "Cl. 6.24(a)", color: "var(--yellow)", icon: "🍳", win: "(0730–0930)" },
+    l: { label: "Lunch",     clause: "Cl. 6.24(b)", color: "var(--green)", icon: "🥗", win: "(1130–1330)" },
+    d: { label: "Dinner",    clause: "Cl. 6.24(c)", color: "var(--orange)", icon: "🍽️", win: "(1730–1930)" },
   };
   // Determine the trip's base port from the first sector with a depAirport.
   // Ground duties at base don't earn meal allowances.
@@ -1020,7 +1020,7 @@ function calcAllowances(day, role, yearIdx, tripDate) {
       add(
         `meal_i_${port}_${pIdx++}`,
         `Incidental ×${incQty} — ${dest.label} (${port})`,
-        "Cl. 6.24", "#A85D04", "☕",
+        "Cl. 6.24", "var(--amber)", "☕",
         dest.incidental, incQty,
         `${dest.flag} ${incQty}× incidental — ${totalH}h raw slip at ${port} (1 per 24h)`
       );
@@ -1030,7 +1030,7 @@ function calcAllowances(day, role, yearIdx, tripDate) {
   // ── Accom opt-out ─────────────────────────────────────────────────────────
   if(day.accomOptOut > 0) {
     const n = day.accomOptOut;
-    add("accom","Accommodation Opt-Out","Cl. 6.32","#5B66D6","🏨",RATES.ACCOM_OPTOUT,n,`${n} night(s) — 48h notice given`);
+    add("accom","Accommodation Opt-Out","Cl. 6.32","var(--indigo)","🏨",RATES.ACCOM_OPTOUT,n,`${n} night(s) — 48h notice given`);
   }
 
   return items;
@@ -1114,7 +1114,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
     const sDate = resolveSectorDate(sec, idx, day, tripDate);
     const label = `Sector ${idx+1}${sec.flightNo ? ` (${sec.flightNo})` : ""}`;
     if (sec.missedMeal)
-      addTo(sDate, mkItem(`missed_${sec.id}`, `Missed Crew Meal — ${label}`, "Cl. 23.1", "#D4701A", "🚫",
+      addTo(sDate, mkItem(`missed_${sec.id}`, `Missed Crew Meal — ${label}`, "Cl. 23.1", "var(--orange2)", "🚫",
         RATES.MISSED_MEAL, 1, `${label} — meal not provided`));
   });
 
@@ -1134,14 +1134,14 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
         const r = role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO;
         const h = Math.floor(totalDiff / 60), m = totalDiff % 60;
         const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-        addTo(lastSDate, mkItem(`dva_rp_${lastSec.id}`, "Duty Variation — vs Roster Publish", "Cl. 5.28", "#A85D04", "📝",
+        addTo(lastSDate, mkItem(`dva_rp_${lastSec.id}`, "Duty Variation — vs Roster Publish", "Cl. 5.28", "var(--amber)", "📝",
           r, 1, `Sign-off ${durStr} later than roster publish (${fmtShort(rpDate)} ${fmtTime(rpOff)} → ${fmtShort(actDate)} ${fmtTime(actOff)}) — >2h buffer`));
       }
       if (totalDiff > 240) {
         const r = role === "cpt" ? RATES.DDO_CPT : RATES.DDO_FO;
         const h = Math.floor(totalDiff / 60), m = totalDiff % 60;
         const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-        addTo(lastSDate, mkItem(`ddo_rp_${lastSec.id}`, "Day Off Payment — vs Roster Publish", "Cl. 5.20", "#CC2E2E", "📅",
+        addTo(lastSDate, mkItem(`ddo_rp_${lastSec.id}`, "Day Off Payment — vs Roster Publish", "Cl. 5.20", "var(--red)", "📅",
           r, 1, `Sign-off ${durStr} later than roster publish (${fmtShort(rpDate)} ${fmtTime(rpOff)} → ${fmtShort(actDate)} ${fmtTime(actOff)}) — >4h buffer`));
       }
     }
@@ -1162,7 +1162,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
         const r = role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO;
         const h = Math.floor(totalDiff / 60), m = totalDiff % 60;
         const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-        addTo(tripDate, mkItem(`dva_rp_on_${firstSec.id}`, "Duty Variation — vs Roster Publish Sign-On", "Cl. 5.28", "#A85D04", "📝",
+        addTo(tripDate, mkItem(`dva_rp_on_${firstSec.id}`, "Duty Variation — vs Roster Publish Sign-On", "Cl. 5.28", "var(--amber)", "📝",
           r, 1, `Sign-on ${durStr} earlier than roster publish (${fmtShort(rpDate)} ${fmtTime(rpOn)} → ${fmtShort(actDate)} ${fmtTime(actOn)}) — >2h buffer`));
       }
     }
@@ -1171,16 +1171,16 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
   // ── DDO — on tripDate ──
   if (day.ddoInfringed) {
     const r = role === "cpt" ? RATES.DDO_CPT : RATES.DDO_FO;
-    addTo(tripDate, mkItem("ddo", "Designated Day Off – Worked", "Cl. 5.20/5.33", "#CC2E2E", "📅", r, 1, "Duty infringed a rostered DDO"));
+    addTo(tripDate, mkItem("ddo", "Designated Day Off – Worked", "Cl. 5.20/5.33", "var(--red)", "📅", r, 1, "Duty infringed a rostered DDO"));
   }
   if (day.extraDva > 0) {
     const r = role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO;
     const qty = typeof day.extraDva === "number" ? day.extraDva : 1;
-    addTo(tripDate, mkItem("extra_dva", `Duty Variation Allowance${qty>1?` ×${qty}`:""}`, "Cl. 5.28", "#C47E08", "⚡", r, qty, `AS48 detected in schedule — ${qty}× DVA`));
+    addTo(tripDate, mkItem("extra_dva", `Duty Variation Allowance${qty>1?` ×${qty}`:""}`, "Cl. 5.28", "var(--orange)", "⚡", r, qty, `AS48 detected in schedule — ${qty}× DVA`));
   }
   if (day.extraDdo > 0) {
     const r = role === "cpt" ? RATES.DDO_CPT : RATES.DDO_FO;
-    addTo(tripDate, mkItem("extra_ddo", `Day Off Payment (Additional) x${day.extraDdo}`, "Cl. 5.20", "#CC2E2E", "📅", r, day.extraDdo, `${day.extraDdo}x manually added day off payment`));
+    addTo(tripDate, mkItem("extra_ddo", `Day Off Payment (Additional) x${day.extraDdo}`, "Cl. 5.20", "var(--red)", "📅", r, day.extraDdo, `${day.extraDdo}x manually added day off payment`));
   }
 
   // ── Meals — per hotel stay, split per calendar day ──
@@ -1204,9 +1204,9 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
       pd.forEach(pdDay => {
         const mealDate = pdDay.date;
         if (!mealDate) return;
-        if (pdDay.b) { addTo(mealDate, mkItem(`meal_b_${hi}_${mealDate}`, `Breakfast — ${dest.label}${tag}`, "Cl. 6.24(a)", "#D4A80A", "🍳", dest.breakfast, 1, `${dest.flag} ${fmtShort(mealDate)} (0730–0930)`)); hotelMealKeys.add(`b@${mealDate}`); }
-        if (pdDay.l) { addTo(mealDate, mkItem(`meal_l_${hi}_${mealDate}`, `Lunch — ${dest.label}${tag}`,     "Cl. 6.24(b)", "#3DA866", "🥗", dest.lunch,     1, `${dest.flag} ${fmtShort(mealDate)} (1130–1330)`)); hotelMealKeys.add(`l@${mealDate}`); }
-        if (pdDay.d) { addTo(mealDate, mkItem(`meal_d_${hi}_${mealDate}`, `Dinner — ${dest.label}${tag}`,    "Cl. 6.24(c)", "#C47E08", "🍽️", dest.dinner,    1, `${dest.flag} ${fmtShort(mealDate)} (1730–1930)`)); hotelMealKeys.add(`d@${mealDate}`); }
+        if (pdDay.b) { addTo(mealDate, mkItem(`meal_b_${hi}_${mealDate}`, `Breakfast — ${dest.label}${tag}`, "Cl. 6.24(a)", "var(--yellow)", "🍳", dest.breakfast, 1, `${dest.flag} ${fmtShort(mealDate)} (0730–0930)`)); hotelMealKeys.add(`b@${mealDate}`); }
+        if (pdDay.l) { addTo(mealDate, mkItem(`meal_l_${hi}_${mealDate}`, `Lunch — ${dest.label}${tag}`,     "Cl. 6.24(b)", "var(--green)", "🥗", dest.lunch,     1, `${dest.flag} ${fmtShort(mealDate)} (1130–1330)`)); hotelMealKeys.add(`l@${mealDate}`); }
+        if (pdDay.d) { addTo(mealDate, mkItem(`meal_d_${hi}_${mealDate}`, `Dinner — ${dest.label}${tag}`,    "Cl. 6.24(c)", "var(--orange)", "🍽️", dest.dinner,    1, `${dest.flag} ${fmtShort(mealDate)} (1730–1930)`)); hotelMealKeys.add(`d@${mealDate}`); }
       });
     }
     // (Per-hotel incidentals removed — trip-level calc below pays them based
@@ -1221,9 +1221,9 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
   // (date, window) so a hotel breakfast isn't re-paid by a morning ground school.
   const GROUND_MEAL_EXCLUDE = /^(MD|V\d|AX|LJ|LA|CLRD|LZR|LZ|LW)\b/i;
   const MEAL_WINDOW_LABELS = {
-    b: { label: "Breakfast", clause: "Cl. 6.24(a)", color: "#D4A80A", icon: "🍳", win: "(0730–0930)" },
-    l: { label: "Lunch",     clause: "Cl. 6.24(b)", color: "#3DA866", icon: "🥗", win: "(1130–1330)" },
-    d: { label: "Dinner",    clause: "Cl. 6.24(c)", color: "#C47E08", icon: "🍽️", win: "(1730–1930)" },
+    b: { label: "Breakfast", clause: "Cl. 6.24(a)", color: "var(--yellow)", icon: "🍳", win: "(0730–0930)" },
+    l: { label: "Lunch",     clause: "Cl. 6.24(b)", color: "var(--green)", icon: "🥗", win: "(1130–1330)" },
+    d: { label: "Dinner",    clause: "Cl. 6.24(c)", color: "var(--orange)", icon: "🍽️", win: "(1730–1930)" },
   };
   // Determine the trip's base port from the first sector with a depAirport.
   // Ground duties at base don't earn meal allowances.
@@ -1312,7 +1312,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
         addTo(incDate, mkItem(
           `meal_i_${port}_${n}_${incIdx++}`,
           `Incidental — ${dest.label} (${port})`,
-          "Cl. 6.24", "#A85D04", "☕",
+          "Cl. 6.24", "var(--amber)", "☕",
           dest.incidental, 1,
           `${dest.flag} ${fmtShort(incDate)} — ${totalH}h raw slip at ${port} (1 per 24h)`
         ));
@@ -1323,7 +1323,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
   // ── Accom opt-out — on tripDate ──
   if (day.accomOptOut > 0) {
     const n = day.accomOptOut;
-    addTo(tripDate, mkItem("accom", "Accommodation Opt-Out", "Cl. 6.32", "#5B66D6", "🏨", RATES.ACCOM_OPTOUT, n, `${n} night(s) — 48h notice given`));
+    addTo(tripDate, mkItem("accom", "Accommodation Opt-Out", "Cl. 6.32", "var(--indigo)", "🏨", RATES.ACCOM_OPTOUT, n, `${n} night(s) — 48h notice given`));
   }
 
   return byDate;
@@ -1331,6 +1331,9 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
 
 // ─── UI components ────────────────────────────────────────────────────────────
 const mono="'IBM Plex Mono',monospace";
+// Tint a theme colour to a transparent wash. Replaces the old "${c}40" hex-alpha
+// concatenation, which cannot work now that colours are CSS custom properties.
+const mix=(c,pct)=>`color-mix(in srgb, ${c} ${pct}%, transparent)`;
 // Narrower face for the big page headings (day-of-week, "Meal Allowance
 // Schedule", "Week Summary", BP number) — the default Syne face renders wide.
 const heading="'Archivo Narrow',sans-serif";
@@ -1338,8 +1341,8 @@ const heading="'Archivo Narrow',sans-serif";
 function Lbl({t,hi,color,extra}) {
   return (
     <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
-      <span style={{fontSize:10,letterSpacing:1,color:hi?"#1E8AC0":color||"#2D3239",fontFamily:mono}}>{t}</span>
-      {extra&&<span style={{fontSize:9,color:"#4A4F57",fontFamily:mono,background:"#D4CCC0",borderRadius:3,padding:"1px 4px"}}>{extra}</span>}
+      <span style={{fontSize:10,letterSpacing:1,color:hi?"var(--accent)":color||"var(--ink2)",fontFamily:mono}}>{t}</span>
+      {extra&&<span style={{fontSize:9,color:"var(--muted)",fontFamily:mono,background:"var(--line)",borderRadius:3,padding:"1px 4px"}}>{extra}</span>}
     </div>
   );
 }
@@ -1349,8 +1352,8 @@ function TInput({label,value,onChange,hi,color,tzLbl}) {
     <div style={{display:"flex",flexDirection:"column"}}>
       <Lbl t={label} hi={hi} color={color} extra={tzLbl}/>
       <input type="time" value={value} onChange={e=>onChange(e.target.value)} style={{
-        background:"#FAF7F2", border:`1px solid ${hi?"#8BAFCF":color?"#C4CEBC":"#D4CCC0"}`,
-        borderRadius:6, color:value?"#1A1A2E":"#4A4F57", padding:"5px 8px",
+        background:"var(--bg)", border:`1px solid ${hi?"var(--accentLine)":color?"var(--sage)":"var(--line)"}`,
+        borderRadius:6, color:value?"var(--ink)":"var(--muted)", padding:"5px 8px",
         fontFamily:mono, fontSize:15, width:"100%", maxWidth:120, minWidth:90,
       }}/>
     </div>
@@ -1362,9 +1365,9 @@ function DInput({label,value,onChange,hi}) {
     <div style={{display:"flex",flexDirection:"column"}}>
       <Lbl t={label} hi={hi}/>
       <input type="date" value={value} onChange={e=>onChange(e.target.value)} style={{
-        background:"#FAF7F2", border:`1px solid ${hi?"#8BAFCF":"#D4CCC0"}`,
-        borderRadius:6, color:value?"#1A1A2E":"#4A4F57", padding:"5px 8px",
-        fontFamily:mono, fontSize:14, width:"100%", maxWidth:160, minWidth:120, colorScheme:"light",
+        background:"var(--bg)", border:`1px solid ${hi?"var(--accentLine)":"var(--line)"}`,
+        borderRadius:6, color:value?"var(--ink)":"var(--muted)", padding:"5px 8px",
+        fontFamily:mono, fontSize:14, width:"100%", maxWidth:160, minWidth:120, colorScheme:"inherit",
       }}/>
     </div>
   );
@@ -1377,8 +1380,8 @@ function ASelect({label,value,onChange,hi,color,dateStr}) {
     <div style={{display:"flex",flexDirection:"column"}}>
       <Lbl t={label} hi={hi} color={color} extra={tz||undefined}/>
       <select value={value} onChange={e=>onChange(e.target.value)} style={{
-        background:"#FAF7F2", border:`1px solid ${hi||color?"#8BAFCF":"#D4CCC0"}`,
-        borderRadius:6, color:value?"#1A1A2E":"#4A4F57", padding:"5px 8px",
+        background:"var(--bg)", border:`1px solid ${hi||color?"var(--accentLine)":"var(--line)"}`,
+        borderRadius:6, color:value?"var(--ink)":"var(--muted)", padding:"5px 8px",
         fontFamily:mono, fontSize:14, cursor:"pointer", width:"100%", maxWidth:180, minWidth:120, appearance:"none",
       }}>
         <option value="">Select airport</option>
@@ -1388,25 +1391,25 @@ function ASelect({label,value,onChange,hi,color,dateStr}) {
   );
 }
 
-function Toggle({label,checked,onChange,color="#1E8AC0"}) {
+function Toggle({label,checked,onChange,color="var(--accent)"}) {
   return (
     <div onClick={()=>onChange(!checked)} style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer",userSelect:"none"}}>
-      <div style={{width:32,height:18,borderRadius:9,background:checked?color:"#D4CCC0",border:`1px solid ${checked?color:"#4A4F57"}`,position:"relative",transition:"all 0.2s",flexShrink:0}}>
-        <div style={{position:"absolute",top:2,left:checked?14:2,width:12,height:12,borderRadius:"50%",background:checked?"#fff":"#2D3239",transition:"left 0.2s"}}/>
+      <div style={{width:32,height:18,borderRadius:9,background:checked?color:"var(--line)",border:`1px solid ${checked?color:"var(--muted)"}`,position:"relative",transition:"all 0.2s",flexShrink:0}}>
+        <div style={{position:"absolute",top:2,left:checked?14:2,width:12,height:12,borderRadius:"50%",background:checked?"#fff":"var(--ink2)",transition:"left 0.2s"}}/>
       </div>
-      <span style={{fontSize:12,color:checked?"#4A4F57":"#2D3239"}}>{label}</span>
+      <span style={{fontSize:12,color:checked?"var(--muted)":"var(--ink2)"}}>{label}</span>
     </div>
   );
 }
 
 function Card({children,border,style={}}) {
-  return <div className="ui-card" style={{background:"#F0EBE3",border:`1px solid ${border||"#D4CCC0"}`,borderRadius:14,padding:"14px 18px",...style}}>{children}</div>;
+  return <div className="ui-card" style={{background:"var(--panel)",border:`1px solid ${border||"var(--line)"}`,borderRadius:14,padding:"14px 18px",...style}}>{children}</div>;
 }
 function ICard({children,border,style={}}) {
-  return <div className="ui-icard" style={{background:"#FAF7F2",border:`1px solid ${border||"#D4CCC0"}`,borderRadius:10,padding:12,...style}}>{children}</div>;
+  return <div className="ui-icard" style={{background:"var(--bg)",border:`1px solid ${border||"var(--line)"}`,borderRadius:10,padding:12,...style}}>{children}</div>;
 }
 function SHead({children}) {
-  return <div style={{fontSize:11,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:12}}>{children}</div>;
+  return <div style={{fontSize:11,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:12}}>{children}</div>;
 }
 
 // ─── Pay Check widgets ────────────────────────────────────────────────────────
@@ -1416,8 +1419,8 @@ function MInput({label,value,onChange,width=120}) {
       <Lbl t={label}/>
       <input type="text" inputMode="decimal" value={value} placeholder="0.00"
         onChange={e=>onChange(e.target.value)} style={{
-        background:"#FAF7F2", border:"1px solid #D4CCC0", borderRadius:6,
-        color:value?"#1A1A2E":"#4A4F57", padding:"5px 8px",
+        background:"var(--bg)", border:"1px solid var(--line)", borderRadius:6,
+        color:value?"var(--ink)":"var(--muted)", padding:"5px 8px",
         fontFamily:mono, fontSize:14, width:"100%", maxWidth:width, minWidth:90,
       }}/>
     </div>
@@ -1426,12 +1429,12 @@ function MInput({label,value,onChange,width=120}) {
 
 // Reads out one payslip line against the calculator's own figure.
 function Delta({paid,calc,off}) {
-  if (paid == null) return <span style={{fontSize:11,color:"#8A8577",fontFamily:mono}}>enter an amount</span>;
+  if (paid == null) return <span style={{fontSize:11,color:"var(--faint)",fontFamily:mono}}>enter an amount</span>;
   const d = paid - calc;
   return (
     <div style={{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}}>
-      <span style={{fontSize:11,color:"#4A4F57",fontFamily:mono}}>calc ${fmtAUD(calc)}</span>
-      <span style={{fontSize:12,fontWeight:700,fontFamily:mono,color:off?"#CC2E2E":"#1FA06E"}}>
+      <span style={{fontSize:11,color:"var(--muted)",fontFamily:mono}}>calc ${fmtAUD(calc)}</span>
+      <span style={{fontSize:12,fontWeight:700,fontFamily:mono,color:off?"var(--red)":"var(--green2)"}}>
         {off ? `${d>0?"+":"−"}$${fmtAUD(Math.abs(d))}` : "✓ match"}
       </span>
     </div>
@@ -1444,7 +1447,7 @@ function PayRowShell({children,onRemove}) {
       <div style={{display:"flex",gap:12,alignItems:"flex-end",flexWrap:"wrap"}}>
         {children}
         <button onClick={onRemove} title="Remove line" style={{
-          background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#CC2E2E",
+          background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--red)",
           fontSize:11,cursor:"pointer",padding:"4px 9px",fontFamily:mono,marginLeft:"auto"}}>Remove</button>
       </div>
     </ICard>
@@ -1461,15 +1464,15 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
 
   return (
     <div style={{
-      border:`1px solid ${col}35`,
+      border:`1px solid ${mix(col,21)}`,
       borderRadius:12,
       overflow:"hidden",
       marginBottom:6,
     }}>
       {/* Sector header */}
       <div style={{
-        background:`${col}10`,
-        borderBottom:`1px solid ${col}25`,
+        background:`${mix(col,6)}`,
+        borderBottom:`1px solid ${mix(col,15)}`,
         padding:"10px 14px",
         display:"flex", alignItems:"center", gap:10,
       }}>
@@ -1477,7 +1480,7 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
         <div style={{
           width:28, height:28, borderRadius:7,
           background:col, display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:15, fontWeight:800, color:"#1A1A2E", flexShrink:0,
+          fontSize:15, fontWeight:800, color:"var(--ink)", flexShrink:0,
           fontFamily:"Arial,sans-serif", letterSpacing:0,
         }}>{idx+1}</div>
 
@@ -1486,7 +1489,7 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
             value={sec.flightNo}
             onChange={e=>onUpdate("flightNo",e.target.value)}
             placeholder="Flight No."
-            style={{background:"transparent",border:"none",borderBottom:`1px solid ${col}40`,color:"#1A1A2E",fontFamily:mono,fontSize:14,width:90,padding:"1px 0"}}
+            style={{background:"transparent",border:"none",borderBottom:`1px solid ${mix(col,25)}`,color:"var(--ink)",fontFamily:mono,fontSize:14,width:90,padding:"1px 0"}}
           />
           {sec.depAirport&&sec.arrAirport&&(
             <span style={{fontSize:13,fontFamily:mono,color:col,fontWeight:700}}>
@@ -1494,7 +1497,7 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
             </span>
           )}
           {dh!=null&&dh>0&&(
-            <span style={{fontSize:12,fontFamily:mono,color:"#2D3239"}}>
+            <span style={{fontSize:12,fontFamily:mono,color:"var(--ink2)"}}>
               ⏱ <span style={{color:col,fontWeight:700}}>{dh.toFixed(2)}h</span> UTC
             </span>
           )}
@@ -1503,17 +1506,17 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
         {/* Sector date (only for sector 2+, as sector 1 always uses the trip day) */}
         {idx > 0 && (
           <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2}}>
-            <span style={{fontSize:9,color:"#2D3239",fontFamily:mono}}>SECTOR DATE</span>
+            <span style={{fontSize:9,color:"var(--ink2)",fontFamily:mono}}>SECTOR DATE</span>
             <input type="date" value={sec.sectorDate||sectorDate} onChange={e=>onUpdate("sectorDate",e.target.value)}
-              style={{background:"transparent",border:"none",borderBottom:`1px solid ${col}30`,color:sec.sectorDate?"#4A4F57":"#2D3239",fontFamily:mono,fontSize:12,colorScheme:"light",cursor:"pointer",width:100}}/>
+              style={{background:"transparent",border:"none",borderBottom:`1px solid ${mix(col,19)}`,color:sec.sectorDate?"var(--muted)":"var(--ink2)",fontFamily:mono,fontSize:12,colorScheme:"inherit",cursor:"pointer",width:100}}/>
           </div>
         )}
 
         {/* Remove button (always allow removal if >1 sector) */}
         {totalSectors > 1 && (
           <button onClick={onRemove} style={{
-            background:"transparent",border:`1px solid #CC2E2E40`,borderRadius:5,
-            color:"#CC2E2E",fontSize:14,cursor:"pointer",padding:"2px 7px",flexShrink:0,
+            background:"transparent",border:`1px solid color-mix(in srgb, var(--red) 25%, transparent)`,borderRadius:5,
+            color:"var(--red)",fontSize:14,cursor:"pointer",padding:"2px 7px",flexShrink:0,
             fontFamily:mono,
           }}>✕</button>
         )}
@@ -1524,7 +1527,7 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
         {/* Reserve Period toggle (sector 1 only) */}
         {isFirstSector && (
           <div style={{marginBottom:sec.reservePeriod?0:12}}>
-            <Toggle label="Reserve Period (flat 4h credit)" checked={!!sec.reservePeriod} onChange={v=>onUpdate("reservePeriod",v)} color="#7C5CD6"/>
+            <Toggle label="Reserve Period (flat 4h credit)" checked={!!sec.reservePeriod} onChange={v=>onUpdate("reservePeriod",v)} color="var(--purple)"/>
           </div>
         )}
 
@@ -1536,7 +1539,7 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
             block times so this only affects manually-entered sectors. */}
         {!sec.reservePeriod && (
           <div style={{marginBottom:12}}>
-            <Toggle label="PAX / Positioning flight (0.5× credit)" checked={!!sec.isPositioning} onChange={v=>onUpdate("isPositioning",v)} color="#D4A80A"/>
+            <Toggle label="PAX / Positioning flight (0.5× credit)" checked={!!sec.isPositioning} onChange={v=>onUpdate("isPositioning",v)} color="var(--yellow)"/>
           </div>
         )}
 
@@ -1544,13 +1547,13 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
         {!sec.reservePeriod && (
           <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:14,alignItems:"flex-end"}}>
             <ASelect label="DEPARTURE" value={sec.depAirport} onChange={v=>onUpdate("depAirport",v)} dateStr={sec.sectorDate||sectorDate} color={col}/>
-            <div style={{color:"#4A4F57",fontSize:16,paddingBottom:6,alignSelf:"flex-end"}}>→</div>
+            <div style={{color:"var(--muted)",fontSize:16,paddingBottom:6,alignSelf:"flex-end"}}>→</div>
             <ASelect label="ARRIVAL"   value={sec.arrAirport} onChange={v=>onUpdate("arrAirport",v)} dateStr={sec.sectorDate||sectorDate} color={col}/>
           </div>
         )}
 
         {/* Times */}
-        <ICard border={`${col}40`} style={sec.reservePeriod?{marginTop:12}:{}}>
+        <ICard border={`${mix(col,25)}`} style={sec.reservePeriod?{marginTop:12}:{}}>
           <div style={{fontSize:10,letterSpacing:1.5,color:col,fontFamily:mono,marginBottom:9}}>✈ SIGN-ON / SIGN-OFF</div>
           <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
             <TInput label="SIGN-ON"  value={sec.aSignOn}  onChange={v=>onUpdate("aSignOn",v)}  color={col} tzLbl={sec.reservePeriod?"—":(tzLabel(sec.depAirport,sec.sectorDate||sectorDate)||"—")}/>
@@ -1560,10 +1563,10 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
 
         {/* DHA + missed meal summary */}
         {!sec.reservePeriod && sec.aSignOn&&(
-          <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",padding:"7px 10px",background:"#FAF7F2",border:`1px solid ${col}20`,borderRadius:8,marginTop:8}}>
-            {dh!=null&&dh>0&&<span style={{fontSize:12,fontFamily:mono}}><span style={{color:"#2D3239"}}>UTC duty: </span><span style={{color:col,fontWeight:700}}>{dh.toFixed(2)}h</span></span>}
+          <div style={{display:"flex",alignItems:"center",gap:14,flexWrap:"wrap",padding:"7px 10px",background:"var(--bg)",border:`1px solid ${col}20`,borderRadius:8,marginTop:8}}>
+            {dh!=null&&dh>0&&<span style={{fontSize:12,fontFamily:mono}}><span style={{color:"var(--ink2)"}}>UTC duty: </span><span style={{color:col,fontWeight:700}}>{dh.toFixed(2)}h</span></span>}
             <div style={{marginLeft:"auto"}}>
-              <Toggle label="Missed meal" checked={sec.missedMeal} onChange={v=>onUpdate("missedMeal",v)} color="#D4701A"/>
+              <Toggle label="Missed meal" checked={sec.missedMeal} onChange={v=>onUpdate("missedMeal",v)} color="var(--orange2)"/>
             </div>
           </div>
         )}
@@ -1571,15 +1574,15 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
         {/* Roster-publish sign-on comparison (first sector only) */}
         {!sec.reservePeriod && isFirstSector && totalSectors > 1 && (
           <div style={{marginTop:8}}>
-            <Toggle label="Different from roster publish sign-on?" checked={sec.hasRosterPublishSignOnDiff} onChange={v=>{onUpdate("hasRosterPublishSignOnDiff",v);if(!v){onUpdate("rosterPublishSignOn","");onUpdate("rosterPublishSignOnDate","");}}} color="#A85D04"/>
+            <Toggle label="Different from roster publish sign-on?" checked={sec.hasRosterPublishSignOnDiff} onChange={v=>{onUpdate("hasRosterPublishSignOnDiff",v);if(!v){onUpdate("rosterPublishSignOn","");onUpdate("rosterPublishSignOnDate","");}}} color="var(--amber)"/>
             {sec.hasRosterPublishSignOnDiff && (
-              <div style={{marginTop:8,background:"#FAF7F2",border:"1px solid #A85D0440",borderRadius:8,padding:"10px 12px"}}>
+              <div style={{marginTop:8,background:"var(--bg)",border:"1px solid color-mix(in srgb, var(--amber) 25%, transparent)",borderRadius:8,padding:"10px 12px"}}>
                 <div style={{display:"flex",alignItems:"flex-end",gap:14,flexWrap:"wrap"}}>
                   <DInput label="ROSTER PUBLISH DATE" value={sec.rosterPublishSignOnDate||sectorDate} onChange={v=>onUpdate("rosterPublishSignOnDate",v)} hi/>
-                  <TInput label="ROSTER PUBLISH SIGN-ON" value={sec.rosterPublishSignOn} onChange={v=>onUpdate("rosterPublishSignOn",v)} color="#A85D04" tzLbl={tzLabel(sec.depAirport,sectorDate)||"—"}/>
+                  <TInput label="ROSTER PUBLISH SIGN-ON" value={sec.rosterPublishSignOn} onChange={v=>onUpdate("rosterPublishSignOn",v)} color="var(--amber)" tzLbl={tzLabel(sec.depAirport,sectorDate)||"—"}/>
                   <div style={{display:"flex",flexDirection:"column",gap:3,paddingBottom:2}}>
-                    <span style={{fontSize:10,letterSpacing:1,color:"#2D3239",fontFamily:mono}}>ACTUAL SIGN-ON</span>
-                    <span style={{fontSize:13,fontFamily:mono,color:"#1A1A2E",fontWeight:600}}>{fmtShort(sectorDate)} {fmtTime(parseTime(sec.aSignOn))}</span>
+                    <span style={{fontSize:10,letterSpacing:1,color:"var(--ink2)",fontFamily:mono}}>ACTUAL SIGN-ON</span>
+                    <span style={{fontSize:13,fontFamily:mono,color:"var(--ink)",fontWeight:600}}>{fmtShort(sectorDate)} {fmtTime(parseTime(sec.aSignOn))}</span>
                   </div>
                   {(()=>{
                     const rp=parseTime(sec.rosterPublishSignOn);
@@ -1592,20 +1595,20 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
                     const h=Math.floor(Math.abs(earlierBy)/60), m=Math.abs(earlierBy)%60;
                     const durStr=h>0?`${h}h ${m}m`:`${m}m`;
                     const dir=earlierBy>0?"earlier":"later";
-                    const varCol=earlierBy<=0?"#1FA06E":earlierBy>120?"#C47E08":"#1FA06E";
+                    const varCol=earlierBy<=0?"var(--green2)":earlierBy>120?"var(--orange)":"var(--green2)";
                     const triggers=earlierBy>120;
                     return (
                       <div style={{display:"flex",flexDirection:"column",gap:3,paddingBottom:2}}>
-                        <span style={{fontSize:10,letterSpacing:1,color:"#2D3239",fontFamily:mono}}>VARIANCE</span>
+                        <span style={{fontSize:10,letterSpacing:1,color:"var(--ink2)",fontFamily:mono}}>VARIANCE</span>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
                           <span style={{fontSize:13,fontFamily:mono,fontWeight:700,color:varCol}}>{earlierBy===0?"On time":`${durStr} ${dir}`}</span>
-                          {triggers&&<span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"#A85D04",border:"1px solid #A85D0440",borderRadius:3,padding:"1px 5px",background:"#A85D0410",fontFamily:mono}}>DVA TRIGGERED</span>}
+                          {triggers&&<span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"var(--amber)",border:"1px solid color-mix(in srgb, var(--amber) 25%, transparent)",borderRadius:3,padding:"1px 5px",background:"color-mix(in srgb, var(--amber) 6%, transparent)",fontFamily:mono}}>DVA TRIGGERED</span>}
                         </div>
                       </div>
                     );
                   })()}
                 </div>
-                <div style={{fontSize:10,color:"#2D3239",fontFamily:mono,marginTop:6,lineHeight:1.6}}>
+                <div style={{fontSize:10,color:"var(--ink2)",fontFamily:mono,marginTop:6,lineHeight:1.6}}>
                   📝 DVA (Cl. 5.28) triggers if actual sign-on is more than 2 hours earlier than roster publish.
                 </div>
               </div>
@@ -1616,15 +1619,15 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
         {/* Roster-publish sign-off comparison (last sector only) */}
         {!sec.reservePeriod && isLastSector && totalSectors > 1 && (
           <div style={{marginTop:8}}>
-            <Toggle label="Different from roster publish sign-off?" checked={sec.hasRosterPublishDiff} onChange={v=>{onUpdate("hasRosterPublishDiff",v);if(!v){onUpdate("rosterPublishSignOff","");onUpdate("rosterPublishSignOffDate","");}}} color="#A85D04"/>
+            <Toggle label="Different from roster publish sign-off?" checked={sec.hasRosterPublishDiff} onChange={v=>{onUpdate("hasRosterPublishDiff",v);if(!v){onUpdate("rosterPublishSignOff","");onUpdate("rosterPublishSignOffDate","");}}} color="var(--amber)"/>
             {sec.hasRosterPublishDiff && (
-              <div style={{marginTop:8,background:"#FAF7F2",border:"1px solid #A85D0440",borderRadius:8,padding:"10px 12px"}}>
+              <div style={{marginTop:8,background:"var(--bg)",border:"1px solid color-mix(in srgb, var(--amber) 25%, transparent)",borderRadius:8,padding:"10px 12px"}}>
                 <div style={{display:"flex",alignItems:"flex-end",gap:14,flexWrap:"wrap"}}>
                   <DInput label="ROSTER PUBLISH DATE" value={sec.rosterPublishSignOffDate||sectorDate} onChange={v=>onUpdate("rosterPublishSignOffDate",v)} hi/>
-                  <TInput label="ROSTER PUBLISH SIGN-OFF" value={sec.rosterPublishSignOff} onChange={v=>onUpdate("rosterPublishSignOff",v)} color="#A85D04" tzLbl={tzLabel(sec.arrAirport,sectorDate)||"—"}/>
+                  <TInput label="ROSTER PUBLISH SIGN-OFF" value={sec.rosterPublishSignOff} onChange={v=>onUpdate("rosterPublishSignOff",v)} color="var(--amber)" tzLbl={tzLabel(sec.arrAirport,sectorDate)||"—"}/>
                   <div style={{display:"flex",flexDirection:"column",gap:3,paddingBottom:2}}>
-                    <span style={{fontSize:10,letterSpacing:1,color:"#2D3239",fontFamily:mono}}>ACTUAL SIGN-OFF</span>
-                    <span style={{fontSize:13,fontFamily:mono,color:"#1A1A2E",fontWeight:600}}>{fmtShort(sectorDate)} {fmtTime(parseTime(sec.aSignOff))}</span>
+                    <span style={{fontSize:10,letterSpacing:1,color:"var(--ink2)",fontFamily:mono}}>ACTUAL SIGN-OFF</span>
+                    <span style={{fontSize:13,fontFamily:mono,color:"var(--ink)",fontWeight:600}}>{fmtShort(sectorDate)} {fmtTime(parseTime(sec.aSignOff))}</span>
                   </div>
                   {(()=>{
                     const rp=parseTime(sec.rosterPublishSignOff);
@@ -1639,20 +1642,20 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
                     const dir=laterBy>0?"later":"earlier";
                     const dvaTrigger=laterBy>120;
                     const ddoTrigger=laterBy>240;
-                    const varCol=laterBy<=0?"#1FA06E":ddoTrigger?"#CC2E2E":dvaTrigger?"#C47E08":"#1FA06E";
+                    const varCol=laterBy<=0?"var(--green2)":ddoTrigger?"var(--red)":dvaTrigger?"var(--orange)":"var(--green2)";
                     return (
                       <div style={{display:"flex",flexDirection:"column",gap:3,paddingBottom:2}}>
-                        <span style={{fontSize:10,letterSpacing:1,color:"#2D3239",fontFamily:mono}}>VARIANCE</span>
+                        <span style={{fontSize:10,letterSpacing:1,color:"var(--ink2)",fontFamily:mono}}>VARIANCE</span>
                         <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                           <span style={{fontSize:13,fontFamily:mono,fontWeight:700,color:varCol}}>{laterBy===0?"On time":`${durStr} ${dir}`}</span>
-                          {dvaTrigger&&<span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"#A85D04",border:"1px solid #A85D0440",borderRadius:3,padding:"1px 5px",background:"#A85D0410",fontFamily:mono}}>DVA TRIGGERED</span>}
-                          {ddoTrigger&&<span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"#CC2E2E",border:"1px solid #CC2E2E40",borderRadius:3,padding:"1px 5px",background:"#CC2E2E10",fontFamily:mono}}>DAY OFF PAYMENT</span>}
+                          {dvaTrigger&&<span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"var(--amber)",border:"1px solid color-mix(in srgb, var(--amber) 25%, transparent)",borderRadius:3,padding:"1px 5px",background:"color-mix(in srgb, var(--amber) 6%, transparent)",fontFamily:mono}}>DVA TRIGGERED</span>}
+                          {ddoTrigger&&<span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"var(--red)",border:"1px solid color-mix(in srgb, var(--red) 25%, transparent)",borderRadius:3,padding:"1px 5px",background:"color-mix(in srgb, var(--red) 6%, transparent)",fontFamily:mono}}>DAY OFF PAYMENT</span>}
                         </div>
                       </div>
                     );
                   })()}
                 </div>
-                <div style={{fontSize:10,color:"#2D3239",fontFamily:mono,marginTop:6,lineHeight:1.6}}>
+                <div style={{fontSize:10,color:"var(--ink2)",fontFamily:mono,marginTop:6,lineHeight:1.6}}>
                   📝 DVA (Cl. 5.28) triggers if actual sign-off is more than 2 hours later. Day Off Payment (Cl. 5.20) triggers if more than 4 hours later.
                 </div>
               </div>
@@ -1665,8 +1668,8 @@ function SectorCard({ sec, idx, sectorDate, tripDate, onUpdate, onRemove, onAddH
       {!sec.reservePeriod && showHotelBtn&&!hasHotelAfter&&(
         <div style={{padding:"0 14px 12px",display:"flex",justifyContent:"center"}}>
           <button onClick={onAddHotelAfter} style={{
-            background:"#D6E4F0",border:"1px dashed #8BAFCF",borderRadius:8,
-            color:"#1E8AC0",fontSize:12,cursor:"pointer",padding:"5px 14px",
+            background:"var(--accentBg2)",border:"1px dashed var(--accentLine)",borderRadius:8,
+            color:"var(--accent)",fontSize:12,cursor:"pointer",padding:"5px 14px",
             fontFamily:mono,letterSpacing:0.5,
           }}>🏨 Hotel stay after this sector</button>
         </div>
@@ -1706,27 +1709,27 @@ function HelpModal({ onClose }) {
     <div onClick={onClose}
       style={{position:"fixed",inset:0,zIndex:9000,background:"rgba(20,24,32,0.55)",display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
       <div onClick={e=>e.stopPropagation()}
-        style={{background:"#FAF7F2",border:"1px solid #8BAFCF",borderRadius:16,maxWidth:640,width:"100%",maxHeight:"calc(100dvh - 32px)",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.3)"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"18px 22px",borderBottom:"1px solid #E8E2D9",flexShrink:0}}>
+        style={{background:"var(--bg)",border:"1px solid var(--accentLine)",borderRadius:16,maxWidth:640,width:"100%",maxHeight:"calc(100dvh - 32px)",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.3)"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"18px 22px",borderBottom:"1px solid var(--line2)",flexShrink:0}}>
           <div>
-            <div style={{fontFamily:heading,fontSize:22,fontWeight:700,color:"#1A1A2E"}}>How to use this calculator</div>
-            <div style={{fontSize:11,letterSpacing:1.5,color:"#4A4F57",fontFamily:mono,marginTop:2}}>EFA DUTY / ALLOWANCE CALCULATOR</div>
+            <div style={{fontFamily:heading,fontSize:22,fontWeight:700,color:"var(--ink)"}}>How to use this calculator</div>
+            <div style={{fontSize:11,letterSpacing:1.5,color:"var(--muted)",fontFamily:mono,marginTop:2}}>EFA DUTY / ALLOWANCE CALCULATOR</div>
           </div>
           <button onClick={onClose} aria-label="Close"
-            style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,color:"#4A4F57",fontSize:16,cursor:"pointer",padding:"4px 11px",fontFamily:mono,lineHeight:1,flexShrink:0}}>✕</button>
+            style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--muted)",fontSize:16,cursor:"pointer",padding:"4px 11px",fontFamily:mono,lineHeight:1,flexShrink:0}}>✕</button>
         </div>
         <div style={{padding:"14px 22px 22px",overflowY:"auto",minHeight:0,WebkitOverflowScrolling:"touch"}}>
           {steps.map(([title,body],i)=>(
-            <div key={i} style={{display:"flex",gap:13,padding:"11px 0",borderBottom:i<steps.length-1?"1px solid #EFE9E1":"none"}}>
-              <div style={{flexShrink:0,width:26,height:26,borderRadius:"50%",background:"#E0EAF5",border:"1px solid #1E8AC0",color:"#1E8AC0",fontFamily:mono,fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center"}}>{i+1}</div>
+            <div key={i} style={{display:"flex",gap:13,padding:"11px 0",borderBottom:i<steps.length-1?"1px solid var(--line3)":"none"}}>
+              <div style={{flexShrink:0,width:26,height:26,borderRadius:"50%",background:"var(--accentBg)",border:"1px solid var(--accent)",color:"var(--accent)",fontFamily:mono,fontWeight:700,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center"}}>{i+1}</div>
               <div style={{flex:1}}>
-                <div style={{fontSize:14,fontWeight:700,color:"#1A1A2E",marginBottom:2}}>{title}</div>
-                <div style={{fontSize:13,color:"#2D3239",lineHeight:1.55}}>{body}</div>
+                <div style={{fontSize:14,fontWeight:700,color:"var(--ink)",marginBottom:2}}>{title}</div>
+                <div style={{fontSize:13,color:"var(--ink2)",lineHeight:1.55}}>{body}</div>
               </div>
             </div>
           ))}
           <button onClick={onClose}
-            style={{marginTop:16,width:"100%",background:"#1E8AC0",border:"none",borderRadius:8,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",padding:"10px",fontFamily:mono,letterSpacing:0.5}}>Got it</button>
+            style={{marginTop:16,width:"100%",background:"var(--accent)",border:"none",borderRadius:8,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",padding:"10px",fontFamily:mono,letterSpacing:0.5}}>Got it</button>
         </div>
       </div>
     </div>
@@ -3365,7 +3368,25 @@ export default function App() {
   const [allWeeks,setAllWeeks]=useState(()=>({[getMon(today)]:{...Object.fromEntries(DAY_NAMES.map(k=>[k,emptyDay()]))}}));
   const [active,setActive]=useState("MON");
   const [tab,setTab]=useState("entry");
-  const [darkMode,setDarkMode]=useState(false);
+  // Day/night theme — a display preference only, mirroring the bid optimiser:
+  // the toggle flips data-theme on <html>, which the CSS reads. Until the
+  // reader picks a side the OS preference wins, and nothing is persisted, so a
+  // reload returns to whatever the OS prefers.
+  const [themeDark,setThemeDark]=useState(()=>
+    typeof window!=="undefined" && !!window.matchMedia
+      && window.matchMedia("(prefers-color-scheme:dark)").matches);
+  useEffect(()=>{
+    if(typeof window==="undefined" || !window.matchMedia) return;
+    const mq=window.matchMedia("(prefers-color-scheme:dark)");
+    const onChange=()=>{ if(!document.documentElement.getAttribute("data-theme")) setThemeDark(mq.matches); };
+    mq.addEventListener("change",onChange);
+    return ()=>mq.removeEventListener("change",onChange);
+  },[]);
+  const toggleTheme=()=>{
+    const next=!themeDark;
+    document.documentElement.setAttribute("data-theme",next?"dark":"light");
+    setThemeDark(next);
+  };
   const [showHelp,setShowHelp]=useState(false);
   const [clock,setClock]=useState(new Date());
   const [confirmReset,setConfirmReset]=useState(false);
@@ -3875,26 +3896,26 @@ export default function App() {
   const utc=clock.toISOString().slice(11,19)+"Z";
 
   return (
-    <div className={darkMode?"dark":""} style={{minHeight:"100vh",background:"#FAF7F2",color:"#4A4F57",fontFamily:"'Syne',sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"var(--bg)",color:"var(--muted)",fontFamily:"'Syne',sans-serif"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&family=Archivo+Narrow:wght@500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
-        ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-track{background:#FAF7F2;} ::-webkit-scrollbar-thumb{background:#C4B8A8;border-radius:2px;}
-        input[type=time]::-webkit-calendar-picker-indicator,input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.7);cursor:pointer;}
+        ::-webkit-scrollbar{width:3px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:2px;}
+        input[type=time]::-webkit-calendar-picker-indicator,input[type=date]::-webkit-calendar-picker-indicator{filter:var(--pickerFilter);cursor:pointer;}
         input:focus,select:focus{outline:none!important;}
-        select option{background:#F0EBE3;color:#4A4F57;}
+        select option{background:var(--panel);color:var(--muted);}
         @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
         .fadein{animation:fadein 0.25s ease both;}
-        .dpill{cursor:pointer;transition:all 0.15s;} .dpill:hover{border-color:#8BAFCF!important;}
+        .dpill{cursor:pointer;transition:all 0.15s;} .dpill:hover{border-color:var(--accentLine)!important;}
         .hrow:hover{background:rgba(56,189,248,0.08)!important;}
-        .addBtn{transition:all 0.15s;} .addBtn:hover{background:#D6E4F0!important;border-color:#1E8AC0!important;}
+        .addBtn{transition:all 0.15s;} .addBtn:hover{background:var(--accentBg2)!important;border-color:var(--accent)!important;}
 
         /* Responsive */
-        .topbar{background:#FAF7F2;border-bottom:1px solid #D4CCC0;display:flex;align-items:center;gap:12px;padding:0 20px;min-height:52px;flex-wrap:wrap;}
+        .topbar{background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 20px;min-height:52px;flex-wrap:wrap;}
         .stickyhead{position:sticky;top:0;z-index:50;}
         .topbar-brand{display:flex;align-items:center;gap:8px;flex-shrink:0;}
         .topbar-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;}
-        .day-tabs{background:#FAF7F2;border-bottom:1px solid #D4CCC0;padding:8px 12px;display:flex;gap:5px;overflow-x:auto;align-items:stretch;-webkit-overflow-scrolling:touch;}
+        .day-tabs{background:var(--bg);border-bottom:1px solid var(--line);padding:8px 12px;display:flex;gap:5px;overflow-x:auto;align-items:stretch;-webkit-overflow-scrolling:touch;}
         .hotel-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-bottom:12px;align-items:end;}
         .summary-row{display:grid;grid-template-columns:125px 1fr auto;}
         .monthly-row{display:grid;grid-template-columns:160px 1fr auto;}
@@ -3922,10 +3943,57 @@ export default function App() {
           .main-content{padding:16px 16px;}
         }
 
-        /* ─── DARK MODE — full invert ─── */
-        .dark{filter:invert(1);}
-        /* Re-invert media so images/emojis stay correct */
-        .dark img,.dark video,.dark canvas,.dark svg{filter:invert(1);}
+        /* ─── Day / night theme ───────────────────────────────────────────
+           Light is the base palette on bare :root. The dark palette lives in
+           one block applied two ways: automatically when the OS asks for dark
+           (unless the reader has forced light), and explicitly when the
+           day/night toggle sets data-theme="dark". The toggle wins in both
+           directions. Theme is a display preference only and is not persisted,
+           so a reload returns to whatever the OS prefers. Mirrors the EFA bid
+           optimiser, and several tokens carry its exact values. */
+        :root{
+          color-scheme:light; --pickerFilter:invert(0.7);
+          --bg:#FAF7F2; --panel:#F0EBE3; --ink:#1A1A2E; --ink2:#2D3239;
+          --muted:#4A4F57; --faint:#8A8577; --line:#D4CCC0; --line2:#E8E2D9;
+          --line3:#EFE9E1; --scroll:#C4B8A8; --accent:#1E8AC0; --accentLine:#8BAFCF;
+          --accentBg:#E0EAF5; --accentBg2:#D6E4F0; --accentInk:#4A7A9B;
+          --slipHead:#1A2A3A; --slipInk:#EAF1F8; --slipMuted:#9DB4CC; --red:#CC2E2E;
+          --red2:#D44545; --redBg:#F5E0E0; --green:#3DA866; --green2:#1FA06E;
+          --greenBg:#E5F0E5; --greenLine:#B8D4B8; --purple:#7C5CD6;
+          --purpleBg:#F5F0F9; --amber:#A85D04; --amberBg:#FFF8E6; --yellow:#D4A80A;
+          --yellow2:#D49B0A; --orange:#C47E08; --orange2:#D4701A; --indigo:#5B66D6;
+          --pink:#D4458E; --blue:#3B82D6; --slate:#94A3B8; --sage:#C4CEBC;
+        }
+        @media (prefers-color-scheme:dark){
+          :root:not([data-theme="light"]){
+          color-scheme:dark; --pickerFilter:none;
+          --bg:#15181C; --panel:#1D2126; --ink:#E8EAED; --ink2:#C2C9D1;
+          --muted:#98A1AA; --faint:#7D858E; --line:#2E343B; --line2:#272C33;
+          --line3:#23282E; --scroll:#3A4149; --accent:#79AEF5; --accentLine:#3D5A7D;
+          --accentBg:#16304F; --accentBg2:#1A3A5F; --accentInk:#9DC4EE;
+          --slipHead:#11161B; --slipInk:#DCE6F2; --slipMuted:#8FA3B8; --red:#F2777A;
+          --red2:#EF8A8A; --redBg:#3A1A1C; --green:#5FCE92; --green2:#4FC48D;
+          --greenBg:#123324; --greenLine:#2C5A3F; --purple:#BB9BEC;
+          --purpleBg:#2C2140; --amber:#E0A94A; --amberBg:#3B2B0D; --yellow:#E8C85A;
+          --yellow2:#DFBB45; --orange:#E0A04A; --orange2:#EA9A55; --indigo:#9AA4EE;
+          --pink:#EF8FC0; --blue:#79AEF5; --slate:#8B949E; --sage:#55604F;
+          }
+        }
+        :root[data-theme="dark"]{
+          color-scheme:dark; --pickerFilter:none;
+          --bg:#15181C; --panel:#1D2126; --ink:#E8EAED; --ink2:#C2C9D1;
+          --muted:#98A1AA; --faint:#7D858E; --line:#2E343B; --line2:#272C33;
+          --line3:#23282E; --scroll:#3A4149; --accent:#79AEF5; --accentLine:#3D5A7D;
+          --accentBg:#16304F; --accentBg2:#1A3A5F; --accentInk:#9DC4EE;
+          --slipHead:#11161B; --slipInk:#DCE6F2; --slipMuted:#8FA3B8; --red:#F2777A;
+          --red2:#EF8A8A; --redBg:#3A1A1C; --green:#5FCE92; --green2:#4FC48D;
+          --greenBg:#123324; --greenLine:#2C5A3F; --purple:#BB9BEC;
+          --purpleBg:#2C2140; --amber:#E0A94A; --amberBg:#3B2B0D; --yellow:#E8C85A;
+          --yellow2:#DFBB45; --orange:#E0A04A; --orange2:#EA9A55; --indigo:#9AA4EE;
+          --pink:#EF8FC0; --blue:#79AEF5; --slate:#8B949E; --sage:#55604F;
+        }
+        /* The HTML shell paints a fixed light background; follow the theme. */
+        html,body{background:var(--bg);}
       `}</style>
 
       {/* ── Sticky header (topbar + tab bar) ── */}
@@ -3933,23 +4001,23 @@ export default function App() {
       <div className="topbar">
         <div className="topbar-brand">
           <div>
-            <div style={{fontFamily:mono,fontSize:13,fontWeight:700,color:"#1A1A2E",letterSpacing:2}}>EFA PAY</div>
-            <div style={{fontSize:9,color:"#4A4F57",letterSpacing:1.5}}>EA 2025 · TRIP ALLOWANCE CALCULATOR</div>
+            <div style={{fontFamily:mono,fontSize:13,fontWeight:700,color:"var(--ink)",letterSpacing:2}}>EFA PAY</div>
+            <div style={{fontSize:9,color:"var(--muted)",letterSpacing:1.5}}>EA 2025 · TRIP ALLOWANCE CALCULATOR</div>
           </div>
         </div>
         <div className="topbar-controls">
           {[["cpt","Captain"],["fo","F/Officer"]].map(([r,lbl])=>(
-            <button key={r} onClick={()=>setRole(r)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:role===r?"#E0EAF5":"transparent",border:`1px solid ${role===r?"#1E8AC0":"#D4CCC0"}`,color:role===r?"#1E8AC0":"#2D3239",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
+            <button key={r} onClick={()=>setRole(r)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:role===r?"var(--accentBg)":"transparent",border:`1px solid ${role===r?"var(--accent)":"var(--line)"}`,color:role===r?"var(--accent)":"var(--ink2)",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
           ))}
           {[["a330","A330"],["a320","A320"]].map(([ac,lbl])=>(
-            <button key={ac} onClick={()=>setAircraft(ac)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:aircraft===ac?"#E0EAF5":"transparent",border:`1px solid ${aircraft===ac?"#1E8AC0":"#D4CCC0"}`,color:aircraft===ac?"#1E8AC0":"#2D3239",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
+            <button key={ac} onClick={()=>setAircraft(ac)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:aircraft===ac?"var(--accentBg)":"transparent",border:`1px solid ${aircraft===ac?"var(--accent)":"var(--line)"}`,color:aircraft===ac?"var(--accent)":"var(--ink2)",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
           ))}
-          <select value={yearIdx} onChange={e=>setYearIdx(+e.target.value)} style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:6,color:"#1E8AC0",padding:"4px 8px",fontFamily:mono,fontSize:12,cursor:"pointer"}}>
+          <select value={yearIdx} onChange={e=>setYearIdx(+e.target.value)} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"4px 8px",fontFamily:mono,fontSize:12,cursor:"pointer"}}>
             {INDEX_YEARS.map((y,i)=><option key={i} value={i}>{y.label}</option>)}
           </select>
         </div>
-        <div style={{fontFamily:mono,fontSize:13,color:"#1E8AC0",letterSpacing:1,flexShrink:0}}>{utc}</div>
-        <label style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,color:"#1E8AC0",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}} title="Upload Qantas SH roster .txt file">
+        <div style={{fontFamily:mono,fontSize:13,color:"var(--accent)",letterSpacing:1,flexShrink:0}}>{utc}</div>
+        <label style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}} title="Upload Qantas SH roster .txt file">
           📄 ROSTER
           <input type="file" accept=".txt,text/plain" onChange={e=>{handleRosterUpload(e.target.files);e.target.value="";}} style={{display:"none"}}/>
         </label>
@@ -3973,42 +4041,42 @@ export default function App() {
             }catch(err){alert("Couldn't generate offline copy: "+err.message);}
           }}
           title="Save this app as a standalone .html for offline use"
-          style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,color:"#1E8AC0",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}}>
+          style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}}>
           ⤓ APP
         </button>
         {confirmClearRoster ? (
-          <div style={{display:"flex",alignItems:"center",gap:6,background:"#F5E0E0",border:"1px solid #CC2E2E60",borderRadius:8,padding:"4px 8px",flexShrink:0}}>
-            <span style={{fontSize:11,color:"#CC2E2E",fontFamily:mono}}>Clear all?</span>
+          <div style={{display:"flex",alignItems:"center",gap:6,background:"var(--redBg)",border:"1px solid color-mix(in srgb, var(--red) 38%, transparent)",borderRadius:8,padding:"4px 8px",flexShrink:0}}>
+            <span style={{fontSize:11,color:"var(--red)",fontFamily:mono}}>Clear all?</span>
             <button onClick={clearRoster}
-              style={{background:"#CC2E2E",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
+              style={{background:"var(--red)",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
               Yes, clear
             </button>
             <button onClick={()=>setConfirmClearRoster(false)}
-              style={{background:"transparent",border:"1px solid #4A4F57",borderRadius:5,color:"#2D3239",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
+              style={{background:"transparent",border:"1px solid var(--muted)",borderRadius:5,color:"var(--ink2)",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
               Cancel
             </button>
           </div>
         ) : (
           <button onClick={()=>setConfirmClearRoster(true)} title="Clear all roster data and reset the calculator"
-            style={{background:"#F0EBE3",border:"1px solid #CC2E2E30",borderRadius:8,color:"#CC2E2E",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5}}>
+            style={{background:"var(--panel)",border:"1px solid color-mix(in srgb, var(--red) 19%, transparent)",borderRadius:8,color:"var(--red)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5}}>
             🗑 CLEAR
           </button>
         )}
-        <button onClick={()=>setDarkMode(!darkMode)} title={darkMode?"Switch to light mode":"Switch to dark mode"}
-          style={{background:darkMode?"#1F3144":"#F0EBE3",border:`1px solid ${darkMode?"#3B82D6":"#D4CCC0"}`,borderRadius:8,color:darkMode?"#F0E68C":"#1E8AC0",padding:"6px 10px",fontSize:14,cursor:"pointer",fontFamily:mono,flexShrink:0,minWidth:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          {darkMode?"☀":"☾"}
+        <button onClick={toggleTheme} title={themeDark?"Switch to day (light) mode":"Switch to night (dark) mode"}
+          style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",justifyContent:"center",whiteSpace:"nowrap"}}>
+          {themeDark?"☀ Day":"🌙 Night"}
         </button>
         <button onClick={()=>setShowHelp(true)} title="How to use this calculator"
-          style={{background:"#F0EBE3",border:"1px solid #1E8AC0",borderRadius:8,color:"#1E8AC0",padding:"6px 10px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,minWidth:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          style={{background:"var(--panel)",border:"1px solid var(--accent)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,minWidth:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
           ?
         </button>
       </div>
       {showHelp && <HelpModal onClose={()=>setShowHelp(false)} />}
 
       {/* ── Tab bar ── */}
-      <div style={{background:"#FAF7F2",borderBottom:"1px solid #D4CCC0",display:"flex",padding:"0 20px",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
+      <div style={{background:"var(--bg)",borderBottom:"1px solid var(--line)",display:"flex",padding:"0 20px",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
         {[["entry","DAY SUMMARY"],["rates","MEAL RATES"],["summary","WEEK SUMMARY"],["monthly","MONTH / ROSTER"],["paycheck","PAY CHECK"]].map(([id,lbl])=>(
-          <button key={id} onClick={()=>setTab(id)} style={{background:"transparent",border:"none",color:tab===id?"#1E8AC0":"#4A4F57",borderBottom:tab===id?"2px solid #1E8AC0":"2px solid transparent",padding:"0 16px",height:44,fontSize:12,fontWeight:700,letterSpacing:1.5,fontFamily:mono,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{lbl}</button>
+          <button key={id} onClick={()=>setTab(id)} style={{background:"transparent",border:"none",color:tab===id?"var(--accent)":"var(--muted)",borderBottom:tab===id?"2px solid var(--accent)":"2px solid transparent",padding:"0 16px",height:44,fontSize:12,fontWeight:700,letterSpacing:1.5,fontFamily:mono,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{lbl}</button>
         ))}
       </div>
       </div>
@@ -4090,22 +4158,22 @@ export default function App() {
             }
 
             return (
-              <div key={day} className="dpill" onClick={()=>{ setActive(day); setConfirmReset(false); }} style={{padding:"7px 11px",borderRadius:9,flexShrink:0,cursor:"pointer",minWidth:82,background:isAct?"#E0EAF5":"transparent",border:`1px solid ${isAct?"#8BAFCF":"#D4CCC0"}`}}>
-                <div style={{fontSize:12,fontWeight:800,fontFamily:mono,letterSpacing:1,color:isWknd?(isAct?"#D44545":"#2D3239"):(isAct?"#1A1A2E":"#2D3239")}}>{day}</div>
-                <div style={{fontSize:13,fontWeight:600,color:isAct?"#1E8AC0":"#4A4F57",marginTop:1}}>{fmtShort(dt)}</div>
-                {route&&<div style={{fontSize:9,color:isAct?"#4A7A9B":"#4A4F57",marginTop:2,fontFamily:mono}}>{route}</div>}
+              <div key={day} className="dpill" onClick={()=>{ setActive(day); setConfirmReset(false); }} style={{padding:"7px 11px",borderRadius:9,flexShrink:0,cursor:"pointer",minWidth:82,background:isAct?"var(--accentBg)":"transparent",border:`1px solid ${isAct?"var(--accentLine)":"var(--line)"}`}}>
+                <div style={{fontSize:12,fontWeight:800,fontFamily:mono,letterSpacing:1,color:isWknd?(isAct?"var(--red2)":"var(--ink2)"):(isAct?"var(--ink)":"var(--ink2)")}}>{day}</div>
+                <div style={{fontSize:13,fontWeight:600,color:isAct?"var(--accent)":"var(--muted)",marginTop:1}}>{fmtShort(dt)}</div>
+                {route&&<div style={{fontSize:9,color:isAct?"var(--accentInk)":"var(--muted)",marginTop:2,fontFamily:mono}}>{route}</div>}
                 {days[day].sectors[0]?.reservePeriod
-                  ? <div style={{fontSize:9,color:"#7C5CD6",fontFamily:mono,marginTop:1,fontWeight:700}}>Reserve</div>
-                  : days[day].sectors.length>2&&<div style={{fontSize:9,color:"#2D3239",fontFamily:mono,marginTop:1}}>{days[day].sectors.length} sectors</div>}
-                {hasSpillOver&&<div style={{fontSize:9,color:"#7C5CD6",fontFamily:mono,marginTop:1,letterSpacing:0.5}}>+ MULTI-DAY</div>}
-                <div style={{fontSize:11,fontFamily:mono,marginTop:3,color:t>0?"#3DA866":"#4A4F57",fontWeight:t>0?700:400}}>{t>0?`$${fmtAUD(t)}`:"—"}</div>
+                  ? <div style={{fontSize:9,color:"var(--purple)",fontFamily:mono,marginTop:1,fontWeight:700}}>Reserve</div>
+                  : days[day].sectors.length>2&&<div style={{fontSize:9,color:"var(--ink2)",fontFamily:mono,marginTop:1}}>{days[day].sectors.length} sectors</div>}
+                {hasSpillOver&&<div style={{fontSize:9,color:"var(--purple)",fontFamily:mono,marginTop:1,letterSpacing:0.5}}>+ MULTI-DAY</div>}
+                <div style={{fontSize:11,fontFamily:mono,marginTop:3,color:t>0?"var(--green)":"var(--muted)",fontWeight:t>0?700:400}}>{t>0?`$${fmtAUD(t)}`:"—"}</div>
               </div>
             );
           })}
-          <div style={{marginLeft:"auto",padding:"7px 13px",borderRadius:9,flexShrink:0,background:weekTotalByDate>0?"#D6E4F0":"transparent",border:`1px solid ${weekTotalByDate>0?"#8BAFCF":"#D4CCC0"}`,display:"flex",flexDirection:"column",justifyContent:"center"}}>
-            <div style={{fontSize:11,color:"#2D3239",fontFamily:mono,letterSpacing:1,fontWeight:700}}>WEEK</div>
-            <div style={{fontSize:11,color:"#4A4F57",fontFamily:mono,marginTop:1}}>{fmtShort(weekStart)}–{fmtShort(weekDate(weekStart,6))}</div>
-            <div style={{fontSize:16,fontWeight:700,fontFamily:mono,color:weekTotalByDate>0?"#1E8AC0":"#4A4F57",marginTop:3,textShadow:weekTotalByDate>0?"0 0 14px rgba(56,189,248,0.4)":"none"}}>{weekTotalByDate>0?`$${fmtAUD(weekTotalByDate)}`:"—"}</div>
+          <div style={{marginLeft:"auto",padding:"7px 13px",borderRadius:9,flexShrink:0,background:weekTotalByDate>0?"var(--accentBg2)":"transparent",border:`1px solid ${weekTotalByDate>0?"var(--accentLine)":"var(--line)"}`,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+            <div style={{fontSize:11,color:"var(--ink2)",fontFamily:mono,letterSpacing:1,fontWeight:700}}>WEEK</div>
+            <div style={{fontSize:11,color:"var(--muted)",fontFamily:mono,marginTop:1}}>{fmtShort(weekStart)}–{fmtShort(weekDate(weekStart,6))}</div>
+            <div style={{fontSize:16,fontWeight:700,fontFamily:mono,color:weekTotalByDate>0?"var(--accent)":"var(--muted)",marginTop:3,textShadow:weekTotalByDate>0?"0 0 14px rgba(56,189,248,0.4)":"none"}}>{weekTotalByDate>0?`$${fmtAUD(weekTotalByDate)}`:"—"}</div>
           </div>
         </div>
       )}
@@ -4118,43 +4186,43 @@ export default function App() {
             {/* Day header */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:8}}>
               <div>
-                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>DUTY DAY</div>
-                <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"#1A1A2E",letterSpacing:0,lineHeight:1}}>
-                  {active} <span style={{color:"#1E8AC0"}}>{fmtShort(dayDate)}</span>
+                <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>DUTY DAY</div>
+                <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"var(--ink)",letterSpacing:0,lineHeight:1}}>
+                  {active} <span style={{color:"var(--accent)"}}>{fmtShort(dayDate)}</span>
                 </div>
-                <div style={{fontSize:12,color:"#2D3239",marginTop:2}}>{fmtFull(dayDate)}</div>
+                <div style={{fontSize:12,color:"var(--ink2)",marginTop:2}}>{fmtFull(dayDate)}</div>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                <div style={{display:"flex",alignItems:"center",gap:3,background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,padding:"3px 6px"}}>
-                  <span style={{fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1,marginRight:3}}>WEEK OF</span>
-                  <button onClick={()=>setWeekStart(addDays(weekStart,-7))} style={{background:"transparent",border:"none",color:"#2D3239",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>‹</button>
+                <div style={{display:"flex",alignItems:"center",gap:3,background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,padding:"3px 6px"}}>
+                  <span style={{fontSize:10,color:"var(--ink2)",fontFamily:mono,letterSpacing:1,marginRight:3}}>WEEK OF</span>
+                  <button onClick={()=>setWeekStart(addDays(weekStart,-7))} style={{background:"transparent",border:"none",color:"var(--ink2)",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>‹</button>
                   <div style={{position:"relative",display:"flex",alignItems:"center"}}>
-                    <span style={{fontFamily:mono,fontSize:13,color:"#1E8AC0",userSelect:"none",minWidth:84,textAlign:"center"}}>
+                    <span style={{fontFamily:mono,fontSize:13,color:"var(--accent)",userSelect:"none",minWidth:84,textAlign:"center"}}>
                       {fmtShort(weekStart)} {parseDate(weekStart)?.getUTCFullYear()}
                     </span>
                     <input type="date" value={weekStart} onChange={e=>setWeekStart(getMon(e.target.value))}
-                      style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",colorScheme:"light"}}/>
+                      style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",colorScheme:"inherit"}}/>
                   </div>
-                  <button onClick={()=>setWeekStart(addDays(weekStart,7))} style={{background:"transparent",border:"none",color:"#2D3239",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>›</button>
+                  <button onClick={()=>setWeekStart(addDays(weekStart,7))} style={{background:"transparent",border:"none",color:"var(--ink2)",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>›</button>
                 </div>
-                <span style={{fontSize:11,color:"#2D3239",fontFamily:mono}}>{d.sectors.length} sector{d.sectors.length!==1?"s":""}</span>
+                <span style={{fontSize:11,color:"var(--ink2)",fontFamily:mono}}>{d.sectors.length} sector{d.sectors.length!==1?"s":""}</span>
                 {confirmReset ? (
-                  <div style={{display:"flex",alignItems:"center",gap:6,background:"#F5E0E0",border:"1px solid #CC2E2E60",borderRadius:8,padding:"4px 8px"}}>
-                    <span style={{fontSize:11,color:"#CC2E2E",fontFamily:mono}}>Clear {active}?</span>
+                  <div style={{display:"flex",alignItems:"center",gap:6,background:"var(--redBg)",border:"1px solid color-mix(in srgb, var(--red) 38%, transparent)",borderRadius:8,padding:"4px 8px"}}>
+                    <span style={{fontSize:11,color:"var(--red)",fontFamily:mono}}>Clear {active}?</span>
                     <button onClick={()=>{ setDays(p=>({...p,[active]:emptyDay()})); setConfirmReset(false); }}
-                      style={{background:"#CC2E2E",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
+                      style={{background:"var(--red)",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
                       Yes, clear
                     </button>
                     <button onClick={()=>setConfirmReset(false)}
-                      style={{background:"transparent",border:"1px solid #4A4F57",borderRadius:5,color:"#2D3239",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
+                      style={{background:"transparent",border:"1px solid var(--muted)",borderRadius:5,color:"var(--ink2)",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
                       Cancel
                     </button>
                   </div>
                 ) : (
                   <button onClick={()=>setConfirmReset(true)}
-                    style={{background:"transparent",border:"1px solid #CC2E2E35",borderRadius:7,color:"#CC2E2E",fontSize:12,cursor:"pointer",padding:"4px 10px",fontFamily:mono,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}}
-                    onMouseEnter={e=>{e.currentTarget.style.background="#CC2E2E15";e.currentTarget.style.borderColor="#CC2E2E70";}}
-                    onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="#CC2E2E35";}}
+                    style={{background:"transparent",border:"1px solid color-mix(in srgb, var(--red) 21%, transparent)",borderRadius:7,color:"var(--red)",fontSize:12,cursor:"pointer",padding:"4px 10px",fontFamily:mono,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}}
+                    onMouseEnter={e=>{e.currentTarget.style.background="color-mix(in srgb, var(--red) 8%, transparent)";e.currentTarget.style.borderColor="color-mix(in srgb, var(--red) 44%, transparent)";}}
+                    onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.borderColor="color-mix(in srgb, var(--red) 21%, transparent)";}}
                   >↺ Reset day</button>
                 )}
               </div>
@@ -4190,16 +4258,16 @@ export default function App() {
                   {/* "Add sector between" button + continue duty toggle */}
                   {!isReserve && idx<d.sectors.length-1&&(
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                      <div style={{flex:1,height:1,background:"#D4CCC0"}}/>
+                      <div style={{flex:1,height:1,background:"var(--line)"}}/>
                       {!hasHotelAfterThis&&(
-                        <Toggle label="Continue duty to next sector" checked={sec.continueDuty} onChange={v=>updSector(active,sec.id,"continueDuty",v)} color="#1E8AC0"/>
+                        <Toggle label="Continue duty to next sector" checked={sec.continueDuty} onChange={v=>updSector(active,sec.id,"continueDuty",v)} color="var(--accent)"/>
                       )}
                       <button className="addBtn" onClick={()=>insertSectorAt(active,idx)} style={{
-                        background:"#F0EBE3",border:"1px dashed #4A4F57",borderRadius:7,
-                        color:"#2D3239",fontSize:11,cursor:"pointer",padding:"3px 10px",
+                        background:"var(--panel)",border:"1px dashed var(--muted)",borderRadius:7,
+                        color:"var(--ink2)",fontSize:11,cursor:"pointer",padding:"3px 10px",
                         fontFamily:mono,letterSpacing:0.5,flexShrink:0,
                       }}>+ Insert sector here</button>
-                      <div style={{flex:1,height:1,background:"#D4CCC0"}}/>
+                      <div style={{flex:1,height:1,background:"var(--line)"}}/>
                     </div>
                   )}
 
@@ -4215,47 +4283,47 @@ export default function App() {
                     const hRetDepTz = d.sectors[idx + 1]?.depAirport;
 
                     return (
-                      <Card key={`hotel-${hotelIdx}`} border="#8BAFCF" style={{marginBottom:8}}>
+                      <Card key={`hotel-${hotelIdx}`} border="var(--accentLine)" style={{marginBottom:8}}>
                         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
                           <SHead style={{marginBottom:0}}>🏨 HOTEL STAY {allHotelsUI.length > 1 ? `#${hotelIdx + 1}` : ""} — between sector {idx+1} and {idx+2}</SHead>
-                          <button onClick={()=>removeHotel(active, hotelIdx)} style={{background:"transparent",border:"1px solid #CC2E2E30",borderRadius:5,color:"#CC2E2E",fontSize:12,cursor:"pointer",padding:"2px 7px",fontFamily:mono}}>Remove hotel</button>
+                          <button onClick={()=>removeHotel(active, hotelIdx)} style={{background:"transparent",border:"1px solid color-mix(in srgb, var(--red) 19%, transparent)",borderRadius:5,color:"var(--red)",fontSize:12,cursor:"pointer",padding:"2px 7px",fontFamily:mono}}>Remove hotel</button>
                         </div>
                         <div className="hotel-grid">
-                          <ICard border="#8BAFCF" style={{display:"flex",flexDirection:"column",gap:9}}>
-                            <div style={{fontSize:10,letterSpacing:1.5,color:"#1E8AC0",fontFamily:mono}}>CHECK-IN</div>
+                          <ICard border="var(--accentLine)" style={{display:"flex",flexDirection:"column",gap:9}}>
+                            <div style={{fontSize:10,letterSpacing:1.5,color:"var(--accent)",fontFamily:mono}}>CHECK-IN</div>
                             <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                               <DInput label="DATE" value={hotel.hotelFrom} onChange={v=>updHotel(active, hotelIdx, "hotelFrom", v)} hi/>
                               <div>
                                 <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
-                                  <span style={{fontSize:10,letterSpacing:1,color:"#1E8AC0",fontFamily:mono}}>TIME</span>
-                                  {sec.arrAirport&&<span style={{fontSize:9,color:"#4A4F57",fontFamily:mono,background:"#D4CCC0",borderRadius:3,padding:"1px 4px"}}>{tzLabel(sec.arrAirport,sDate)}</span>}
-                                  <span style={{fontSize:9,color:"#1FA06E",fontFamily:mono}}>auto</span>
+                                  <span style={{fontSize:10,letterSpacing:1,color:"var(--accent)",fontFamily:mono}}>TIME</span>
+                                  {sec.arrAirport&&<span style={{fontSize:9,color:"var(--muted)",fontFamily:mono,background:"var(--line)",borderRadius:3,padding:"1px 4px"}}>{tzLabel(sec.arrAirport,sDate)}</span>}
+                                  <span style={{fontSize:9,color:"var(--green2)",fontFamily:mono}}>auto</span>
                                 </div>
                                 <input type="time" value={hotel.hotelCheckIn} onChange={e=>updHotel(active, hotelIdx, "hotelCheckIn", e.target.value)}
-                                  style={{background:"#FAF7F2",border:"1px solid #8BAFCF",borderRadius:6,color:hotel.hotelCheckIn?"#1A1A2E":"#4A4F57",padding:"5px 8px",fontFamily:mono,fontSize:15,width:"100%",maxWidth:120,minWidth:90}}/>
+                                  style={{background:"var(--bg)",border:"1px solid var(--accentLine)",borderRadius:6,color:hotel.hotelCheckIn?"var(--ink)":"var(--muted)",padding:"5px 8px",fontFamily:mono,fontSize:15,width:"100%",maxWidth:120,minWidth:90}}/>
                               </div>
                             </div>
                           </ICard>
                           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,paddingBottom:4}}>
-                            <div style={{fontSize:22,color:"#4A4F57"}}>⬌</div>
-                            {hNights>=0&&<div style={{background:"#D6E4F0",border:"1px solid #8BAFCF",borderRadius:8,padding:"4px 10px",textAlign:"center"}}>
-                              <div style={{fontFamily:mono,fontSize:16,fontWeight:700,color:"#1E8AC0"}}>{hNights}</div>
-                              <div style={{fontSize:9,color:"#2D3239",fontFamily:mono}}>{hNights===0?"same day":`night${hNights!==1?"s":""}`}</div>
+                            <div style={{fontSize:22,color:"var(--muted)"}}>⬌</div>
+                            {hNights>=0&&<div style={{background:"var(--accentBg2)",border:"1px solid var(--accentLine)",borderRadius:8,padding:"4px 10px",textAlign:"center"}}>
+                              <div style={{fontFamily:mono,fontSize:16,fontWeight:700,color:"var(--accent)"}}>{hNights}</div>
+                              <div style={{fontSize:9,color:"var(--ink2)",fontFamily:mono}}>{hNights===0?"same day":`night${hNights!==1?"s":""}`}</div>
                             </div>}
-                            {hTotSlip>0&&<div style={{fontSize:10,color:hTotSlip>4*60?"#1FA06E":"#CC2E2E",fontFamily:mono,textAlign:"center"}}>{(hTotSlip/60).toFixed(1)}h{hTotSlip>4*60?" ✓":" ✗"}</div>}
+                            {hTotSlip>0&&<div style={{fontSize:10,color:hTotSlip>4*60?"var(--green2)":"var(--red)",fontFamily:mono,textAlign:"center"}}>{(hTotSlip/60).toFixed(1)}h{hTotSlip>4*60?" ✓":" ✗"}</div>}
                           </div>
-                          <ICard border="#C4CEBC" style={{display:"flex",flexDirection:"column",gap:9}}>
-                            <div style={{fontSize:10,letterSpacing:1.5,color:"#3DA866",fontFamily:mono}}>CHECK-OUT</div>
+                          <ICard border="var(--sage)" style={{display:"flex",flexDirection:"column",gap:9}}>
+                            <div style={{fontSize:10,letterSpacing:1.5,color:"var(--green)",fontFamily:mono}}>CHECK-OUT</div>
                             <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                               <DInput label="DATE" value={hotel.hotelTo} onChange={v=>updHotel(active, hotelIdx, "hotelTo", v)} hi/>
                               <div>
                                 <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
-                                  <span style={{fontSize:10,letterSpacing:1,color:"#3DA866",fontFamily:mono}}>TIME</span>
-                                  {hRetDepTz&&<span style={{fontSize:9,color:"#4A4F57",fontFamily:mono,background:"#D4CCC0",borderRadius:3,padding:"1px 4px"}}>{tzLabel(hRetDepTz,hotel.hotelTo||dayDate)}</span>}
-                                  <span style={{fontSize:9,color:"#1FA06E",fontFamily:mono}}>auto</span>
+                                  <span style={{fontSize:10,letterSpacing:1,color:"var(--green)",fontFamily:mono}}>TIME</span>
+                                  {hRetDepTz&&<span style={{fontSize:9,color:"var(--muted)",fontFamily:mono,background:"var(--line)",borderRadius:3,padding:"1px 4px"}}>{tzLabel(hRetDepTz,hotel.hotelTo||dayDate)}</span>}
+                                  <span style={{fontSize:9,color:"var(--green2)",fontFamily:mono}}>auto</span>
                                 </div>
                                 <input type="time" value={hotel.hotelCheckOut} onChange={e=>updHotel(active, hotelIdx, "hotelCheckOut", e.target.value)}
-                                  style={{background:"#FAF7F2",border:"1px solid #C4CEBC",borderRadius:6,color:hotel.hotelCheckOut?"#1A1A2E":"#4A4F57",padding:"5px 8px",fontFamily:mono,fontSize:15,width:"100%",maxWidth:120,minWidth:90}}/>
+                                  style={{background:"var(--bg)",border:"1px solid var(--sage)",borderRadius:6,color:hotel.hotelCheckOut?"var(--ink)":"var(--muted)",padding:"5px 8px",fontFamily:mono,fontSize:15,width:"100%",maxWidth:120,minWidth:90}}/>
                               </div>
                             </div>
                           </ICard>
@@ -4263,11 +4331,11 @@ export default function App() {
 
                         {sec.arrAirport&&(
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:hPerDayM.length>0?12:0,marginTop:10}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6,background:`${hDest.color}10`,border:`1px solid ${hDest.color}30`,borderRadius:8,padding:"5px 10px"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6,background:`${mix(hDest.color,6)}`,border:`1px solid ${mix(hDest.color,19)}`,borderRadius:8,padding:"5px 10px"}}>
                               <span style={{fontSize:15}}>{hDest.flag}</span>
                               <div>
                                 <div style={{fontSize:11,fontWeight:700,color:hDest.color}}>{hDest.label}</div>
-                                <div style={{fontSize:9,color:"#2D3239",fontFamily:mono}}>B ${fmtAUD(hDest.breakfast)} · L ${fmtAUD(hDest.lunch)} · D ${fmtAUD(hDest.dinner)}</div>
+                                <div style={{fontSize:9,color:"var(--ink2)",fontFamily:mono}}>B ${fmtAUD(hDest.breakfast)} · L ${fmtAUD(hDest.lunch)} · D ${fmtAUD(hDest.dinner)}</div>
                               </div>
                             </div>
                           </div>
@@ -4275,7 +4343,7 @@ export default function App() {
 
                         {hPerDayM.length>0&&hTotSlip>4*60&&(
                           <div>
-                            <div style={{fontSize:10,color:"#4A4F57",fontFamily:mono,letterSpacing:1.5,marginBottom:7}}>MEAL COVERAGE PER CALENDAR DAY</div>
+                            <div style={{fontSize:10,color:"var(--muted)",fontFamily:mono,letterSpacing:1.5,marginBottom:7}}>MEAL COVERAGE PER CALENDAR DAY</div>
                             <div style={{display:"flex",flexDirection:"column",gap:4}}>
                               {hPerDayM.map((pd)=>{
                                 const calDays = hNights+1;
@@ -4285,24 +4353,24 @@ export default function App() {
                                 const presStartStr = fmtTime(pd.presStart===1440 ? 0 : pd.presStart);
                                 const presEndStr   = pd.presEnd===1440 ? "24:00" : fmtTime(pd.presEnd);
                                 return (
-                                  <div key={pd.dayNum} style={{display:"flex",alignItems:"center",gap:8,background:pd.isFullDay?"#E5F0E5":"#FAF7F2",border:`1px solid ${pd.isFullDay?"#B8D4B8":"#D4CCC0"}`,borderRadius:8,padding:"7px 11px"}}>
-                                    <div style={{fontFamily:mono,fontSize:11,fontWeight:700,color:pd.isFullDay?"#3DA866":"#2D3239",width:24,flexShrink:0}}>{tag}</div>
+                                  <div key={pd.dayNum} style={{display:"flex",alignItems:"center",gap:8,background:pd.isFullDay?"var(--greenBg)":"var(--bg)",border:`1px solid ${pd.isFullDay?"var(--greenLine)":"var(--line)"}`,borderRadius:8,padding:"7px 11px"}}>
+                                    <div style={{fontFamily:mono,fontSize:11,fontWeight:700,color:pd.isFullDay?"var(--green)":"var(--ink2)",width:24,flexShrink:0}}>{tag}</div>
                                     <div style={{flexShrink:0,minWidth:100}}>
-                                      <div style={{fontSize:10,color:"#4A4F57",fontFamily:mono,fontWeight:600}}>{fmtShort(pd.date)}</div>
-                                      <div style={{fontSize:9,color:"#4A4F57",fontFamily:mono,marginTop:1}}>
+                                      <div style={{fontSize:10,color:"var(--muted)",fontFamily:mono,fontWeight:600}}>{fmtShort(pd.date)}</div>
+                                      <div style={{fontSize:9,color:"var(--muted)",fontFamily:mono,marginTop:1}}>
                                         {pd.isFullDay ? "full day" : `${presStartStr}–${presEndStr}`}
                                       </div>
                                     </div>
                                     <div style={{display:"flex",gap:5,flex:1,flexWrap:"wrap"}}>
                                       {MEAL_WINDOWS.map(w=>{
                                         const ok=pd[w.id];
-                                        return <div key={w.id} style={{display:"flex",alignItems:"center",gap:3,padding:"2px 6px",borderRadius:5,background:ok?`${w.color}15`:"transparent",border:`1px solid ${ok?w.color+"40":"#D4CCC0"}`,opacity:ok?1:0.3}}>
+                                        return <div key={w.id} style={{display:"flex",alignItems:"center",gap:3,padding:"2px 6px",borderRadius:5,background:ok?`${mix(w.color,8)}`:"transparent",border:`1px solid ${ok?w.color+"40":"var(--line)"}`,opacity:ok?1:0.3}}>
                                           <span style={{fontSize:11}}>{w.icon}</span>
-                                          <span style={{fontSize:10,color:ok?w.color:"#4A4F57",fontFamily:mono}}>{ok?`$${fmtAUD(hDest[w.key])}`:"—"}</span>
+                                          <span style={{fontSize:10,color:ok?w.color:"var(--muted)",fontFamily:mono}}>{ok?`$${fmtAUD(hDest[w.key])}`:"—"}</span>
                                         </div>;
                                       })}
                                     </div>
-                                    <div style={{fontFamily:mono,fontSize:11,fontWeight:700,color:"#3DA866",minWidth:50,textAlign:"right"}}>
+                                    <div style={{fontFamily:mono,fontSize:11,fontWeight:700,color:"var(--green)",minWidth:50,textAlign:"right"}}>
                                       ${fmtAUD((pd.b?hDest.breakfast:0)+(pd.l?hDest.lunch:0)+(pd.d?hDest.dinner:0))}
                                     </div>
                                   </div>
@@ -4310,10 +4378,10 @@ export default function App() {
                               })}
                               {hTotSlip>24*60&&(()=>{
                                 const incQty=Math.floor(hTotSlip/(24*60));
-                                return <div style={{display:"flex",alignItems:"center",gap:8,background:"#FAF7F2",border:`1px solid #A85D0440`,borderRadius:8,padding:"6px 11px"}}>
+                                return <div style={{display:"flex",alignItems:"center",gap:8,background:"var(--bg)",border:`1px solid color-mix(in srgb, var(--amber) 25%, transparent)`,borderRadius:8,padding:"6px 11px"}}>
                                   <span style={{fontSize:14}}>☕</span>
-                                  <div style={{flex:1,fontSize:11,color:"#A85D04"}}>Incidental ×{incQty} — {hDest.label} ({(hTotSlip/60).toFixed(1)}h slip — 1 per 24h)</div>
-                                  <div style={{fontFamily:mono,fontSize:11,fontWeight:700,color:"#3DA866"}}>${fmtAUD(hDest.incidental*incQty)}</div>
+                                  <div style={{flex:1,fontSize:11,color:"var(--amber)"}}>Incidental ×{incQty} — {hDest.label} ({(hTotSlip/60).toFixed(1)}h slip — 1 per 24h)</div>
+                                  <div style={{fontFamily:mono,fontSize:11,fontWeight:700,color:"var(--green)"}}>${fmtAUD(hDest.incidental*incQty)}</div>
                                 </div>;
                               })()}
                             </div>
@@ -4329,12 +4397,12 @@ export default function App() {
                                 <div style={{
                                   display:"flex",alignItems:"center",justifyContent:"space-between",
                                   marginTop:9,padding:"8px 11px",
-                                  background:"#E5F0E5",border:"1px solid #3DA86640",borderRadius:8,
+                                  background:"var(--greenBg)",border:"1px solid color-mix(in srgb, var(--green) 25%, transparent)",borderRadius:8,
                                 }}>
-                                  <div style={{fontSize:11,fontFamily:mono,color:"#2D3239",letterSpacing:1,fontWeight:600}}>
+                                  <div style={{fontSize:11,fontFamily:mono,color:"var(--ink2)",letterSpacing:1,fontWeight:600}}>
                                     HOTEL STAY TOTAL
                                   </div>
-                                  <div style={{fontFamily:mono,fontSize:14,fontWeight:700,color:"#3DA866"}}>
+                                  <div style={{fontFamily:mono,fontSize:14,fontWeight:700,color:"var(--green)"}}>
                                     ${fmtAUD(stayTotal)}
                                   </div>
                                 </div>
@@ -4352,8 +4420,8 @@ export default function App() {
             {/* Add sector to end */}
             {!d.sectors[0]?.reservePeriod && (
               <button className="addBtn" onClick={()=>addSector(active)} style={{
-                width:"100%",background:"#F0EBE3",border:"1px dashed #4A4F57",borderRadius:10,
-                color:"#2D3239",fontSize:12,cursor:"pointer",padding:"10px",
+                width:"100%",background:"var(--panel)",border:"1px dashed var(--muted)",borderRadius:10,
+                color:"var(--ink2)",fontSize:12,cursor:"pointer",padding:"10px",
                 fontFamily:mono,letterSpacing:0.5,marginBottom:12,
                 display:"flex",alignItems:"center",justifyContent:"center",gap:6,
               }}>
@@ -4376,38 +4444,38 @@ export default function App() {
             <Card style={{marginBottom:14}}>
               <SHead>OTHER</SHead>
               <div style={{display:"flex",flexWrap:"wrap",gap:18,alignItems:"center"}}>
-                <Toggle label="DDO infringed (Cl. 5.20/5.33)"            checked={d.ddoInfringed} onChange={v=>updDay(active,"ddoInfringed",v)} color="#CC2E2E"/>
-                <Toggle label="Extra Duty Variation Allowance (Cl. 5.28)" checked={d.extraDva}   onChange={v=>updDay(active,"extraDva",v)}      color="#C47E08"/>
+                <Toggle label="DDO infringed (Cl. 5.20/5.33)"            checked={d.ddoInfringed} onChange={v=>updDay(active,"ddoInfringed",v)} color="var(--red)"/>
+                <Toggle label="Extra Duty Variation Allowance (Cl. 5.28)" checked={d.extraDva}   onChange={v=>updDay(active,"extraDva",v)}      color="var(--orange)"/>
                 {/* Extra Day Off Payment — numeric stepper */}
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                    <span style={{fontSize:12,color:d.extraDdo>0?"#CC2E2E":"#2D3239"}}>Extra Day Off Payment (Cl. 5.20)</span>
-                    <span style={{fontSize:10,color:"#4A4F57",fontFamily:mono}}>${fmtAUD(role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO)} each</span>
+                    <span style={{fontSize:12,color:d.extraDdo>0?"var(--red)":"var(--ink2)"}}>Extra Day Off Payment (Cl. 5.20)</span>
+                    <span style={{fontSize:10,color:"var(--muted)",fontFamily:mono}}>${fmtAUD(role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO)} each</span>
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:6,background:"#FAF7F2",border:`1px solid ${d.extraDdo>0?"#CC2E2E":"#D4CCC0"}`,borderRadius:8,padding:"4px 8px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,background:"var(--bg)",border:`1px solid ${d.extraDdo>0?"var(--red)":"var(--line)"}`,borderRadius:8,padding:"4px 8px"}}>
                     <button onClick={()=>updDay(active,"extraDdo",Math.max(0,d.extraDdo-1))}
-                      style={{background:"transparent",border:`1px solid ${d.extraDdo>0?"#CC2E2E40":"#D4CCC0"}`,borderRadius:4,color:d.extraDdo>0?"#CC2E2E":"#2D3239",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>−</button>
-                    <span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:d.extraDdo>0?"#CC2E2E":"#4A4F57",minWidth:18,textAlign:"center"}}>{d.extraDdo}</span>
+                      style={{background:"transparent",border:`1px solid ${d.extraDdo>0?"color-mix(in srgb, var(--red) 25%, transparent)":"var(--line)"}`,borderRadius:4,color:d.extraDdo>0?"var(--red)":"var(--ink2)",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>−</button>
+                    <span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:d.extraDdo>0?"var(--red)":"var(--muted)",minWidth:18,textAlign:"center"}}>{d.extraDdo}</span>
                     <button onClick={()=>updDay(active,"extraDdo",d.extraDdo+1)}
-                      style={{background:"transparent",border:"1px solid #CC2E2E40",borderRadius:4,color:"#CC2E2E",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>+</button>
+                      style={{background:"transparent",border:"1px solid color-mix(in srgb, var(--red) 25%, transparent)",borderRadius:4,color:"var(--red)",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>+</button>
                   </div>
-                  {d.extraDdo>0&&<span style={{fontSize:11,fontFamily:mono,color:"#3DA866"}}>${fmtAUD((role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO)*d.extraDdo)}</span>}
+                  {d.extraDdo>0&&<span style={{fontSize:11,fontFamily:mono,color:"var(--green)"}}>${fmtAUD((role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO)*d.extraDdo)}</span>}
                 </div>
 
                 {/* Accommodation opt-out — numeric nights stepper */}
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                    <span style={{fontSize:12,color:d.accomOptOut>0?"#5B66D6":"#2D3239"}}>Accommodation opt-out (Cl. 6.32)</span>
-                    <span style={{fontSize:10,color:"#4A4F57",fontFamily:mono}}>${fmtAUD(RATES.ACCOM_OPTOUT)} × nights</span>
+                    <span style={{fontSize:12,color:d.accomOptOut>0?"var(--indigo)":"var(--ink2)"}}>Accommodation opt-out (Cl. 6.32)</span>
+                    <span style={{fontSize:10,color:"var(--muted)",fontFamily:mono}}>${fmtAUD(RATES.ACCOM_OPTOUT)} × nights</span>
                   </div>
-                  <div style={{display:"flex",alignItems:"center",gap:6,background:"#FAF7F2",border:`1px solid ${d.accomOptOut>0?"#5B66D6":"#D4CCC0"}`,borderRadius:8,padding:"4px 8px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,background:"var(--bg)",border:`1px solid ${d.accomOptOut>0?"var(--indigo)":"var(--line)"}`,borderRadius:8,padding:"4px 8px"}}>
                     <button onClick={()=>updDay(active,"accomOptOut",Math.max(0,d.accomOptOut-1))}
-                      style={{background:"transparent",border:`1px solid ${d.accomOptOut>0?"#5B66D640":"#D4CCC0"}`,borderRadius:4,color:d.accomOptOut>0?"#5B66D6":"#2D3239",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>−</button>
-                    <span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:d.accomOptOut>0?"#5B66D6":"#4A4F57",minWidth:18,textAlign:"center"}}>{d.accomOptOut}</span>
+                      style={{background:"transparent",border:`1px solid ${d.accomOptOut>0?"color-mix(in srgb, var(--indigo) 25%, transparent)":"var(--line)"}`,borderRadius:4,color:d.accomOptOut>0?"var(--indigo)":"var(--ink2)",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>−</button>
+                    <span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:d.accomOptOut>0?"var(--indigo)":"var(--muted)",minWidth:18,textAlign:"center"}}>{d.accomOptOut}</span>
                     <button onClick={()=>updDay(active,"accomOptOut",d.accomOptOut+1)}
-                      style={{background:"transparent",border:"1px solid #5B66D640",borderRadius:4,color:"#5B66D6",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>+</button>
+                      style={{background:"transparent",border:"1px solid color-mix(in srgb, var(--indigo) 25%, transparent)",borderRadius:4,color:"var(--indigo)",fontSize:15,cursor:"pointer",width:22,height:22,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:mono,padding:0}}>+</button>
                   </div>
-                  {d.accomOptOut>0&&<span style={{fontSize:11,fontFamily:mono,color:"#3DA866"}}>${fmtAUD(RATES.ACCOM_OPTOUT*d.accomOptOut)}</span>}
+                  {d.accomOptOut>0&&<span style={{fontSize:11,fontFamily:mono,color:"var(--green)"}}>${fmtAUD(RATES.ACCOM_OPTOUT*d.accomOptOut)}</span>}
                 </div>
               </div>
             </Card>
@@ -4432,34 +4500,34 @@ export default function App() {
                 {/* Full trip summary — shown on the entry day when trip spans multiple dates */}
                 {isMultiDay && fullTripItems.length > 0 && (
                   <>
-                    <div style={{fontSize:11,letterSpacing:2,color:"#1E8AC0",fontFamily:mono,marginBottom:10}}>
+                    <div style={{fontSize:11,letterSpacing:2,color:"var(--accent)",fontFamily:mono,marginBottom:10}}>
                       FULL TRIP ALLOWANCES — {active} {fmtShort(dayDate)}
-                      <span style={{color:"#7C5CD6",marginLeft:8,fontSize:10,letterSpacing:1}}>ENTIRE TRIP</span>
+                      <span style={{color:"var(--purple)",marginLeft:8,fontSize:10,letterSpacing:1}}>ENTIRE TRIP</span>
                     </div>
                     <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:18}}>
                       {(()=>{const g={};fullTripItems.forEach(it=>{const cl=it.label.replace(/\s*\((pre|post)-midnight\)\s*$/,"");const k=cl;if(!g[k])g[k]={...it,label:cl,count:0,amount:0};g[k].count++;g[k].amount+=it.amount;});return Object.values(g);})().map((item,i)=>(
-                        <div key={`trip-${i}`} style={{background:`${item.color}10`,border:`1px solid ${item.color}30`,borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"flex-start",gap:10}}>
+                        <div key={`trip-${i}`} style={{background:`${mix(item.color,6)}`,border:`1px solid ${mix(item.color,19)}`,borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"flex-start",gap:10}}>
                           <span style={{fontSize:17,flexShrink:0}}>{item.icon}</span>
                           <div style={{flex:1}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
                               <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
                                 <span style={{fontSize:14,fontWeight:700,color:item.color}}>{item.count>1?`${item.count}× `:""}{item.label}</span>
-                                <span style={{fontSize:10,fontWeight:700,letterSpacing:0.8,color:item.color,border:`1px solid ${item.color}40`,borderRadius:3,padding:"1px 4px",background:`${item.color}10`,fontFamily:mono}}>{item.clause}</span>
+                                <span style={{fontSize:10,fontWeight:700,letterSpacing:0.8,color:item.color,border:`1px solid ${mix(item.color,25)}`,borderRadius:3,padding:"1px 4px",background:`${mix(item.color,6)}`,fontFamily:mono}}>{item.clause}</span>
                               </div>
-                              {item.amount>0&&<span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:"#3DA866",whiteSpace:"nowrap"}}>${fmtAUD(item.amount)}</span>}
+                              {item.amount>0&&<span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:"var(--green)",whiteSpace:"nowrap"}}>${fmtAUD(item.amount)}</span>}
                             </div>
-                            <div style={{fontSize:11,color:"#2D3239",marginTop:3,lineHeight:1.5}}>{item.reason}</div>
+                            <div style={{fontSize:11,color:"var(--ink2)",marginTop:3,lineHeight:1.5}}>{item.reason}</div>
                           </div>
                         </div>
                       ))}
-                      <div style={{background:"linear-gradient(135deg,#E0EAF5,#FAF7F2)",border:"1px solid #8BAFCF",borderRadius:10,padding:"11px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
-                        <span style={{fontSize:11,letterSpacing:1.5,color:"#1E8AC0",fontFamily:mono}}>TRIP TOTAL — {active} {fmtShort(dayDate)}</span>
-                        <span style={{fontFamily:mono,fontSize:18,fontWeight:700,color:"#1E8AC0",textShadow:"0 0 20px rgba(56,189,248,0.35)"}}>AUD ${fmtAUD(fullTripTotal)}</span>
+                      <div style={{background:"linear-gradient(135deg,var(--accentBg),var(--bg))",border:"1px solid var(--accentLine)",borderRadius:10,padding:"11px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                        <span style={{fontSize:11,letterSpacing:1.5,color:"var(--accent)",fontFamily:mono}}>TRIP TOTAL — {active} {fmtShort(dayDate)}</span>
+                        <span style={{fontFamily:mono,fontSize:18,fontWeight:700,color:"var(--accent)",textShadow:"0 0 20px rgba(56,189,248,0.35)"}}>AUD ${fmtAUD(fullTripTotal)}</span>
                       </div>
                     </div>
 
                     {/* Per-date breakdown — uses dateAllowanceMap so totals match day pills */}
-                    <div style={{fontSize:11,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:10}}>
+                    <div style={{fontSize:11,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:10}}>
                       PER-DATE BREAKDOWN
                     </div>
                     {entryDates.map(dt => {
@@ -4470,13 +4538,13 @@ export default function App() {
                       return (
                         <div key={dt} style={{marginBottom:10}}>
                           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
-                            <span style={{fontSize:12,fontWeight:700,color:isEntryDate?"#1A1A2E":"#7C5CD6",fontFamily:mono}}>{fmtFull(dt)}</span>
-                            {!isEntryDate && <span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"#7C5CD6",border:"1px solid #7C5CD640",borderRadius:3,padding:"1px 4px",background:"#7C5CD610",fontFamily:mono}}>SPILL-OVER</span>}
-                            <span style={{fontSize:12,fontFamily:mono,fontWeight:700,color:"#3DA866",marginLeft:"auto"}}>${fmtAUD(dtTotal)}</span>
+                            <span style={{fontSize:12,fontWeight:700,color:isEntryDate?"var(--ink)":"var(--purple)",fontFamily:mono}}>{fmtFull(dt)}</span>
+                            {!isEntryDate && <span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"var(--purple)",border:"1px solid color-mix(in srgb, var(--purple) 25%, transparent)",borderRadius:3,padding:"1px 4px",background:"color-mix(in srgb, var(--purple) 6%, transparent)",fontFamily:mono}}>SPILL-OVER</span>}
+                            <span style={{fontSize:12,fontFamily:mono,fontWeight:700,color:"var(--green)",marginLeft:"auto"}}>${fmtAUD(dtTotal)}</span>
                           </div>
                           <div style={{display:"flex",flexWrap:"wrap",gap:5,marginLeft:8}}>
                             {items.map((item,i) => (
-                              <span key={i} style={{fontSize:10,padding:"3px 6px",borderRadius:5,background:`${item.color}15`,color:item.color,border:`1px solid ${item.color}30`,fontWeight:600,fontFamily:mono,
+                              <span key={i} style={{fontSize:10,padding:"3px 6px",borderRadius:5,background:`${mix(item.color,8)}`,color:item.color,border:`1px solid ${mix(item.color,19)}`,fontWeight:600,fontFamily:mono,
                                 ...(!isEntryDate ? {borderStyle:"dashed"} : {})}}>
                                 {item.icon} {item.label}{item.amount>0?` $${fmtAUD(item.amount)}`:""}
                               </span>
@@ -4491,12 +4559,12 @@ export default function App() {
                 {/* Standard per-date view (non-multi-day entries, or spill-over from other days) */}
                 {!isMultiDay && (
                   <>
-                    <div style={{fontSize:11,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:10}}>
+                    <div style={{fontSize:11,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:10}}>
                       AUTO-CALCULATED ALLOWANCES — {active} {fmtShort(dayDate)}
-                      {hasSpillOver && <span style={{color:"#7C5CD6",marginLeft:8,fontSize:10,letterSpacing:1}}>INCLUDES MULTI-DAY</span>}
+                      {hasSpillOver && <span style={{color:"var(--purple)",marginLeft:8,fontSize:10,letterSpacing:1}}>INCLUDES MULTI-DAY</span>}
                     </div>
                     {dateItems.length===0
-                      ?<div style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:12,padding:24,textAlign:"center",color:"#4A4F57",fontSize:14}}>
+                      ?<div style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:12,padding:24,textAlign:"center",color:"var(--muted)",fontSize:14}}>
                         No allowances triggered — enter sector times above
                       </div>
                       :<div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -4505,26 +4573,26 @@ export default function App() {
                             orig.id === item.id && Math.abs(orig.amount - item.amount) < 0.01
                           );
                           return (
-                            <div key={i} style={{background:`${item.color}10`,border:`1px solid ${item.color}30`,borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"flex-start",gap:10,
+                            <div key={i} style={{background:`${mix(item.color,6)}`,border:`1px solid ${mix(item.color,19)}`,borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"flex-start",gap:10,
                               ...(isFromOtherDay ? {borderStyle:"dashed"} : {})}}>
                               <span style={{fontSize:17,flexShrink:0}}>{item.icon}</span>
                               <div style={{flex:1}}>
                                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
                                   <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
                                     <span style={{fontSize:14,fontWeight:700,color:item.color}}>{item.label}</span>
-                                    <span style={{fontSize:10,fontWeight:700,letterSpacing:0.8,color:item.color,border:`1px solid ${item.color}40`,borderRadius:3,padding:"1px 4px",background:`${item.color}10`,fontFamily:mono}}>{item.clause}</span>
-                                    {isFromOtherDay && <span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"#7C5CD6",border:"1px solid #7C5CD640",borderRadius:3,padding:"1px 4px",background:"#7C5CD610",fontFamily:mono}}>FROM OTHER DAY</span>}
+                                    <span style={{fontSize:10,fontWeight:700,letterSpacing:0.8,color:item.color,border:`1px solid ${mix(item.color,25)}`,borderRadius:3,padding:"1px 4px",background:`${mix(item.color,6)}`,fontFamily:mono}}>{item.clause}</span>
+                                    {isFromOtherDay && <span style={{fontSize:9,fontWeight:700,letterSpacing:0.8,color:"var(--purple)",border:"1px solid color-mix(in srgb, var(--purple) 25%, transparent)",borderRadius:3,padding:"1px 4px",background:"color-mix(in srgb, var(--purple) 6%, transparent)",fontFamily:mono}}>FROM OTHER DAY</span>}
                                   </div>
-                                  {item.amount>0&&<span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:"#3DA866",whiteSpace:"nowrap"}}>${fmtAUD(item.amount)}</span>}
+                                  {item.amount>0&&<span style={{fontFamily:mono,fontSize:16,fontWeight:700,color:"var(--green)",whiteSpace:"nowrap"}}>${fmtAUD(item.amount)}</span>}
                                 </div>
-                                <div style={{fontSize:11,color:"#2D3239",marginTop:3,lineHeight:1.5}}>{item.reason}</div>
+                                <div style={{fontSize:11,color:"var(--ink2)",marginTop:3,lineHeight:1.5}}>{item.reason}</div>
                               </div>
                             </div>
                           );
                         })}
-                        <div style={{background:"#D6E4F0",border:"1px solid #8BAFCF",borderRadius:10,padding:"11px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
-                          <span style={{fontSize:11,letterSpacing:1.5,color:"#2D3239",fontFamily:mono}}>TOTAL — {active} {fmtShort(dayDate)}</span>
-                          <span style={{fontFamily:mono,fontSize:18,fontWeight:700,color:"#1E8AC0",textShadow:"0 0 20px rgba(56,189,248,0.35)"}}>AUD ${fmtAUD(dateTotal)}</span>
+                        <div style={{background:"var(--accentBg2)",border:"1px solid var(--accentLine)",borderRadius:10,padding:"11px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+                          <span style={{fontSize:11,letterSpacing:1.5,color:"var(--ink2)",fontFamily:mono}}>TOTAL — {active} {fmtShort(dayDate)}</span>
+                          <span style={{fontFamily:mono,fontSize:18,fontWeight:700,color:"var(--accent)",textShadow:"0 0 20px rgba(56,189,248,0.35)"}}>AUD ${fmtAUD(dateTotal)}</span>
                         </div>
                       </div>
                     }
@@ -4542,23 +4610,23 @@ export default function App() {
           <div className="fadein">
             <div style={{marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
               <div>
-                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>EFA EA 2025 — CL. 6.22–6.24</div>
-                <div style={{fontFamily:heading,fontSize:25,fontWeight:700,color:"#1A1A2E"}}>Meal Allowance Schedule</div>
+                <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:4}}>EFA EA 2025 — CL. 6.22–6.24</div>
+                <div style={{fontFamily:heading,fontSize:25,fontWeight:700,color:"var(--ink)"}}>Meal Allowance Schedule</div>
               </div>
-              <select value={mealRateYear} onChange={e=>setMealRateYear(+e.target.value)} style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,color:"#1E8AC0",padding:"6px 12px",fontFamily:mono,fontSize:13,fontWeight:700,cursor:"pointer"}}>
+              <select value={mealRateYear} onChange={e=>setMealRateYear(+e.target.value)} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 12px",fontFamily:mono,fontSize:13,fontWeight:700,cursor:"pointer"}}>
                 {MEAL_RATE_YEARS.map((yr,i)=><option key={i} value={i}>{yr.label}</option>)}
               </select>
             </div>
             <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
-              <div style={{padding:"9px 14px",fontSize:11,letterSpacing:2,color:"#4A4F57",fontFamily:mono,borderBottom:"1px solid #D4CCC0"}}>AIRPORT → MEAL ZONE</div>
+              <div style={{padding:"9px 14px",fontSize:11,letterSpacing:2,color:"var(--muted)",fontFamily:mono,borderBottom:"1px solid var(--line)"}}>AIRPORT → MEAL ZONE</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))"}}>
                 {AIRPORTS.map(ap=>{
                   const dest=mealRates[zoneFrom(ap.code)];
-                  return <div key={ap.code} style={{padding:"11px 14px",borderRight:"1px solid #E8E2D9",borderBottom:"1px solid #E8E2D9",display:"flex",alignItems:"center",gap:9}}>
+                  return <div key={ap.code} style={{padding:"11px 14px",borderRight:"1px solid var(--line2)",borderBottom:"1px solid var(--line2)",display:"flex",alignItems:"center",gap:9}}>
                     <div style={{fontSize:20}}>{ap.flag}</div>
                     <div>
-                      <div style={{fontFamily:mono,fontSize:14,fontWeight:700,color:"#1A1A2E"}}>{ap.code}</div>
-                      <div style={{fontSize:12,color:"#2D3239"}}>{ap.name}</div>
+                      <div style={{fontFamily:mono,fontSize:14,fontWeight:700,color:"var(--ink)"}}>{ap.code}</div>
+                      <div style={{fontSize:12,color:"var(--ink2)"}}>{ap.name}</div>
                       <div style={{fontSize:10,fontWeight:700,color:dest.color,marginTop:1}}>{dest.flag} {dest.label}</div>
                     </div>
                   </div>;
@@ -4566,35 +4634,35 @@ export default function App() {
               </div>
             </Card>
             <Card style={{padding:0,overflow:"hidden"}}>
-              <div className="rates-grid" style={{borderBottom:"1px solid #D4CCC0"}}>
-                <div style={{padding:"9px 14px",fontSize:10,letterSpacing:1.5,color:"#2D3239",fontFamily:mono,borderRight:"1px solid #D4CCC0"}}>ALLOWANCE</div>
+              <div className="rates-grid" style={{borderBottom:"1px solid var(--line)"}}>
+                <div style={{padding:"9px 14px",fontSize:10,letterSpacing:1.5,color:"var(--ink2)",fontFamily:mono,borderRight:"1px solid var(--line)"}}>ALLOWANCE</div>
                 {Object.values(mealRates).map((dest,i)=>(
-                  <div key={i} style={{padding:"9px 12px",borderRight:i<3?"1px solid #D4CCC0":"none"}}>
+                  <div key={i} style={{padding:"9px 12px",borderRight:i<3?"1px solid var(--line)":"none"}}>
                     <div style={{fontSize:16}}>{dest.flag}</div>
                     <div style={{fontSize:11,fontWeight:700,color:dest.color,marginTop:2,lineHeight:1.3}}>{dest.label}</div>
                   </div>
                 ))}
               </div>
               {[
-                {label:"Breakfast",icon:"🍳",clause:"Cl. 6.24(a)",win:"0730–0930",key:"breakfast",color:"#D4A80A"},
-                {label:"Lunch",icon:"🥗",clause:"Cl. 6.24(b)",win:"1130–1330",key:"lunch",color:"#3DA866"},
-                {label:"Dinner",icon:"🍽️",clause:"Cl. 6.24(c)",win:"1730–1930",key:"dinner",color:"#C47E08"},
-                {label:"Total (meals only)",icon:"∑",clause:"",win:"",key:"_t",color:"#94A3B8",sub:true},
-                {label:"Incidental",icon:"☕",clause:"Cl. 6.24",win:">24h",key:"incidental",color:"#A85D04"},
-                {label:"Total (inc. incidental)",icon:"★",clause:"",win:"",key:"_ti",color:"#1E8AC0",bold:true},
+                {label:"Breakfast",icon:"🍳",clause:"Cl. 6.24(a)",win:"0730–0930",key:"breakfast",color:"var(--yellow)"},
+                {label:"Lunch",icon:"🥗",clause:"Cl. 6.24(b)",win:"1130–1330",key:"lunch",color:"var(--green)"},
+                {label:"Dinner",icon:"🍽️",clause:"Cl. 6.24(c)",win:"1730–1930",key:"dinner",color:"var(--orange)"},
+                {label:"Total (meals only)",icon:"∑",clause:"",win:"",key:"_t",color:"var(--slate)",sub:true},
+                {label:"Incidental",icon:"☕",clause:"Cl. 6.24",win:">24h",key:"incidental",color:"var(--amber)"},
+                {label:"Total (inc. incidental)",icon:"★",clause:"",win:"",key:"_ti",color:"var(--accent)",bold:true},
               ].map((row,ri,arr)=>(
-                <div key={row.key} className="rates-grid" style={{borderBottom:ri<arr.length-1?"1px solid #E8E2D9":"none",background:row.bold?"#D6E4F0":row.sub?"#FAF7F2":"transparent"}}>
-                  <div style={{padding:"10px 14px",borderRight:"1px solid #D4CCC0",display:"flex",alignItems:"center",gap:7}}>
+                <div key={row.key} className="rates-grid" style={{borderBottom:ri<arr.length-1?"1px solid var(--line2)":"none",background:row.bold?"var(--accentBg2)":row.sub?"var(--bg)":"transparent"}}>
+                  <div style={{padding:"10px 14px",borderRight:"1px solid var(--line)",display:"flex",alignItems:"center",gap:7}}>
                     <span style={{fontSize:16}}>{row.icon}</span>
                     <div>
-                      <div style={{fontSize:13,fontWeight:row.bold?800:600,color:row.bold?"#1A1A2E":row.sub?"#2D3239":"#4A4F57"}}>{row.label}</div>
-                      {row.clause&&<div style={{fontSize:9,color:"#4A4F57",fontFamily:mono,marginTop:1}}>{row.clause}{row.win?` · ${row.win}`:""}</div>}
+                      <div style={{fontSize:13,fontWeight:row.bold?800:600,color:row.bold?"var(--ink)":row.sub?"var(--ink2)":"var(--muted)"}}>{row.label}</div>
+                      {row.clause&&<div style={{fontSize:9,color:"var(--muted)",fontFamily:mono,marginTop:1}}>{row.clause}{row.win?` · ${row.win}`:""}</div>}
                     </div>
                   </div>
                   {Object.values(mealRates).map((dest,i)=>{
                     const val=row.key==="_t"?dest.breakfast+dest.lunch+dest.dinner:row.key==="_ti"?dest.breakfast+dest.lunch+dest.dinner+dest.incidental:dest[row.key];
-                    return <div key={i} style={{padding:"10px 12px",borderRight:i<3?"1px solid #D4CCC0":"none",textAlign:"right"}}>
-                      <span style={{fontFamily:mono,fontSize:row.bold?14:12,fontWeight:row.bold?700:500,color:row.bold?"#1E8AC0":row.sub?"#2D3239":"#1A1A2E"}}>${fmtAUD(val)}</span>
+                    return <div key={i} style={{padding:"10px 12px",borderRight:i<3?"1px solid var(--line)":"none",textAlign:"right"}}>
+                      <span style={{fontFamily:mono,fontSize:row.bold?14:12,fontWeight:row.bold?700:500,color:row.bold?"var(--accent)":row.sub?"var(--ink2)":"var(--ink)"}}>${fmtAUD(val)}</span>
                     </div>;
                   })}
                 </div>
@@ -4609,35 +4677,35 @@ export default function App() {
           <div className="fadein">
             <div style={{marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
               <div>
-                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>WEEK OF {fmtFull(weekStart)}</div>
-                <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"#1A1A2E"}}>Week Summary</div>
-                <div style={{fontSize:12,color:"#2D3239",marginTop:3,fontFamily:mono}}>{role==="cpt"?"Captain":"First Officer"} · {INDEX_YEARS[yearIdx].label}</div>
+                <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:4}}>WEEK OF {fmtFull(weekStart)}</div>
+                <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"var(--ink)"}}>Week Summary</div>
+                <div style={{fontSize:12,color:"var(--ink2)",marginTop:3,fontFamily:mono}}>{role==="cpt"?"Captain":"First Officer"} · {INDEX_YEARS[yearIdx].label}</div>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                <div style={{display:"flex",alignItems:"center",gap:3,background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,padding:"3px 6px"}}>
-                  <span style={{fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1,marginRight:3}}>WEEK OF</span>
-                  <button onClick={()=>setWeekStart(addDays(weekStart,-7))} style={{background:"transparent",border:"none",color:"#2D3239",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>‹</button>
+                <div style={{display:"flex",alignItems:"center",gap:3,background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,padding:"3px 6px"}}>
+                  <span style={{fontSize:10,color:"var(--ink2)",fontFamily:mono,letterSpacing:1,marginRight:3}}>WEEK OF</span>
+                  <button onClick={()=>setWeekStart(addDays(weekStart,-7))} style={{background:"transparent",border:"none",color:"var(--ink2)",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>‹</button>
                   <div style={{position:"relative",display:"flex",alignItems:"center"}}>
-                    <span style={{fontFamily:mono,fontSize:13,color:"#1E8AC0",userSelect:"none",minWidth:84,textAlign:"center"}}>
+                    <span style={{fontFamily:mono,fontSize:13,color:"var(--accent)",userSelect:"none",minWidth:84,textAlign:"center"}}>
                       {fmtShort(weekStart)} {parseDate(weekStart)?.getUTCFullYear()}
                     </span>
                     <input type="date" value={weekStart} onChange={e=>setWeekStart(getMon(e.target.value))}
-                      style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",colorScheme:"light"}}/>
+                      style={{position:"absolute",inset:0,opacity:0,cursor:"pointer",width:"100%",colorScheme:"inherit"}}/>
                   </div>
-                  <button onClick={()=>setWeekStart(addDays(weekStart,7))} style={{background:"transparent",border:"none",color:"#2D3239",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>›</button>
+                  <button onClick={()=>setWeekStart(addDays(weekStart,7))} style={{background:"transparent",border:"none",color:"var(--ink2)",fontSize:16,cursor:"pointer",padding:"0 3px",lineHeight:1,fontFamily:mono}}>›</button>
                 </div>
                 <button onClick={()=>{
                   const entries=DAY_NAMES.map((dn,i)=>({dayName:dn,tripDate:dateFor(i),day:days[dn]}));
                   downloadCsv(`EFA-Week-${weekStart}.csv`,entries,role,yearIdx,`Week of ${fmtFull(weekStart)}`);
-                }} style={{background:"#E0EAF5",border:"1px solid #8BAFCF",borderRadius:8,color:"#1E8AC0",fontSize:12,fontWeight:700,cursor:"pointer",padding:"8px 16px",fontFamily:mono,letterSpacing:0.5,display:"flex",alignItems:"center",gap:6}}>
+                }} style={{background:"var(--accentBg)",border:"1px solid var(--accentLine)",borderRadius:8,color:"var(--accent)",fontSize:12,fontWeight:700,cursor:"pointer",padding:"8px 16px",fontFamily:mono,letterSpacing:0.5,display:"flex",alignItems:"center",gap:6}}>
                   📥 Export CSV
                 </button>
               </div>
             </div>
-            <div style={{background:"linear-gradient(135deg,#E0EAF5,#FAF7F2)",border:"1px solid #8BAFCF",borderRadius:14,padding:"16px 20px",marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{background:"linear-gradient(135deg,var(--accentBg),var(--bg))",border:"1px solid var(--accentLine)",borderRadius:14,padding:"16px 20px",marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
-                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>TOTAL ALLOWANCES — WEEK</div>
-                <div style={{fontFamily:mono,fontSize:38,fontWeight:700,color:"#1E8AC0",letterSpacing:-1.5,textShadow:"0 0 30px rgba(56,189,248,0.25)"}}>AUD ${fmtAUD(weekTotalByDate)}</div>
+                <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:4}}>TOTAL ALLOWANCES — WEEK</div>
+                <div style={{fontFamily:mono,fontSize:38,fontWeight:700,color:"var(--accent)",letterSpacing:-1.5,textShadow:"0 0 30px rgba(56,189,248,0.25)"}}>AUD ${fmtAUD(weekTotalByDate)}</div>
               </div>
               <div style={{fontSize:44,opacity:0.06}}>✈</div>
             </div>
@@ -4652,37 +4720,37 @@ export default function App() {
                 const first=secs[0],last=secs[secs.length-1];
                 const nt=daysBetween(days[day].hotelFrom,days[day].hotelTo);
                 return (
-                  <div key={day} className="hrow summary-row" onClick={()=>{setActive(day);setTab("entry");}} style={{borderBottom:di<6?"1px solid #E8E2D9":"none",cursor:"pointer",transition:"background 0.15s"}}>
-                    <div style={{padding:"10px 12px",borderRight:"1px solid #D4CCC0"}}>
+                  <div key={day} className="hrow summary-row" onClick={()=>{setActive(day);setTab("entry");}} style={{borderBottom:di<6?"1px solid var(--line2)":"none",cursor:"pointer",transition:"background 0.15s"}}>
+                    <div style={{padding:"10px 12px",borderRight:"1px solid var(--line)"}}>
                       <div style={{display:"flex",alignItems:"baseline",gap:5}}>
-                        <span style={{fontFamily:mono,fontSize:12,fontWeight:700,color:(day==="SAT"||day==="SUN")?"#D44545":t>0?"#4A4F57":"#4A4F57"}}>{day}</span>
-                        <span style={{fontSize:12,fontWeight:600,color:t>0?"#1E8AC0":"#4A4F57"}}>{fmtShort(dt)}</span>
+                        <span style={{fontFamily:mono,fontSize:12,fontWeight:700,color:(day==="SAT"||day==="SUN")?"var(--red2)":t>0?"var(--muted)":"var(--muted)"}}>{day}</span>
+                        <span style={{fontSize:12,fontWeight:600,color:t>0?"var(--accent)":"var(--muted)"}}>{fmtShort(dt)}</span>
                       </div>
                       {secs[0]?.reservePeriod
-                        ? <div style={{fontSize:9,color:"#7C5CD6",fontFamily:mono,marginTop:1,fontWeight:700}}>Reserve</div>
-                        : (first?.depAirport&&last?.arrAirport&&<div style={{fontSize:9,color:"#2D3239",fontFamily:mono,marginTop:1}}>{first.depAirport}→{last.arrAirport}{secs.length>2?` (${secs.length}sec)`:""}</div>)}
-                      {nt>0&&<div style={{fontSize:9,color:"#3B82D6",fontFamily:mono,marginTop:1}}>🏨 {nt}n</div>}
-                      {hasSpillOver&&<div style={{fontSize:9,color:"#7C5CD6",fontFamily:mono,marginTop:1}}>+ multi-day</div>}
+                        ? <div style={{fontSize:9,color:"var(--purple)",fontFamily:mono,marginTop:1,fontWeight:700}}>Reserve</div>
+                        : (first?.depAirport&&last?.arrAirport&&<div style={{fontSize:9,color:"var(--ink2)",fontFamily:mono,marginTop:1}}>{first.depAirport}→{last.arrAirport}{secs.length>2?` (${secs.length}sec)`:""}</div>)}
+                      {nt>0&&<div style={{fontSize:9,color:"var(--blue)",fontFamily:mono,marginTop:1}}>🏨 {nt}n</div>}
+                      {hasSpillOver&&<div style={{fontSize:9,color:"var(--purple)",fontFamily:mono,marginTop:1}}>+ multi-day</div>}
                     </div>
-                    <div style={{padding:"10px 12px",borderRight:"1px solid #D4CCC0"}}>
+                    <div style={{padding:"10px 12px",borderRight:"1px solid var(--line)"}}>
                       {items.length>0
                         ?<div style={{display:"flex",flexWrap:"wrap",gap:4}}>{items.map((item,i)=>{
                           const isFromOtherDay=!dayResults[day]?.some(orig=>orig.id===item.id&&Math.abs(orig.amount-item.amount)<0.01);
-                          return <span key={i} style={{fontSize:10,padding:"2px 5px",borderRadius:4,background:`${item.color}15`,color:item.color,border:`1px solid ${item.color}30`,fontWeight:600,fontFamily:mono,
+                          return <span key={i} style={{fontSize:10,padding:"2px 5px",borderRadius:4,background:`${mix(item.color,8)}`,color:item.color,border:`1px solid ${mix(item.color,19)}`,fontWeight:600,fontFamily:mono,
                             ...(isFromOtherDay?{borderStyle:"dashed"}:{})}}>
                             {item.icon} {item.label}{item.amount>0?` $${fmtAUD(item.amount)}`:""}</span>;
                         })}</div>
-                        :<span style={{fontSize:12,color:"#D4CCC0"}}>{days[day].sectors[0]?.aSignOn?"No allowances triggered":"No data entered"}</span>
+                        :<span style={{fontSize:12,color:"var(--line)"}}>{days[day].sectors[0]?.aSignOn?"No allowances triggered":"No data entered"}</span>
                       }
                     </div>
-                    <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:t>0?"#3DA866":"#D4CCC0"}}>{t>0?`$${fmtAUD(t)}`:"—"}</div>
+                    <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:t>0?"var(--green)":"var(--line)"}}>{t>0?`$${fmtAUD(t)}`:"—"}</div>
                   </div>
                 );
               })}
-              <div className="summary-row" style={{background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
+              <div className="summary-row" style={{background:"var(--accentBg2)",borderTop:"1px solid var(--accentLine)"}}>
                 <div style={{padding:"10px 12px"}}/>
-                <div style={{padding:"10px 12px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{DAY_NAMES.reduce((s,day)=>{const dt=dateFor(DAY_NAMES.indexOf(day));return s+(dateAllowanceMap[dt]?.items?.filter(i=>i.amount>0)?.length||0);},0)} allowance items</div>
-                <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:17,fontWeight:700,color:weekTotalByDate>0?"#1E8AC0":"#4A4F57",textShadow:weekTotalByDate>0?"0 0 20px rgba(56,189,248,0.3)":"none"}}>{weekTotalByDate>0?`$${fmtAUD(weekTotalByDate)}`:"—"}</div>
+                <div style={{padding:"10px 12px",fontSize:10,color:"var(--ink2)",fontFamily:mono}}>{DAY_NAMES.reduce((s,day)=>{const dt=dateFor(DAY_NAMES.indexOf(day));return s+(dateAllowanceMap[dt]?.items?.filter(i=>i.amount>0)?.length||0);},0)} allowance items</div>
+                <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:17,fontWeight:700,color:weekTotalByDate>0?"var(--accent)":"var(--muted)",textShadow:weekTotalByDate>0?"0 0 20px rgba(56,189,248,0.3)":"none"}}>{weekTotalByDate>0?`$${fmtAUD(weekTotalByDate)}`:"—"}</div>
               </div>
             </Card>
             {(()=>{
@@ -4700,22 +4768,22 @@ export default function App() {
               if(!sorted.length) return null;
               return <>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
-                  <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>ALLOWANCE TYPE BREAKDOWN</div>
+                  <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>ALLOWANCE TYPE BREAKDOWN</div>
                   <button onClick={()=>setShowTypeBreakdown(!showTypeBreakdown)}
-                    style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                    style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--muted)",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
                     {showTypeBreakdown ? "Hide" : "Show"}
                   </button>
                 </div>
                 {showTypeBreakdown && (
                   <div className="type-breakdown">
                     {sorted.map((item,si)=>(
-                      <div key={`wt-${si}`} style={{background:"#F0EBE3",border:`1px solid ${item.color}25`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:9}}>
+                      <div key={`wt-${si}`} style={{background:"var(--panel)",border:`1px solid ${mix(item.color,15)}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:9}}>
                         <span style={{fontSize:18}}>{item.icon}</span>
                         <div style={{flex:1}}>
                           <div style={{fontSize:13,fontWeight:600,color:item.color}}>{item.label}{item.count>1?` × ${item.count}`:""}</div>
-                          <div style={{fontSize:10,color:"#2D3239",marginTop:1}}>{item.count>1&&item.rate>0?`$${fmtAUD(item.rate)} each · `:""}{item.clause}</div>
+                          <div style={{fontSize:10,color:"var(--ink2)",marginTop:1}}>{item.count>1&&item.rate>0?`$${fmtAUD(item.rate)} each · `:""}{item.clause}</div>
                         </div>
-                        <div style={{fontFamily:mono,fontSize:15,fontWeight:700,color:"#3DA866"}}>{item.total>0?`$${fmtAUD(item.total)}`:"—"}</div>
+                        <div style={{fontFamily:mono,fontSize:15,fontWeight:700,color:"var(--green)"}}>{item.total>0?`$${fmtAUD(item.total)}`:"—"}</div>
                       </div>
                     ))}
                   </div>
@@ -4741,33 +4809,33 @@ export default function App() {
               {/* Month navigator */}
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
                 <div>
-                  <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>ALLOWANCE SUMMARY</div>
+                  <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:4}}>ALLOWANCE SUMMARY</div>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <button onClick={()=>{const d=new Date(mvYear,mvMonth-2,1);setMonthView(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);setCustomFrom("");setCustomTo("");}}
-                      style={{background:"transparent",border:"none",color:"#2D3239",fontSize:18,cursor:"pointer",fontFamily:mono,padding:"0 4px",opacity:useCustom?0.2:1}}>‹</button>
-                    <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"#1A1A2E"}}>{useCustom ? (rosterBPs.find(b=>b.from===customFrom&&b.to===customTo) ? `BP ${rosterBPs.find(b=>b.from===customFrom&&b.to===customTo).bp}` : "Custom Range") : `${monthName} ${mvYear}`}</div>
+                      style={{background:"transparent",border:"none",color:"var(--ink2)",fontSize:18,cursor:"pointer",fontFamily:mono,padding:"0 4px",opacity:useCustom?0.2:1}}>‹</button>
+                    <div style={{fontFamily:heading,fontSize:27,fontWeight:700,color:"var(--ink)"}}>{useCustom ? (rosterBPs.find(b=>b.from===customFrom&&b.to===customTo) ? `BP ${rosterBPs.find(b=>b.from===customFrom&&b.to===customTo).bp}` : "Custom Range") : `${monthName} ${mvYear}`}</div>
                     <button onClick={()=>{const d=new Date(mvYear,mvMonth,1);setMonthView(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`);setCustomFrom("");setCustomTo("");}}
-                      style={{background:"transparent",border:"none",color:"#2D3239",fontSize:18,cursor:"pointer",fontFamily:mono,padding:"0 4px",opacity:useCustom?0.2:1}}>›</button>
+                      style={{background:"transparent",border:"none",color:"var(--ink2)",fontSize:18,cursor:"pointer",fontFamily:mono,padding:"0 4px",opacity:useCustom?0.2:1}}>›</button>
                   </div>
                   {useCustom && (() => {
                     const matchedBp = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
                     const dateLine = matchedBp
-                      ? <div style={{ fontSize: 12, color: "#1E8AC0", marginTop: 3, fontFamily: mono }}>({fmtFull(customFrom)} — {fmtFull(customTo)})</div>
-                      : <div style={{ fontSize: 12, color: "#1E8AC0", marginTop: 3, fontFamily: mono }}>{fmtFull(customFrom)} — {fmtFull(customTo)}</div>;
+                      ? <div style={{ fontSize: 12, color: "var(--accent)", marginTop: 3, fontFamily: mono }}>({fmtFull(customFrom)} — {fmtFull(customTo)})</div>
+                      : <div style={{ fontSize: 12, color: "var(--accent)", marginTop: 3, fontFamily: mono }}>{fmtFull(customFrom)} — {fmtFull(customTo)}</div>;
                     const carry = matchedBp?.headerCarry;
                     const carryLine = (carry && (carry.carriedInDuty || carry.carriedOutDuty || carry.carriedInCredit || carry.carriedOutCredit))
-                      ? <div style={{ fontSize: 11, color: "#4A4F57", marginTop: 3, fontFamily: mono, letterSpacing: 0.2 }}>
-                          <span style={{color:"#7C5CD6"}}>Qantas header</span> · duty in/out {carry.carriedInDuty || "0:00"}/{carry.carriedOutDuty || "0:00"} · credit in/out {carry.carriedInCredit || "0:00"}/{carry.carriedOutCredit || "0:00"}
+                      ? <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 3, fontFamily: mono, letterSpacing: 0.2 }}>
+                          <span style={{color:"var(--purple)"}}>Qantas header</span> · duty in/out {carry.carriedInDuty || "0:00"}/{carry.carriedOutDuty || "0:00"} · credit in/out {carry.carriedInCredit || "0:00"}/{carry.carriedOutCredit || "0:00"}
                         </div>
                       : null;
                     return <>{dateLine}{carryLine}</>;
                   })()}
-                  <div style={{fontSize:12,color:"#2D3239",marginTop:3,fontFamily:mono}}>{role==="cpt"?"Captain":"First Officer"} · {INDEX_YEARS[yearIdx].label}</div>
+                  <div style={{fontSize:12,color:"var(--ink2)",marginTop:3,fontFamily:mono}}>{role==="cpt"?"Captain":"First Officer"} · {INDEX_YEARS[yearIdx].label}</div>
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
                     <input type="month" value={monthView} onChange={e=>{setMonthView(e.target.value);setCustomFrom("");setCustomTo("");}}
-                      style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:8,color:"#1E8AC0",padding:"6px 10px",fontFamily:mono,fontSize:13,colorScheme:"light",cursor:"pointer",opacity:useCustom?0.2:1}}/>
+                      style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontFamily:mono,fontSize:13,colorScheme:"inherit",cursor:"pointer",opacity:useCustom?0.2:1}}/>
                     <button onClick={()=>{
                       const allEntries=[];
                       weeksInRange.forEach(ws=>{
@@ -4777,21 +4845,21 @@ export default function App() {
                         });
                       });
                       downloadCsv(`EFA-${useCustom?"Custom":monthName}-${mvYear}.csv`,allEntries,role,yearIdx,rangeLabel);
-                    }} style={{background:"#E0EAF5",border:"1px solid #8BAFCF",borderRadius:8,color:"#1E8AC0",fontSize:12,fontWeight:700,cursor:"pointer",padding:"8px 16px",fontFamily:mono,letterSpacing:0.5,display:"flex",alignItems:"center",gap:6}}>
+                    }} style={{background:"var(--accentBg)",border:"1px solid var(--accentLine)",borderRadius:8,color:"var(--accent)",fontSize:12,fontWeight:700,cursor:"pointer",padding:"8px 16px",fontFamily:mono,letterSpacing:0.5,display:"flex",alignItems:"center",gap:6}}>
                       📥 Export CSV
                     </button>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                    <span style={{fontSize:10,color:"#4A4F57",fontFamily:mono}}>Custom range:</span>
+                    <span style={{fontSize:10,color:"var(--muted)",fontFamily:mono}}>Custom range:</span>
                     <input type="date" value={customFrom} onChange={e=>setCustomFrom(e.target.value)}
-                      style={{background:"#F0EBE3",border:`1px solid ${useCustom?"#1E8AC0":"#D4CCC0"}`,borderRadius:6,color:customFrom?"#1A1A2E":"#4A4F57",padding:"4px 8px",fontFamily:mono,fontSize:12,colorScheme:"light",cursor:"pointer"}}/>
-                    <span style={{fontSize:12,color:"#4A4F57"}}>—</span>
+                      style={{background:"var(--panel)",border:`1px solid ${useCustom?"var(--accent)":"var(--line)"}`,borderRadius:6,color:customFrom?"var(--ink)":"var(--muted)",padding:"4px 8px",fontFamily:mono,fontSize:12,colorScheme:"inherit",cursor:"pointer"}}/>
+                    <span style={{fontSize:12,color:"var(--muted)"}}>—</span>
                     <input type="date" value={customTo} onChange={e=>setCustomTo(e.target.value)}
-                      style={{background:"#F0EBE3",border:`1px solid ${useCustom?"#1E8AC0":"#D4CCC0"}`,borderRadius:6,color:customTo?"#1A1A2E":"#4A4F57",padding:"4px 8px",fontFamily:mono,fontSize:12,colorScheme:"light",cursor:"pointer"}}/>
+                      style={{background:"var(--panel)",border:`1px solid ${useCustom?"var(--accent)":"var(--line)"}`,borderRadius:6,color:customTo?"var(--ink)":"var(--muted)",padding:"4px 8px",fontFamily:mono,fontSize:12,colorScheme:"inherit",cursor:"pointer"}}/>
                     {rosterBPs.map(b=>{
                       const isActive = customFrom===b.from && customTo===b.to;
                       return <button key={b.bp} onClick={()=>{setCustomFrom(b.from);setCustomTo(b.to);setMonthView(b.from.slice(0,7));setYearIdx(ebaYearIdxForDate(b.from));}}
-                        style={{background:isActive?"#E0EAF5":"#F0EBE3",border:`1px solid ${isActive?"#1E8AC0":"#D4CCC0"}`,borderRadius:6,color:isActive?"#1E8AC0":"#2D3239",fontSize:11,fontWeight:700,cursor:"pointer",padding:"4px 10px",fontFamily:mono,letterSpacing:0.5}}>
+                        style={{background:isActive?"var(--accentBg)":"var(--panel)",border:`1px solid ${isActive?"var(--accent)":"var(--line)"}`,borderRadius:6,color:isActive?"var(--accent)":"var(--ink2)",fontSize:11,fontWeight:700,cursor:"pointer",padding:"4px 10px",fontFamily:mono,letterSpacing:0.5}}>
                         BP {b.bp}
                       </button>;
                     })}
@@ -4800,17 +4868,17 @@ export default function App() {
               </div>
 
               {/* Monthly total card */}
-              <div style={{background:"linear-gradient(135deg,#E0EAF5,#FAF7F2)",border:"1px solid #8BAFCF",borderRadius:14,padding:"16px 20px",marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{background:"linear-gradient(135deg,var(--accentBg),var(--bg))",border:"1px solid var(--accentLine)",borderRadius:14,padding:"16px 20px",marginBottom:18,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
-                  <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>TOTAL ALLOWANCES — {useCustom ? "CUSTOM RANGE" : `${monthName.toUpperCase()} ${mvYear}`}</div>
-                  <div style={{fontFamily:mono,fontSize:38,fontWeight:700,color:monthGrandTotal>0?"#1E8AC0":"#4A4F57",letterSpacing:-1.5,textShadow:monthGrandTotal>0?"0 0 30px rgba(56,189,248,0.25)":"none"}}>
+                  <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:4}}>TOTAL ALLOWANCES — {useCustom ? "CUSTOM RANGE" : `${monthName.toUpperCase()} ${mvYear}`}</div>
+                  <div style={{fontFamily:mono,fontSize:38,fontWeight:700,color:monthGrandTotal>0?"var(--accent)":"var(--muted)",letterSpacing:-1.5,textShadow:monthGrandTotal>0?"0 0 30px rgba(56,189,248,0.25)":"none"}}>
                     AUD ${fmtAUD(monthGrandTotal)}
                   </div>
-                  <div style={{fontSize:11,color:"#2D3239",marginTop:3,fontFamily:mono}}>
+                  <div style={{fontSize:11,color:"var(--ink2)",marginTop:3,fontFamily:mono}}>
                     {weeksInRange.length} week{weeksInRange.length!==1?"s":""} with data
-                    {includeOvertime && overtimePay>0&&<span style={{color:"#D4A80A",fontWeight:700}}> · incl. overtime ${fmtAUD(overtimePay)} ({overtimeHrs.toFixed(2)}h over 70h)</span>}
-                    {includeOvertime && overtimeHrs>0&&yos<0&&<span style={{color:"#CC2E2E",fontWeight:700}}> · overtime pending (select YOS!)</span>}
-                    {!isBpSelected && overtimeHrs>0&&<span style={{color:"#4A4F57",fontStyle:"italic"}}> · overtime excluded (select a BP to include)</span>}
+                    {includeOvertime && overtimePay>0&&<span style={{color:"var(--yellow)",fontWeight:700}}> · incl. overtime ${fmtAUD(overtimePay)} ({overtimeHrs.toFixed(2)}h over 70h)</span>}
+                    {includeOvertime && overtimeHrs>0&&yos<0&&<span style={{color:"var(--red)",fontWeight:700}}> · overtime pending (select YOS!)</span>}
+                    {!isBpSelected && overtimeHrs>0&&<span style={{color:"var(--muted)",fontStyle:"italic"}}> · overtime excluded (select a BP to include)</span>}
                   </div>
                 </div>
                 <div style={{fontSize:44,opacity:0.06}}>📅</div>
@@ -4818,7 +4886,7 @@ export default function App() {
 
               {/* Per-week breakdown */}
               {weeksInRange.length===0 ? (
-                <div style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:12,padding:32,textAlign:"center",color:"#4A4F57",fontSize:14}}>
+                <div style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:12,padding:32,textAlign:"center",color:"var(--muted)",fontSize:14}}>
                   No weeks entered for {useCustom ? "this date range" : `${monthName} ${mvYear}`}.<br/>
                   <span style={{fontSize:12,marginTop:6,display:"block"}}>Enter duty data in the week view then return here to see the summary.</span>
                 </div>
@@ -4827,27 +4895,27 @@ export default function App() {
                   {/* Trips breakdown */}
                   {trips.length>0&&(
                     <>
-                      <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:9}}>PATTERNS — {trips.length}</div>
+                      <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>PATTERNS — {trips.length}</div>
                       <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
                         {trips.map((trip,ti)=>(
                           <div key={`${trip.ws}-${trip.dn}`} className="hrow" onClick={()=>{setWeekStart(trip.ws);setActive(trip.dn);setTab("entry");}}
-                            style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",borderBottom:"1px solid #E8E2D9",cursor:"pointer",transition:"background 0.15s"}}>
-                            <div style={{padding:"11px 14px",borderRight:"1px solid #D4CCC0"}}>
-                              <div style={{fontSize:12,fontWeight:700,color:"#1A1A2E",fontFamily:mono}}>{fmtShort(trip.tripFrom)}{trip.tripFrom!==trip.tripTo?` - ${fmtShort(trip.tripTo)}`:""}</div>
-                              {trip.route&&<div style={{fontSize:10,color:"#2D3239",fontFamily:mono,marginTop:2}}>{trip.route}</div>}
-                              <div style={{fontSize:9,color:"#4A4F57",fontFamily:mono,marginTop:1}}>{trip.isReserve?"Reserve":`${trip.sectorCount} sector${trip.sectorCount!==1?"s":""}`} · {trip.dn}</div>
+                            style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",borderBottom:"1px solid var(--line2)",cursor:"pointer",transition:"background 0.15s"}}>
+                            <div style={{padding:"11px 14px",borderRight:"1px solid var(--line)"}}>
+                              <div style={{fontSize:12,fontWeight:700,color:"var(--ink)",fontFamily:mono}}>{fmtShort(trip.tripFrom)}{trip.tripFrom!==trip.tripTo?` - ${fmtShort(trip.tripTo)}`:""}</div>
+                              {trip.route&&<div style={{fontSize:10,color:"var(--ink2)",fontFamily:mono,marginTop:2}}>{trip.route}</div>}
+                              <div style={{fontSize:9,color:"var(--muted)",fontFamily:mono,marginTop:1}}>{trip.isReserve?"Reserve":`${trip.sectorCount} sector${trip.sectorCount!==1?"s":""}`} · {trip.dn}</div>
                             </div>
-                            <div style={{padding:"11px 14px",borderRight:"1px solid #D4CCC0"}}>
+                            <div style={{padding:"11px 14px",borderRight:"1px solid var(--line)"}}>
                               <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
                                 {trip.byType.map((item,bi)=>{
                                   const isDHA = /Duty Hour Allowance/.test(item.label);
-                                  return <span key={`${item.id}-${bi}`} style={{fontSize:10,padding:"2px 5px",borderRadius:4,background:`${item.color}15`,color:item.color,border:`1px solid ${item.color}30`,fontWeight:600,fontFamily:mono}}>
+                                  return <span key={`${item.id}-${bi}`} style={{fontSize:10,padding:"2px 5px",borderRadius:4,background:`${mix(item.color,8)}`,color:item.color,border:`1px solid ${mix(item.color,19)}`,fontWeight:600,fontFamily:mono}}>
                                     {item.icon} {item.count>1&&!isDHA?`${item.count}× ${item.label} $${fmtAUD(item.rate)}`:`${item.label} $${fmtAUD(item.total)}`}
                                   </span>;
                                 })}
                               </div>
                             </div>
-                            <div style={{padding:"11px 16px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"#3DA866"}}>
+                            <div style={{padding:"11px 16px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"var(--green)"}}>
                               ${fmtAUD(trip.tripTotal)}
                             </div>
                           </div>
@@ -4855,10 +4923,10 @@ export default function App() {
                         {(() => {
                           const tripsSum = trips.reduce((s, t) => s + (t.tripTotal || 0), 0);
                           return (
-                            <div style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
-                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1}}>PATTERNS TOTAL</div>
-                              <div style={{padding:"10px 14px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{trips.length} pattern{trips.length!==1?"s":""} · full pattern totals (excludes BP carry adjustment)</div>
-                              <div style={{padding:"10px 16px",textAlign:"right",fontFamily:mono,fontSize:16,fontWeight:700,color:"#1E8AC0"}}>${fmtAUD(tripsSum)}</div>
+                            <div style={{display:"grid",gridTemplateColumns:"minmax(140px,auto) 1fr minmax(100px,auto)",background:"var(--accentBg2)",borderTop:"1px solid var(--accentLine)"}}>
+                              <div style={{padding:"10px 14px",fontSize:10,color:"var(--ink2)",fontFamily:mono,letterSpacing:1}}>PATTERNS TOTAL</div>
+                              <div style={{padding:"10px 14px",fontSize:10,color:"var(--ink2)",fontFamily:mono}}>{trips.length} pattern{trips.length!==1?"s":""} · full pattern totals (excludes BP carry adjustment)</div>
+                              <div style={{padding:"10px 16px",textAlign:"right",fontFamily:mono,fontSize:16,fontWeight:700,color:"var(--accent)"}}>${fmtAUD(tripsSum)}</div>
                             </div>
                           );
                         })()}
@@ -4870,22 +4938,22 @@ export default function App() {
                   {monthTypes.length>0&&(
                     <>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
-                        <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>ALLOWANCE TYPE BREAKDOWN{useCustom ? "" : ` — ${monthName.toUpperCase()}`}</div>
+                        <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>ALLOWANCE TYPE BREAKDOWN{useCustom ? "" : ` — ${monthName.toUpperCase()}`}</div>
                         <button onClick={()=>setShowTypeBreakdown(!showTypeBreakdown)}
-                          style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                          style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--muted)",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
                           {showTypeBreakdown ? "Hide" : "Show"}
                         </button>
                       </div>
                       {showTypeBreakdown && (
                         <div className="type-breakdown">
                           {monthTypes.map((item,mi)=>(
-                            <div key={`mt-${mi}`} style={{background:"#F0EBE3",border:`1px solid ${item.color}25`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:9}}>
+                            <div key={`mt-${mi}`} style={{background:"var(--panel)",border:`1px solid ${mix(item.color,15)}`,borderRadius:10,padding:"11px 13px",display:"flex",alignItems:"center",gap:9}}>
                               <span style={{fontSize:18}}>{item.icon}</span>
                               <div style={{flex:1}}>
                                 <div style={{fontSize:13,fontWeight:600,color:item.color}}>{item.label}{item.count>1?` × ${item.count}`:""}</div>
-                                <div style={{fontSize:10,color:"#2D3239",marginTop:1}}>{item.count>1&&item.rate>0?`$${fmtAUD(item.rate)} each · `:""}{item.clause}</div>
+                                <div style={{fontSize:10,color:"var(--ink2)",marginTop:1}}>{item.count>1&&item.rate>0?`$${fmtAUD(item.rate)} each · `:""}{item.clause}</div>
                               </div>
-                              <div style={{fontFamily:mono,fontSize:15,fontWeight:700,color:"#3DA866"}}>${fmtAUD(item.total)}</div>
+                              <div style={{fontFamily:mono,fontSize:15,fontWeight:700,color:"var(--green)"}}>${fmtAUD(item.total)}</div>
                             </div>
                           ))}
                         </div>
@@ -4897,9 +4965,9 @@ export default function App() {
                   {dhaItems.length>0&&(
                     <>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,marginTop:18,gap:10,flexWrap:"wrap"}}>
-                        <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>DHA ALLOWANCES — {dhaItems.length} ITEM{dhaItems.length!==1?"S":""}</div>
+                        <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>DHA ALLOWANCES — {dhaItems.length} ITEM{dhaItems.length!==1?"S":""}</div>
                         <button onClick={()=>setShowDhaList(!showDhaList)}
-                          style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                          style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--muted)",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
                           {showDhaList ? "Hide" : "Show"}
                         </button>
                       </div>
@@ -4908,40 +4976,40 @@ export default function App() {
                           {dhaItems.map((item,ix)=>{
                             const shortLabel = item.label.replace(/^Duty Hour Allowance\s*—\s*/, "");
                             return (
-                              <div key={`dha-${ix}`} style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid #E8E2D9",alignItems:"center"}}>
-                                <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                  <div style={{fontSize:11,fontWeight:700,color:"#4A4F57",fontFamily:mono}}>{fmtShort(item.date)}</div>
+                              <div key={`dha-${ix}`} style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid var(--line2)",alignItems:"center"}}>
+                                <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                  <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",fontFamily:mono}}>{fmtShort(item.date)}</div>
                                 </div>
-                                <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
+                                <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
                                   <div style={{fontSize:12,fontWeight:600,color:item.color,lineHeight:1.35}}>🕐 {shortLabel}</div>
-                                  {item.reason&&<div style={{fontSize:10,color:"#2D3239",marginTop:2,fontFamily:mono,lineHeight:1.4}}>{item.reason}</div>}
+                                  {item.reason&&<div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>{item.reason}</div>}
                                 </div>
-                                <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"#3DA866"}}>${fmtAUD(item.amount)}</div>
+                                <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"var(--green)"}}>${fmtAUD(item.amount)}</div>
                               </div>
                             );
                           })}
                           {bpHdrItems && (bpHdrItems.carriedInDuty !== "0:00" || bpHdrItems.carriedOutDuty !== "0:00") && (
-                            <div style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid #E8E2D9",alignItems:"center",background:"#F5F0F9"}}>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                <div style={{fontSize:11,fontWeight:700,color:"#7C5CD6",fontFamily:mono}}>BP hdr</div>
+                            <div style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid var(--line2)",alignItems:"center",background:"var(--purpleBg)"}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                <div style={{fontSize:11,fontWeight:700,color:"var(--purple)",fontFamily:mono}}>BP hdr</div>
                               </div>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                <div style={{fontSize:12,fontWeight:600,color:"#7C5CD6",lineHeight:1.35}}>🕐 Carry-in / Carry-out (Qantas)</div>
-                                <div style={{fontSize:10,color:"#2D3239",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                <div style={{fontSize:12,fontWeight:600,color:"var(--purple)",lineHeight:1.35}}>🕐 Carry-in / Carry-out (Qantas)</div>
+                                <div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
                                   {bpHdrItems.carriedInDuty !== "0:00" ? `+${bpHdrItems.carriedInDuty} carried in from prev BP` : ""}
                                   {bpHdrItems.carriedInDuty !== "0:00" && bpHdrItems.carriedOutDuty !== "0:00" ? " · " : ""}
                                   {bpHdrItems.carriedOutDuty !== "0:00" ? `−${bpHdrItems.carriedOutDuty} carried out to next BP` : ""}
                                 </div>
                               </div>
-                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:dhaCarryDeltaHrs>=0?"#3DA866":"#CC2E2E"}}>
+                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:dhaCarryDeltaHrs>=0?"var(--green)":"var(--red)"}}>
                                 {dhaCarryDeltaHrs>=0?"+":""}${fmtAUD(dhaCarryDeltaHrs * dhaRateForItems)}
                               </div>
                             </div>
                           )}
-                          <div style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1,fontWeight:700}}>DHA TOTAL</div>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{dhaItems.length} payment{dhaItems.length!==1?"s":""} · {(dhaTotal / ((role==="cpt"?RATES.DHA_CPT:RATES.DHA_FO) * INDEX_YEARS[yearIdx].mult)).toFixed(2)}h</div>
-                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"#1E8AC0"}}>${fmtAUD(dhaTotal)}</div>
+                          <div style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",background:"var(--accentBg2)",borderTop:"1px solid var(--accentLine)"}}>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono,letterSpacing:1,fontWeight:700}}>DHA TOTAL</div>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono}}>{dhaItems.length} payment{dhaItems.length!==1?"s":""} · {(dhaTotal / ((role==="cpt"?RATES.DHA_CPT:RATES.DHA_FO) * INDEX_YEARS[yearIdx].mult)).toFixed(2)}h</div>
+                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"var(--accent)"}}>${fmtAUD(dhaTotal)}</div>
                           </div>
                         </Card>
                       )}
@@ -4952,9 +5020,9 @@ export default function App() {
                   {stays.length>0&&(
                     <>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,marginTop:18,gap:10,flexWrap:"wrap"}}>
-                        <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>TRIP TOTALS — {stays.length}</div>
+                        <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>TRIP TOTALS — {stays.length}</div>
                         <button onClick={()=>setShowStayList(!showStayList)}
-                          style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                          style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--muted)",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
                           {showStayList ? "Hide" : "Show"}
                         </button>
                       </div>
@@ -4977,22 +5045,22 @@ export default function App() {
                               counts.i > 0 ? `${counts.i}×Inc` : null,
                             ].filter(Boolean).join("  ");
                             return (
-                              <div key={`stay-${s.key}`} style={{display:"grid",gridTemplateColumns:"minmax(130px,auto) 1fr minmax(80px,auto)",borderBottom:ix<stays.length-1?"1px solid #E8E2D9":"none",alignItems:"center"}}>
-                                <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                  <div style={{fontSize:11,fontWeight:700,color:"#4A4F57",fontFamily:mono}}>{rangeLbl}</div>
+                              <div key={`stay-${s.key}`} style={{display:"grid",gridTemplateColumns:"minmax(130px,auto) 1fr minmax(80px,auto)",borderBottom:ix<stays.length-1?"1px solid var(--line2)":"none",alignItems:"center"}}>
+                                <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                  <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",fontFamily:mono}}>{rangeLbl}</div>
                                 </div>
-                                <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                  <div style={{fontSize:12,fontWeight:600,color:"#2D3239",lineHeight:1.35}}>{s.label}</div>
-                                  <div style={{fontSize:10,color:"#4A4F57",marginTop:2,fontFamily:mono,lineHeight:1.4}}>{summary}</div>
+                                <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                  <div style={{fontSize:12,fontWeight:600,color:"var(--ink2)",lineHeight:1.35}}>{s.label}</div>
+                                  <div style={{fontSize:10,color:"var(--muted)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>{summary}</div>
                                 </div>
-                                <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"#3DA866"}}>${fmtAUD(s.total)}</div>
+                                <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"var(--green)"}}>${fmtAUD(s.total)}</div>
                               </div>
                             );
                           })}
-                          <div style={{display:"grid",gridTemplateColumns:"minmax(130px,auto) 1fr minmax(80px,auto)",background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1,fontWeight:700}}>STAY TOTAL</div>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{stays.length} stay{stays.length!==1?"s":""}</div>
-                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"#1E8AC0"}}>${fmtAUD(mealTotal)}</div>
+                          <div style={{display:"grid",gridTemplateColumns:"minmax(130px,auto) 1fr minmax(80px,auto)",background:"var(--accentBg2)",borderTop:"1px solid var(--accentLine)"}}>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono,letterSpacing:1,fontWeight:700}}>STAY TOTAL</div>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono}}>{stays.length} stay{stays.length!==1?"s":""}</div>
+                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"var(--accent)"}}>${fmtAUD(mealTotal)}</div>
                           </div>
                         </Card>
                       )}
@@ -5003,30 +5071,30 @@ export default function App() {
                   {mealItems.length>0&&(
                     <>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,marginTop:18,gap:10,flexWrap:"wrap"}}>
-                        <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>MEAL ALLOWANCES — {mealItems.length} ITEM{mealItems.length!==1?"S":""}</div>
+                        <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>MEAL ALLOWANCES — {mealItems.length} ITEM{mealItems.length!==1?"S":""}</div>
                         <button onClick={()=>setShowMealList(!showMealList)}
-                          style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                          style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--muted)",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
                           {showMealList ? "Hide" : "Show"}
                         </button>
                       </div>
                       {showMealList && (
                         <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
                           {mealItems.map((item,ix)=>(
-                            <div key={`meal-${ix}`} style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",borderBottom:ix<mealItems.length-1?"1px solid #E8E2D9":"none",alignItems:"center"}}>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                <div style={{fontSize:11,fontWeight:700,color:"#4A4F57",fontFamily:mono}}>{fmtShort(item.date)}</div>
+                            <div key={`meal-${ix}`} style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",borderBottom:ix<mealItems.length-1?"1px solid var(--line2)":"none",alignItems:"center"}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",fontFamily:mono}}>{fmtShort(item.date)}</div>
                               </div>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
                                 <div style={{fontSize:12,fontWeight:600,color:item.color,lineHeight:1.35}}>{item.icon} {item.label}</div>
-                                {item.reason&&<div style={{fontSize:10,color:"#2D3239",marginTop:2,fontFamily:mono,lineHeight:1.4}}>{item.reason}</div>}
+                                {item.reason&&<div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>{item.reason}</div>}
                               </div>
-                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"#3DA866"}}>${fmtAUD(item.amount)}</div>
+                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"var(--green)"}}>${fmtAUD(item.amount)}</div>
                             </div>
                           ))}
-                          <div style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1,fontWeight:700}}>MEAL TOTAL</div>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{mealItems.length} item{mealItems.length!==1?"s":""}</div>
-                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"#1E8AC0"}}>${fmtAUD(mealTotal)}</div>
+                          <div style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",background:"var(--accentBg2)",borderTop:"1px solid var(--accentLine)"}}>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono,letterSpacing:1,fontWeight:700}}>MEAL TOTAL</div>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono}}>{mealItems.length} item{mealItems.length!==1?"s":""}</div>
+                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"var(--accent)"}}>${fmtAUD(mealTotal)}</div>
                           </div>
                         </Card>
                       )}
@@ -5037,69 +5105,69 @@ export default function App() {
                   {creditItems.length>0&&(
                     <>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,marginTop:18,gap:10,flexWrap:"wrap"}}>
-                        <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>CREDIT HOURS — {creditTotal.toFixed(2)}h{creditTotal>70&&yos<0?"":" "}</div>
-                        {creditTotal>70&&yos<0&&<span style={{fontSize:11,fontWeight:700,color:"#CC2E2E",fontFamily:mono}}>Select Years of Service!</span>}
+                        <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>CREDIT HOURS — {creditTotal.toFixed(2)}h{creditTotal>70&&yos<0?"":" "}</div>
+                        {creditTotal>70&&yos<0&&<span style={{fontSize:11,fontWeight:700,color:"var(--red)",fontFamily:mono}}>Select Years of Service!</span>}
                         <button onClick={()=>setShowCreditHours(!showCreditHours)}
-                          style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                          style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--muted)",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
                           {showCreditHours ? "Hide" : "Show"}
                         </button>
                       </div>
                       {showCreditHours && (
                         <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
                           {creditItems.map((item,ix)=>(
-                            <div key={`cr-${ix}`} style={{display:"grid",gridTemplateColumns:"minmax(80px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid #E8E2D9",alignItems:"center"}}>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                <div style={{fontSize:11,fontWeight:700,color:"#4A4F57",fontFamily:mono}}>{fmtShort(item.date)}</div>
+                            <div key={`cr-${ix}`} style={{display:"grid",gridTemplateColumns:"minmax(80px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid var(--line2)",alignItems:"center"}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",fontFamily:mono}}>{fmtShort(item.date)}</div>
                               </div>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                <div style={{fontSize:12,fontWeight:600,color:item.type==="Operating"?"#1E8AC0":item.type==="Positioning"?"#7C5CD6":item.type==="Reserve"?"#D4458E":item.type==="Leave"?"#D4A80A":"#3DA866",lineHeight:1.35}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                <div style={{fontSize:12,fontWeight:600,color:item.type==="Operating"?"var(--accent)":item.type==="Positioning"?"var(--purple)":item.type==="Reserve"?"var(--pink)":item.type==="Leave"?"var(--yellow)":"var(--green)",lineHeight:1.35}}>
                                   {item.label}
                                 </div>
-                                <div style={{fontSize:10,color:"#2D3239",marginTop:2,fontFamily:mono}}>
+                                <div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono}}>
                                   {item.type==="Leave"?"2.5h per day":item.type==="Reserve"?"Flat 4h credit":item.type==="Ground"?`${item.credit.toFixed(2)}h (max 4h)`:item.blockHrs!=null?`${item.blockHrs.toFixed(2)}h block${item.type==="Positioning"?" × 0.5":""}`:``}
                                 </div>
                               </div>
-                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"#1E8AC0"}}>{item.credit.toFixed(2)}h</div>
+                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"var(--accent)"}}>{item.credit.toFixed(2)}h</div>
                             </div>
                           ))}
                           {bpHdr && (bpHdr.carriedInCredit !== "0:00" || bpHdr.carriedOutCredit !== "0:00") && (
-                            <div style={{display:"grid",gridTemplateColumns:"minmax(80px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid #E8E2D9",alignItems:"center",background:"#F5F0F9"}}>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                <div style={{fontSize:11,fontWeight:700,color:"#7C5CD6",fontFamily:mono}}>BP hdr</div>
+                            <div style={{display:"grid",gridTemplateColumns:"minmax(80px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid var(--line2)",alignItems:"center",background:"var(--purpleBg)"}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                <div style={{fontSize:11,fontWeight:700,color:"var(--purple)",fontFamily:mono}}>BP hdr</div>
                               </div>
-                              <div style={{padding:"10px 13px",borderRight:"1px solid #D4CCC0"}}>
-                                <div style={{fontSize:12,fontWeight:600,color:"#7C5CD6",lineHeight:1.35}}>Carry-in / Carry-out (Qantas)</div>
-                                <div style={{fontSize:10,color:"#2D3239",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
+                              <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                                <div style={{fontSize:12,fontWeight:600,color:"var(--purple)",lineHeight:1.35}}>Carry-in / Carry-out (Qantas)</div>
+                                <div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
                                   {bpHdr.carriedInCredit !== "0:00" ? `+${bpHdr.carriedInCredit} carried in` : ""}
                                   {bpHdr.carriedInCredit !== "0:00" && bpHdr.carriedOutCredit !== "0:00" ? " · " : ""}
                                   {bpHdr.carriedOutCredit !== "0:00" ? `−${bpHdr.carriedOutCredit} carried out` : ""}
                                 </div>
                               </div>
-                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:headerCreditDelta>=0?"#3DA866":"#CC2E2E"}}>
+                              <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:headerCreditDelta>=0?"var(--green)":"var(--red)"}}>
                                 {headerCreditDelta>=0?"+":""}{headerCreditDelta.toFixed(2)}h
                               </div>
                             </div>
                           )}
-                          <div style={{display:"grid",gridTemplateColumns:"minmax(80px,auto) 1fr minmax(80px,auto)",background:"#D6E4F0",borderTop:"1px solid #8BAFCF"}}>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono,letterSpacing:1,fontWeight:700}}>CREDIT TOTAL</div>
-                            <div style={{padding:"10px 13px",fontSize:10,color:"#2D3239",fontFamily:mono}}>{creditItems.length} item{creditItems.length!==1?"s":""}</div>
-                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"#1E8AC0"}}>{creditTotal.toFixed(2)}h</div>
+                          <div style={{display:"grid",gridTemplateColumns:"minmax(80px,auto) 1fr minmax(80px,auto)",background:"var(--accentBg2)",borderTop:"1px solid var(--accentLine)"}}>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono,letterSpacing:1,fontWeight:700}}>CREDIT TOTAL</div>
+                            <div style={{padding:"10px 13px",fontSize:10,color:"var(--ink2)",fontFamily:mono}}>{creditItems.length} item{creditItems.length!==1?"s":""}</div>
+                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:15,fontWeight:700,color:"var(--accent)"}}>{creditTotal.toFixed(2)}h</div>
                           </div>
                           {/* Overtime section */}
                           {creditTotal > 70 && (
-                            <div style={{padding:"12px 14px",background:"#FFF8E6",borderTop:"1px solid #D4A80A50"}}>
+                            <div style={{padding:"12px 14px",background:"var(--amberBg)",borderTop:"1px solid color-mix(in srgb, var(--yellow) 31%, transparent)"}}>
                               <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:8}}>
-                                <span style={{fontSize:11,fontWeight:700,color:"#D4A80A",fontFamily:mono}}>⚠ OVERTIME: {(creditTotal - 70).toFixed(2)}h above 70h threshold</span>
+                                <span style={{fontSize:11,fontWeight:700,color:"var(--yellow)",fontFamily:mono}}>⚠ OVERTIME: {(creditTotal - 70).toFixed(2)}h above 70h threshold</span>
                               </div>
                               <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-                                <span style={{fontSize:11,color:"#2D3239",fontFamily:mono}}>Years of Service:</span>
-                                <select value={useYos} onChange={e=>setYos(+e.target.value)} style={{background:"#F0EBE3",border:"1px solid #D4CCC0",borderRadius:6,color:"#1E8AC0",padding:"4px 8px",fontFamily:mono,fontSize:11,cursor:"pointer"}}>
+                                <span style={{fontSize:11,color:"var(--ink2)",fontFamily:mono}}>Years of Service:</span>
+                                <select value={useYos} onChange={e=>setYos(+e.target.value)} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"4px 8px",fontFamily:mono,fontSize:11,cursor:"pointer"}}>
                                   <option value={-1}>— Select —</option>
                                   {YOS_OPTIONS.filter(o=> role==="fo" ? o.idx<=2 : true).map(o=><option key={o.idx} value={o.idx}>{o.label}</option>)}
                                 </select>
-                                {useYos < 0 && <span style={{fontSize:12,fontWeight:700,color:"#CC2E2E",fontFamily:mono}}>Select Years of Service!</span>}
+                                {useYos < 0 && <span style={{fontSize:12,fontWeight:700,color:"var(--red)",fontFamily:mono}}>Select Years of Service!</span>}
                                 {pilotJoiningDate && effectiveYos >= 0 && effectiveYos !== yos && (
-                                  <span style={{fontSize:10,color:"#4A4F57",fontFamily:mono,fontStyle:"italic"}}>(auto-set for this BP)</span>
+                                  <span style={{fontSize:10,color:"var(--muted)",fontFamily:mono,fontStyle:"italic"}}>(auto-set for this BP)</span>
                                 )}
                               </div>
                               {useYos >= 0 && (()=>{
@@ -5112,17 +5180,17 @@ export default function App() {
                                 const overtimeHrs = Math.round((creditTotal - 70) * 100) / 100;
                                 const overtimePay = overtimeHrs * hourlyRate;
                                 return (
-                                  <div style={{marginTop:10,padding:"10px 12px",background:"#F0EBE3",borderRadius:8,border:"1px solid #D4CCC0"}}>
-                                    <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:4,fontSize:11,fontFamily:mono,color:"#2D3239"}}>
+                                  <div style={{marginTop:10,padding:"10px 12px",background:"var(--panel)",borderRadius:8,border:"1px solid var(--line)"}}>
+                                    <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:4,fontSize:11,fontFamily:mono,color:"var(--ink2)"}}>
                                       <span>Annual salary ({aircraft.toUpperCase()} {role==="cpt"?"CPT":"F/O"}, {YOS_OPTIONS[useYos].label})</span>
                                       <span style={{textAlign:"right",fontWeight:700}}>${fmtAUD(sal)}</span>
                                       <span>Hourly rate (salary ÷ 750)</span>
                                       <span style={{textAlign:"right",fontWeight:700}}>${fmtAUD(hourlyRate)}/h</span>
                                       <span>Overtime hours ({creditTotal.toFixed(2)} − 70)</span>
                                       <span style={{textAlign:"right",fontWeight:700}}>{overtimeHrs.toFixed(2)}h</span>
-                                      <div style={{gridColumn:"1 / -1",borderTop:"1px solid #D4CCC0",marginTop:4,paddingTop:6,display:"flex",justifyContent:"space-between"}}>
-                                        <span style={{fontWeight:700,color:"#D4A80A"}}>Overtime payment</span>
-                                        <span style={{fontWeight:700,fontSize:14,color:"#3DA866"}}>${fmtAUD(overtimePay)}</span>
+                                      <div style={{gridColumn:"1 / -1",borderTop:"1px solid var(--line)",marginTop:4,paddingTop:6,display:"flex",justifyContent:"space-between"}}>
+                                        <span style={{fontWeight:700,color:"var(--yellow)"}}>Overtime payment</span>
+                                        <span style={{fontWeight:700,fontSize:14,color:"var(--green)"}}>${fmtAUD(overtimePay)}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -5139,15 +5207,15 @@ export default function App() {
                   {selectedBpForItems?.rawText && (
                     <>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,marginTop:18,gap:10,flexWrap:"wrap"}}>
-                        <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>ROSTER VIEW{selectedBpForItems.fileName ? ` — ${selectedBpForItems.fileName}` : ""}</div>
+                        <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>ROSTER VIEW{selectedBpForItems.fileName ? ` — ${selectedBpForItems.fileName}` : ""}</div>
                         <button onClick={()=>setShowRosterView(!showRosterView)}
-                          style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#4A4F57",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
+                          style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--muted)",fontSize:10,cursor:"pointer",padding:"3px 8px",fontFamily:mono,letterSpacing:0.5}}>
                           {showRosterView ? "Hide" : "Show"}
                         </button>
                       </div>
                       {showRosterView && (
                         <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
-                          <pre style={{margin:0,padding:"14px 16px",fontFamily:mono,fontSize:11,lineHeight:1.5,color:"#2D3239",background:"#F0EBE3",whiteSpace:"pre",overflowX:"auto",maxHeight:"70vh",overflowY:"auto"}}>{selectedBpForItems.rawText}</pre>
+                          <pre style={{margin:0,padding:"14px 16px",fontFamily:mono,fontSize:11,lineHeight:1.5,color:"var(--ink2)",background:"var(--panel)",whiteSpace:"pre",overflowX:"auto",maxHeight:"70vh",overflowY:"auto"}}>{selectedBpForItems.rawText}</pre>
                         </Card>
                       )}
                     </>
@@ -5167,8 +5235,8 @@ export default function App() {
 
           const Header = (
             <div style={{marginBottom:16}}>
-              <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:4}}>PAYSLIP RECONCILIATION</div>
-              <div style={{fontFamily:heading,fontSize:25,fontWeight:700,color:"#1A1A2E"}}>
+              <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:4}}>PAYSLIP RECONCILIATION</div>
+              <div style={{fontFamily:heading,fontSize:25,fontWeight:700,color:"var(--ink)"}}>
                 Pay Check{bp ? ` — BP ${bp.bp}` : ""}
               </div>
             </div>
@@ -5182,48 +5250,48 @@ export default function App() {
           const UploadPanel = (
             <Card style={{marginBottom:18}}>
               <div style={{display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-                <label style={{background:"#E0EAF5",border:"1px solid #1E8AC0",borderRadius:8,color:"#1E8AC0",padding:"8px 13px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:mono,letterSpacing:0.5,flexShrink:0}}
+                <label style={{background:"var(--accentBg)",border:"1px solid var(--accent)",borderRadius:8,color:"var(--accent)",padding:"8px 13px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:mono,letterSpacing:0.5,flexShrink:0}}
                   title="Read a payslip PDF">
                   📄 Upload payslip PDF
                   <input type="file" accept=".pdf,application/pdf"
                     onChange={e=>{handlePayslipUpload(e.target.files);e.target.value="";}}
                     style={{display:"none"}}/>
                 </label>
-                <div style={{fontSize:11,color:"#4A4F57",fontFamily:mono,lineHeight:1.6,flex:1,minWidth:200}}>
+                <div style={{fontSize:11,color:"var(--muted)",fontFamily:mono,lineHeight:1.6,flex:1,minWidth:200}}>
                   Reads the earnings lines straight off the PDF and fills everything in.
                   <br/>The file is read in your browser — it is never uploaded anywhere.
                 </div>
                 {hasPayData && (confirmClearPay ? (
-                  <div style={{display:"flex",alignItems:"center",gap:6,background:"#F5E0E0",border:"1px solid #CC2E2E60",borderRadius:8,padding:"4px 8px",flexShrink:0}}>
-                    <span style={{fontSize:11,color:"#CC2E2E",fontFamily:mono}}>Clear payslip?</span>
+                  <div style={{display:"flex",alignItems:"center",gap:6,background:"var(--redBg)",border:"1px solid color-mix(in srgb, var(--red) 38%, transparent)",borderRadius:8,padding:"4px 8px",flexShrink:0}}>
+                    <span style={{fontSize:11,color:"var(--red)",fontFamily:mono}}>Clear payslip?</span>
                     <button onClick={clearPaySlip}
-                      style={{background:"#CC2E2E",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
+                      style={{background:"var(--red)",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
                       Yes, clear
                     </button>
                     <button onClick={()=>setConfirmClearPay(false)}
-                      style={{background:"transparent",border:"1px solid #4A4F57",borderRadius:5,color:"#2D3239",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
+                      style={{background:"transparent",border:"1px solid var(--muted)",borderRadius:5,color:"var(--ink2)",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
                       Cancel
                     </button>
                   </div>
                 ) : (
                   <button onClick={()=>setConfirmClearPay(true)} title="Remove every payslip figure on this page"
-                    style={{background:"#F0EBE3",border:"1px solid #CC2E2E30",borderRadius:8,color:"#CC2E2E",padding:"7px 11px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5}}>
+                    style={{background:"var(--panel)",border:"1px solid color-mix(in srgb, var(--red) 19%, transparent)",borderRadius:8,color:"var(--red)",padding:"7px 11px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5}}>
                     🗑 CLEAR PAYSLIP
                   </button>
                 ))}
               </div>
               {payPdf && (
-                <div style={{marginTop:12,paddingTop:11,borderTop:"1px solid #D4CCC0",fontSize:11,fontFamily:mono,lineHeight:1.7}}>
-                  {payPdf.busy && <span style={{color:"#4A4F57"}}>Reading {payPdf.name}…</span>}
+                <div style={{marginTop:12,paddingTop:11,borderTop:"1px solid var(--line)",fontSize:11,fontFamily:mono,lineHeight:1.7}}>
+                  {payPdf.busy && <span style={{color:"var(--muted)"}}>Reading {payPdf.name}…</span>}
                   {payPdf.err && (
-                    <span style={{color:"#CC2E2E"}}>
+                    <span style={{color:"var(--red)"}}>
                       ✕ {payPdf.name}: {payPdf.err}
-                      <br/><span style={{color:"#4A4F57"}}>You can still enter the lines by hand below.</span>
+                      <br/><span style={{color:"var(--muted)"}}>You can still enter the lines by hand below.</span>
                     </span>
                   )}
                   {payPdf.ok && (
-                    <span style={{color:"#2D3239"}}>
-                      <span style={{color:"#1FA06E",fontWeight:700}}>✓ Read {payPdf.name}</span>
+                    <span style={{color:"var(--ink2)"}}>
+                      <span style={{color:"var(--green2)",fontWeight:700}}>✓ Read {payPdf.name}</span>
                       {payPdf.periodEnd && ` · period ending ${fmtFull(payPdf.periodEnd)}`}
                       <br/>
                       {[payPdf.counts.dha && "duty hour allowance",
@@ -5232,12 +5300,12 @@ export default function App() {
                         payPdf.counts.dvas && `${payPdf.counts.dvas} DVA`,
                         payPdf.counts.overtime && "overtime"].filter(Boolean).join(" · ")}
                       {payPdf.picked
-                        ? <><br/><span style={{color:"#1E8AC0"}}>Selected BP {payPdf.picked} from the duty hour allowance period.</span></>
+                        ? <><br/><span style={{color:"var(--accent)"}}>Selected BP {payPdf.picked} from the duty hour allowance period.</span></>
                         : payPdf.dhaPeriod
-                          ? <><br/><span style={{color:"#CC2E2E"}}>Paid for {fmtShort(payPdf.dhaPeriod[0])}–{fmtShort(payPdf.dhaPeriod[1])} — that bid period isn't loaded. Upload its roster to compare.</span></>
+                          ? <><br/><span style={{color:"var(--red)"}}>Paid for {fmtShort(payPdf.dhaPeriod[0])}–{fmtShort(payPdf.dhaPeriod[1])} — that bid period isn't loaded. Upload its roster to compare.</span></>
                           : null}
                       {payPdf.ignored.length>0 && (
-                        <><br/><span style={{color:"#8A8577"}}>Not compared: {payPdf.ignored.join(", ")}.</span></>
+                        <><br/><span style={{color:"var(--faint)"}}>Not compared: {payPdf.ignored.join(", ")}.</span></>
                       )}
                     </span>
                   )}
@@ -5267,32 +5335,32 @@ export default function App() {
 
           const ExpectedPayslip = (
             <Card style={{ marginBottom: 18, padding: 0, overflow: "hidden" }}>
-              <div style={{ background: "#1A2A3A", color: "#EAF1F8", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ background: "var(--slipHead)", color: "var(--slipInk)", padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
                 <div style={{ fontFamily: heading, fontSize: 17, fontWeight: 700, letterSpacing: 0.3 }}>Expected Payslip</div>
-                <div style={{ fontFamily: mono, fontSize: 10, letterSpacing: 1.5, color: "#9DB4CC" }}>ESTIMATE · ALLOWANCE EARNINGS</div>
+                <div style={{ fontFamily: mono, fontSize: 10, letterSpacing: 1.5, color: "var(--slipMuted)" }}>ESTIMATE · ALLOWANCE EARNINGS</div>
               </div>
               <div style={{ padding: "12px 16px" }}>
-                <div style={{ fontFamily: mono, fontSize: 10, color: "#4A4F57", letterSpacing: 0.5, marginBottom: 10 }}>
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--muted)", letterSpacing: 0.5, marginBottom: 10 }}>
                   BP {bp ? bp.bp : ""} · {bp ? `${fmtFull(bp.from)} – ${fmtFull(bp.to)}` : ""}
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "6px 0", borderBottom: "2px solid #1A2A3A", fontFamily: mono, fontSize: 9, letterSpacing: 1, color: "#4A4F57" }}>
+                <div style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "6px 0", borderBottom: "2px solid var(--slipHead)", fontFamily: mono, fontSize: 9, letterSpacing: 1, color: "var(--muted)" }}>
                   <div>DESCRIPTION</div><div>PERIOD / DATE</div><div style={{ textAlign: "right" }}>AMOUNT</div>
                 </div>
                 {expLines.length === 0 ? (
-                  <div style={{ padding: "14px 0", fontFamily: mono, fontSize: 12, color: "#8A8577" }}>No allowance earnings expected for this bid period.</div>
+                  <div style={{ padding: "14px 0", fontFamily: mono, fontSize: 12, color: "var(--faint)" }}>No allowance earnings expected for this bid period.</div>
                 ) : expLines.map((l, i) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "7px 0", borderBottom: "1px solid #EFE9E1", alignItems: "baseline" }}>
-                    <div style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: "#1A1A2E" }}>{l.code}</div>
-                    <div style={{ fontFamily: mono, fontSize: 11, color: "#4A4F57" }}>{l.detail}</div>
-                    <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "#1A1A2E", textAlign: "right" }}>${fmtAUD(l.amount)}</div>
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "7px 0", borderBottom: "1px solid var(--line3)", alignItems: "baseline" }}>
+                    <div style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>{l.code}</div>
+                    <div style={{ fontFamily: mono, fontSize: 11, color: "var(--muted)" }}>{l.detail}</div>
+                    <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--ink)", textAlign: "right" }}>${fmtAUD(l.amount)}</div>
                   </div>
                 ))}
-                <div style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "10px 0 2px", borderTop: "2px solid #1A2A3A", alignItems: "baseline" }}>
-                  <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "#1A2A3A" }}>TOTAL ALLOWANCES</div>
+                <div style={{ display: "grid", gridTemplateColumns: expCols, gap: 8, padding: "10px 0 2px", borderTop: "2px solid var(--slipHead)", alignItems: "baseline" }}>
+                  <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, letterSpacing: 1, color: "var(--slipHead)" }}>TOTAL ALLOWANCES</div>
                   <div/>
-                  <div style={{ fontFamily: mono, fontSize: 16, fontWeight: 700, color: "#1E8AC0", textAlign: "right" }}>${fmtAUD(expTotal)}</div>
+                  <div style={{ fontFamily: mono, fontSize: 16, fontWeight: 700, color: "var(--accent)", textAlign: "right" }}>${fmtAUD(expTotal)}</div>
                 </div>
-                <div style={{ fontFamily: mono, fontSize: 9.5, color: "#8A8577", marginTop: 10, lineHeight: 1.6 }}>
+                <div style={{ fontFamily: mono, fontSize: 9.5, color: "var(--faint)", marginTop: 10, lineHeight: 1.6 }}>
                   Estimate of the allowance lines your payslip should show for this bid period — excludes base salary. Compare against your actual payslip below.
                 </div>
               </div>
@@ -5305,10 +5373,10 @@ export default function App() {
                 {Header}
                 {UploadPanel}
                 <Card>
-                  <div style={{fontSize:13,color:"#2D3239",lineHeight:1.7}}>
+                  <div style={{fontSize:13,color:"var(--ink2)",lineHeight:1.7}}>
                     Select a bid period — open <strong>MONTH / ROSTER</strong> and click a BP chip, or
                     upload a payslip above and the right one is chosen for you.
-                    <div style={{fontSize:11,color:"#4A4F57",marginTop:8,fontFamily:mono,lineHeight:1.6}}>
+                    <div style={{fontSize:11,color:"var(--muted)",marginTop:8,fontFamily:mono,lineHeight:1.6}}>
                       A payslip is only comparable against a whole bid period: the 70-hour overtime
                       threshold and the roster header's carried in/out hours both settle per BP, so an
                       arbitrary date range cannot be reconciled.
@@ -5327,22 +5395,22 @@ export default function App() {
 
               {/* Headline */}
               <Card style={{marginBottom:18,textAlign:"center",padding:"18px"}}>
-                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:6}}>
+                <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:6}}>
                   {fmtFull(bp.from)} — {fmtFull(bp.to)}
                 </div>
                 {pc.anyInput ? (
                   <>
                     <div style={{fontFamily:mono,fontSize:34,fontWeight:700,letterSpacing:-1.2,
-                      color:pc.off?"#CC2E2E":"#1FA06E"}}>
+                      color:pc.off?"var(--red)":"var(--green2)"}}>
                       {pc.off ? `${pc.delta>0?"+":"−"}$${fmtAUD(Math.abs(pc.delta))}` : "✓ All matched"}
                     </div>
-                    <div style={{fontSize:11,color:"#4A4F57",fontFamily:mono,marginTop:6}}>
+                    <div style={{fontSize:11,color:"var(--muted)",fontFamily:mono,marginTop:6}}>
                       payslip ${fmtAUD(pc.paidTotal)} · calculated ${fmtAUD(pc.calcTotal)}
-                      {pc.off && <span style={{color:"#CC2E2E"}}> · {pc.delta>0?"paid more than calculated":"paid less than calculated"}</span>}
+                      {pc.off && <span style={{color:"var(--red)"}}> · {pc.delta>0?"paid more than calculated":"paid less than calculated"}</span>}
                     </div>
                   </>
                 ) : (
-                  <div style={{fontSize:13,color:"#4A4F57",lineHeight:1.7}}>
+                  <div style={{fontSize:13,color:"var(--muted)",lineHeight:1.7}}>
                     Enter what your payslip actually paid, below. Each line is matched to this bid
                     period's own figures and any difference is shown.
                   </div>
@@ -5351,23 +5419,23 @@ export default function App() {
 
               {/* ── CR MEALS ATO ── */}
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
-                <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>CR MEALS ATO — {d.payStays.length} STAY{d.payStays.length!==1?"S":""} THIS BP</div>
+                <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>CR MEALS ATO — {d.payStays.length} STAY{d.payStays.length!==1?"S":""} THIS BP</div>
                 <button className="addBtn" onClick={()=>addPayRow("meals",{from:"",to:"",amount:""})}
-                  style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#1E8AC0",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>+ Add meal line</button>
+                  style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>+ Add meal line</button>
               </div>
               <Card style={{marginBottom:18}}>
                 {paySlip.meals.length===0 && (
-                  <div style={{fontSize:12,color:"#4A4F57",lineHeight:1.7}}>
+                  <div style={{fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
                     Add one line per <span style={{fontFamily:mono}}>CR MEALS ATO</span> row on the payslip —
                     its date range and amount. Leave the "to" date blank for a same-day slip.
                     <button onClick={()=>d.payStays.forEach(s=>addPayRow("meals",{from:s.startDate,to:s.endDate===s.startDate?"":s.endDate,amount:""}))}
-                      style={{display:"block",marginTop:10,background:"transparent",border:"1px solid #8BAFCF",borderRadius:6,color:"#1E8AC0",fontSize:11,cursor:"pointer",padding:"5px 10px",fontFamily:mono}}>
+                      style={{display:"block",marginTop:10,background:"transparent",border:"1px solid var(--accentLine)",borderRadius:6,color:"var(--accent)",fontSize:11,cursor:"pointer",padding:"5px 10px",fontFamily:mono}}>
                       Pre-fill {d.payStays.length} line{d.payStays.length!==1?"s":""} from this roster
                     </button>
-                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid #D4CCC0"}}>
-                      <div style={{fontSize:10,letterSpacing:1,color:"#8A8577",fontFamily:mono,marginBottom:5}}>THIS BID PERIOD'S STAYS</div>
+                    <div style={{marginTop:12,paddingTop:10,borderTop:"1px solid var(--line)"}}>
+                      <div style={{fontSize:10,letterSpacing:1,color:"var(--faint)",fontFamily:mono,marginBottom:5}}>THIS BID PERIOD'S STAYS</div>
                       {d.payStays.map(s=>(
-                        <div key={s.key} style={{fontSize:11,color:"#4A4F57",fontFamily:mono,lineHeight:1.8}}>
+                        <div key={s.key} style={{fontSize:11,color:"var(--muted)",fontFamily:mono,lineHeight:1.8}}>
                           {s.port||"—"} · {fmtShort(s.startDate)}–{fmtShort(s.endDate)} · ${fmtAUD(s.total)}
                         </div>
                       ))}
@@ -5384,25 +5452,25 @@ export default function App() {
                       <div style={{minWidth:190,paddingBottom:4}}>
                         {row?.stay ? (
                           <>
-                            <div style={{fontSize:11,color:"#2D3239",fontFamily:mono,marginBottom:3}}>
+                            <div style={{fontSize:11,color:"var(--ink2)",fontFamily:mono,marginBottom:3}}>
                               {row.stay.port||"—"} · {fmtShort(row.stay.startDate)}–{fmtShort(row.stay.endDate)}
                             </div>
                             <Delta paid={row.paid} calc={row.stay.total} off={row.off}/>
                           </>
                         ) : (
-                          <span style={{fontSize:11,color:"#CC2E2E",fontFamily:mono}}>no matching stay in this BP</span>
+                          <span style={{fontSize:11,color:"var(--red)",fontFamily:mono}}>no matching stay in this BP</span>
                         )}
                       </div>
                     </PayRowShell>
                   );
                 })}
                 {paySlip.meals.length>0 && pc.unmatchedStays.length>0 && (
-                  <div style={{marginTop:10,padding:"10px 12px",background:"#CC2E2E10",border:"1px solid #CC2E2E40",borderRadius:8}}>
-                    <div style={{fontSize:11,fontWeight:700,color:"#CC2E2E",fontFamily:mono,marginBottom:5}}>
+                  <div style={{marginTop:10,padding:"10px 12px",background:"color-mix(in srgb, var(--red) 6%, transparent)",border:"1px solid color-mix(in srgb, var(--red) 25%, transparent)",borderRadius:8}}>
+                    <div style={{fontSize:11,fontWeight:700,color:"var(--red)",fontFamily:mono,marginBottom:5}}>
                       {pc.unmatchedStays.length} STAY{pc.unmatchedStays.length!==1?"S":""} WITH NO PAYSLIP LINE
                     </div>
                     {pc.unmatchedStays.map(s=>(
-                      <div key={s.key} style={{fontSize:11,color:"#2D3239",fontFamily:mono,lineHeight:1.8}}>
+                      <div key={s.key} style={{fontSize:11,color:"var(--ink2)",fontFamily:mono,lineHeight:1.8}}>
                         {s.port||"—"} · {fmtShort(s.startDate)}–{fmtShort(s.endDate)} · ${fmtAUD(s.total)}
                       </div>
                     ))}
@@ -5411,13 +5479,13 @@ export default function App() {
               </Card>
 
               {/* ── DUTY HOUR AL + OVERTIME ── */}
-              <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono,marginBottom:9}}>DUTY HOURS &amp; OVERTIME</div>
+              <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>DUTY HOURS &amp; OVERTIME</div>
               <Card style={{marginBottom:18}}>
                 <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap",marginBottom:12}}>
                   <MInput label="DUTY HOUR AL — PAID $" value={paySlip.dha} onChange={v=>setPayField("dha",v)} width={140}/>
                   <div style={{paddingBottom:4}}>
                     <Delta paid={pc.dha?.paid ?? null} calc={d.dhaTotal} off={pc.dha?.off}/>
-                    <div style={{fontSize:10,color:"#8A8577",fontFamily:mono,marginTop:3}}>
+                    <div style={{fontSize:10,color:"var(--faint)",fontFamily:mono,marginTop:3}}>
                       {(d.dhaTotal/((role==="cpt"?RATES.DHA_CPT:RATES.DHA_FO)*INDEX_YEARS[yearIdx].mult)).toFixed(2)}h
                       {d.dhaCarryDeltaHrs!==0 && ` (incl. ${d.dhaCarryDeltaHrs>0?"+":""}${d.dhaCarryDeltaHrs.toFixed(2)}h header carry)`}
                     </div>
@@ -5427,7 +5495,7 @@ export default function App() {
                   <MInput label="OVERTIME — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={140}/>
                   <div style={{paddingBottom:4}}>
                     <Delta paid={pc.ot?.paid ?? null} calc={d.overtimePay} off={pc.ot?.off}/>
-                    <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"#CC2E2E":"#8A8577",fontFamily:mono,marginTop:3}}>
+                    <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"var(--red)":"var(--faint)",fontFamily:mono,marginTop:3}}>
                       {d.useYos<0&&d.overtimeHrs>0
                         ? "select Years of Service to resolve overtime"
                         : `${d.creditTotal.toFixed(2)}h credit · ${d.overtimeHrs.toFixed(2)}h over 70h`}
@@ -5441,13 +5509,13 @@ export default function App() {
                 ["dvas","DUTY VARIATION ALLOWANCE","+ Add DVA",pc.dvas]].map(([key,title,addLbl,res])=>(
                 <div key={key}>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
-                    <div style={{fontSize:10,letterSpacing:2,color:"#4A4F57",fontFamily:mono}}>{title}</div>
+                    <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>{title}</div>
                     <button className="addBtn" onClick={()=>addPayRow(key,{date:"",amount:""})}
-                      style={{background:"transparent",border:"1px solid #D4CCC0",borderRadius:6,color:"#1E8AC0",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>{addLbl}</button>
+                      style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>{addLbl}</button>
                   </div>
                   <Card style={{marginBottom:18}}>
                     {paySlip[key].length===0 && res.unmatched.length===0 && (
-                      <div style={{fontSize:12,color:"#4A4F57"}}>Nothing on the payslip and nothing calculated for this BP.</div>
+                      <div style={{fontSize:12,color:"var(--muted)"}}>Nothing on the payslip and nothing calculated for this BP.</div>
                     )}
                     {paySlip[key].map(line=>{
                       const row = res.rows.find(r=>r.id===line.id);
@@ -5458,14 +5526,14 @@ export default function App() {
                           <div style={{minWidth:190,paddingBottom:4}}>
                             {row?.item ? (
                               <>
-                                <div style={{fontSize:11,color:"#2D3239",fontFamily:mono,marginBottom:3}}>
+                                <div style={{fontSize:11,color:"var(--ink2)",fontFamily:mono,marginBottom:3}}>
                                   {row.item.icon} {fmtShort(row.item.date)} · {row.item.label}
                                 </div>
                                 <Delta paid={row.paid} calc={row.item.amount} off={row.off}/>
                               </>
                             ) : (
                               <>
-                                <div style={{fontSize:11,color:"#CC2E2E",fontFamily:mono,marginBottom:3}}>the calculator pays nothing here</div>
+                                <div style={{fontSize:11,color:"var(--red)",fontFamily:mono,marginBottom:3}}>the calculator pays nothing here</div>
                                 <Delta paid={row?.paid ?? null} calc={0} off={row?.off}/>
                               </>
                             )}
@@ -5474,12 +5542,12 @@ export default function App() {
                       );
                     })}
                     {res.unmatched.length>0 && (
-                      <div style={{marginTop:paySlip[key].length?10:0,padding:"10px 12px",background:"#CC2E2E10",border:"1px solid #CC2E2E40",borderRadius:8}}>
-                        <div style={{fontSize:11,fontWeight:700,color:"#CC2E2E",fontFamily:mono,marginBottom:5}}>
+                      <div style={{marginTop:paySlip[key].length?10:0,padding:"10px 12px",background:"color-mix(in srgb, var(--red) 6%, transparent)",border:"1px solid color-mix(in srgb, var(--red) 25%, transparent)",borderRadius:8}}>
+                        <div style={{fontSize:11,fontWeight:700,color:"var(--red)",fontFamily:mono,marginBottom:5}}>
                           CALCULATED BUT NOT ON THE PAYSLIP
                         </div>
                         {res.unmatched.map((i,n)=>(
-                          <div key={n} style={{fontSize:11,color:"#2D3239",fontFamily:mono,lineHeight:1.8}}>
+                          <div key={n} style={{fontSize:11,color:"var(--ink2)",fontFamily:mono,lineHeight:1.8}}>
                             {i.icon} {fmtShort(i.date)} · {i.label} · ${fmtAUD(i.amount)}
                           </div>
                         ))}
@@ -5489,7 +5557,7 @@ export default function App() {
                 </div>
               ))}
 
-              <div style={{fontSize:10,color:"#8A8577",fontFamily:mono,lineHeight:1.7,marginBottom:20}}>
+              <div style={{fontSize:10,color:"var(--faint)",fontFamily:mono,lineHeight:1.7,marginBottom:20}}>
                 Meal lines are matched to hotel stays by date span, over a window that extends past the
                 bid period so a stay checking out after the BP ends keeps its whole total. Duty hours and
                 credit hours are unaffected by that window.
@@ -5498,7 +5566,7 @@ export default function App() {
           );
         })()}
       </div>
-      <footer style={{maxWidth:980,margin:"6px auto 30px",padding:"0 20px",textAlign:"center",fontSize:10,lineHeight:1.7,color:"#8A8577",fontFamily:mono,letterSpacing:0.3}}>
+      <footer style={{maxWidth:980,margin:"6px auto 30px",padding:"0 20px",textAlign:"center",fontSize:10,lineHeight:1.7,color:"var(--faint)",fontFamily:mono,letterSpacing:0.3}}>
         For personal use only · Estimates only — use at your own risk.<br/>
         © 2026 Thomas Pappin · All rights reserved.
       </footer>
