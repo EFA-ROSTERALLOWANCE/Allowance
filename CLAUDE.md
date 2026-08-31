@@ -55,14 +55,45 @@ in `efa-duty-calculator-v5.jsx`, not inline in the render. Both the
 MONTH / ROSTER and PAY CHECK tabs call it, so they cannot disagree. Add a
 field to its return object rather than recomputing anything in a tab.
 
-It returns meal stays twice, and the difference matters:
+### Meals are attributed by pattern sign-on, not by date
 
-- `stays` — clipped to the viewed range. What MONTH / ROSTER shows.
-- `payStays` — the same grouping over the BP window extended 7 days
-  (`isInBaseRange`) and filtered by `ownedByThisBp`. A trip that checks out
-  after the BP ends keeps its whole meal total, which is what payroll pays on
-  one `CR MEALS ATO` line. Used by PAY CHECK only — it must never feed DHA or
-  credit hours, which settle via the roster header's carried in/out values.
+Payroll pays a hotel stay as ONE `CR MEALS ATO` line, in full, in the bid
+period whose range contains the pattern's **sign-on date** — whatever dates the
+meals themselves fall on. `mealStayOwned()` is that rule, and it has to hold in
+BOTH directions:
+
+- **Outgoing** — a stay checking out after the BP ends (SIN 11–13 Jul in a BP
+  ending 12 Jul) keeps its whole total here.
+- **Incoming** — a stay a BP file carries IN (its pattern signed on in the
+  PREVIOUS BP) belongs to that previous BP and must NOT be counted here, even
+  though its meal dates land inside this range. Miss this half and the stay is
+  paid twice across two BPs.
+
+Verified against real payslips (BP 3741/3745/3751/3755): 15 of 16 `CR MEALS
+ATO` lines match to the cent, including the boundary cases in both directions.
+When changing meal logic, re-verify the same way rather than reasoning from the
+EA — and note payslip PDF columns are offset, so check the earnings rows sum to
+`Total Gross` before trusting a figure read off one.
+
+Duty hours are the opposite and are untouched by this: they split at midnight
+and settle through the roster header's Carried In/Out. `mealStayOwned` must
+never feed DHA or credit hours.
+
+Only a selected BP has a sign-on rule to apply; a plain calendar month view has
+no patterns of its own, so it stays date-based.
+
+The bulk app implements the same rule in `processRoster` (also `mealStayOwned`).
+It is not in `calcAllowancesByDate`, so it is not on the parity surface listed
+above — but the two MUST stay in step, or a pilot and management see different
+meal totals for a boundary trip. Re-verify both after any change.
+
+It returns meal stays twice:
+
+- `stays` — what MONTH / ROSTER shows. Under a BP chip this is the owned,
+  extended grouping (identical to `payStays`), so the tab reads what payroll
+  pays; for a plain calendar month it stays clipped to the viewed range.
+- `payStays` — the owned grouping over the BP window extended 7 days
+  (`isInBaseRange`). Used by PAY CHECK.
 
 This function is main-calculator-only and is NOT part of the parity surface
 above; the bulk app has its own aggregation. `derivePayCheck()` sits alongside

@@ -2443,6 +2443,25 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           const isInBaseRange = (dateStr) => {
             return dateStr >= rangeFrom && dateStr <= (matchedBpForRange ? extRangeTo : rangeTo);
           };
+          // Meals do not follow the item's date at a BP boundary. Payroll pays
+          // a hotel stay as ONE line, in full, in the bid period its pattern
+          // SIGNS ON in. Verified against payslips: BP3755's SIN stay
+          // 11–13 Jul was paid whole on the BP3755 payslip even though 13 Jul
+          // is past rangeTo, and the 16–19 Apr stays that the BP3745 file
+          // carries IN were paid on the BP3741 payslip, not BP3745.
+          // isInBaseRange fixes only the outgoing side — ownership has to hold
+          // in both directions, or a carried-in stay is counted twice (once in
+          // the BP that flew it, once in the BP that inherits its dates).
+          //
+          // Duty hours are unaffected: they split at midnight and settle
+          // through the header's Carried In/Out.
+          //
+          // Only a selected BP has a sign-on rule to apply; a plain calendar
+          // month has no patterns of its own, so it stays date-based.
+          const mealStayOwned = (patternStart) =>
+            matchedBpForRange
+              ? (patternStart >= rangeFrom && patternStart <= rangeTo)
+              : ownedByThisBp(patternStart);
 
           // Find all weeks that overlap the range
           const weeksInRange=Object.keys(allWeeks).filter(ws=>{
@@ -2476,9 +2495,13 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
               Object.entries(byDate).forEach(([dateStr, items]) => {
                 // Use extended range so outgoing boundary DHA (dated just past
                 // rangeTo) is included in base; header COut then subtracts it.
-                if (!isInBaseRange(dateStr)) return;
+                // Meals ignore the date under a BP — see mealStayOwned.
+                const keep = items.filter(item => item.id.startsWith("meal_")
+                  ? mealStayOwned(tripDate)
+                  : isInBaseRange(dateStr));
+                if (keep.length === 0) return;
                 if (!monthDateMap[dateStr]) monthDateMap[dateStr] = [];
-                monthDateMap[dateStr].push(...items);
+                monthDateMap[dateStr].push(...keep);
               });
             });
           });
@@ -2693,7 +2716,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
               const day = wDays[dn];
               if (!day || !day.sectors?.[0]?.aSignOn) return;
               const tripDate = weekDate(ws, di);
-              if (requireOwned && !ownedByThisBp(tripDate)) return;
+              if (requireOwned && !mealStayOwned(tripDate)) return;
               const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
 
               // Build buckets for each hotel + one "unassigned" bucket
@@ -2824,7 +2847,12 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           mealItems.sort((a,b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label));
           return { mealItems, stays, mealTotal: mealItems.reduce((s,i) => s + i.amount, 0) };
           };
-          const { mealItems, stays, mealTotal } = buildStays(isInRange, false);
+          // Under a BP chip the month list and Pay Check are the same grouping:
+          // a stay belongs to the BP its pattern signs on in and keeps every one
+          // of its meal dates, so TRIP TOTALS reads what payroll pays. A plain
+          // calendar month has no sign-on rule, so it stays date-clipped.
+          const { mealItems, stays, mealTotal } = buildStays(
+            matchedBpForRange ? isInBaseRange : isInRange, !!matchedBpForRange);
           // Pay Check: the same stay grouping over the EXTENDED BP window, so a
           // stay checking out after the BP ends (hotel 11-13 Jul in a BP ending
           // 12 Jul) keeps its whole meal total - which is what payroll pays as a

@@ -1684,9 +1684,19 @@ function processRoster(text, yearIdx, fallbackName) {
       }
 
       const byDate = calcAllowancesByDate(day, role, yearIdx, tripDate);
+      // Meals are attributed by the pattern's SIGN-ON date, not by the item's
+      // own date: payroll pays a hotel stay as one line, in full, in the bid
+      // period its pattern signs on in (verified against payslips — BP3755's
+      // SIN stay 11–13 Jul was paid whole on the BP3755 payslip, and the stays
+      // a file carries IN from the previous BP were paid on that previous BP).
+      // Duty hours keep the date-based base range plus the header's Carried
+      // In/Out settlement. Must stay in step with the calculator's
+      // mealStayOwned.
+      const mealStayOwned = !rangeFrom || !rangeTo
+        || (tripDate >= rangeFrom && tripDate <= rangeTo);
       Object.entries(byDate).forEach(([dateStr, items]) => {
-        if (!isInRange(dateStr)) return;
         items.forEach(item => {
+          if (item.id.startsWith("meal_") ? !mealStayOwned : !isInRange(dateStr)) return;
           if (item.id.startsWith("dha_")) {
             dhaTotal += item.amount;
             dhaCount += 1;
