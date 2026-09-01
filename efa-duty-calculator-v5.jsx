@@ -3089,8 +3089,9 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           };
           const selectedBpEntry = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const bpHdr = selectedBpEntry?.headerCarry;
-          const headerDutyDelta   = bpHdr ? carriedInAddHrs(bpHdr, "duty")   - hm2h(bpHdr.carriedOutDuty)   : 0;
-          const headerCreditDelta = bpHdr ? carriedInAddHrs(bpHdr, "credit") - hm2h(bpHdr.carriedOutCredit) : 0;
+          const creditCarryInHrs  = carriedInAddHrs(bpHdr, "credit");
+          const headerDutyDelta   = bpHdr ? carriedInAddHrs(bpHdr, "duty") - hm2h(bpHdr.carriedOutDuty)   : 0;
+          const headerCreditDelta = bpHdr ? creditCarryInHrs              - hm2h(bpHdr.carriedOutCredit) : 0;
           const creditTotal = creditTotalRaw + headerCreditDelta;
           // Overtime hours and hourly rate are rounded to 2 dp before multiplying
           // so the displayed values (e.g. "3.87h × $231.85/h = $897.26") reconcile.
@@ -3126,9 +3127,9 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           const monthGrandTotal = monthTotal + (includeOvertime ? overtimePay : 0);
           return { mvYear, mvMonth, monthName, useCustom, rangeFrom, rangeTo, rangeLabel,
                    weeksInRange, monthTotal, monthTypes, trips, monthDateMap,
-                   dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaRateForItems,
+                   dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,
                    mealItems, mealTotal, stays, payStays,
-                   creditItems, creditTotal, headerCreditDelta, bpHdr,
+                   creditItems, creditTotal, headerCreditDelta, creditCarryInHrs, bpHdr,
                    overtimeHrs, overtimePay, effectiveYos, useYos,
                    selectedBpForItems, bpHdrItems,
                    isBpSelected, includeOvertime, monthGrandTotal };
@@ -4932,8 +4933,8 @@ export default function App() {
         {/* ══ MONTHLY SUMMARY ══ */}
         {tab==="monthly"&&(()=>{
           const { mvYear, mvMonth, monthName, useCustom, rangeLabel, weeksInRange,
-                  monthTypes, trips, dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaRateForItems,
-                  mealItems, mealTotal, stays, creditItems, creditTotal, headerCreditDelta,
+                  monthTypes, trips, dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,
+                  mealItems, mealTotal, stays, creditItems, creditTotal, headerCreditDelta, creditCarryInHrs,
                   bpHdr, overtimeHrs, overtimePay, effectiveYos, useYos,
                   selectedBpForItems, bpHdrItems,
                   isBpSelected, includeOvertime, monthGrandTotal }
@@ -5274,7 +5275,7 @@ export default function App() {
                               <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
                                 <div style={{fontSize:12,fontWeight:600,color:"var(--purple)",lineHeight:1.35}}>Carry-in / Carry-out (Qantas)</div>
                                 <div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
-                                  {bpHdr.carriedInCredit !== "0:00" ? `+${fmtHM(carriedInAddHrs(bpHdr, "credit"))} carried in${bpHdr.carriedInPrintedCredit !== "0:00" ? ` (${bpHdr.carriedInCredit} less ${bpHdr.carriedInPrintedCredit} already on this roster)` : ""}` : ""}
+                                  {bpHdr.carriedInCredit !== "0:00" ? `+${fmtHM(creditCarryInHrs)} carried in${bpHdr.carriedInPrintedCredit !== "0:00" ? ` (${bpHdr.carriedInCredit} less ${bpHdr.carriedInPrintedCredit} already on this roster)` : ""}` : ""}
                                   {bpHdr.carriedInCredit !== "0:00" && bpHdr.carriedOutCredit !== "0:00" ? " · " : ""}
                                   {bpHdr.carriedOutCredit !== "0:00" ? `−${bpHdr.carriedOutCredit} carried out` : ""}
                                 </div>
