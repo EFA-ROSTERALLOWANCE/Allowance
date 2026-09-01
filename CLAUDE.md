@@ -205,6 +205,37 @@ Rules when touching UI colour:
 `index2.html` (bulk summary) has no theme toggle, and theme is not part of the
 allowance parity surface above.
 
+## Lint: run it before every build
+
+```
+npm install     # once — devDependencies only, nothing ships in the apps
+npm run lint    # eslint, one rule: no-undef, over the two .jsx sources
+```
+
+`package.json` and `node_modules/` are dev tooling only. The apps are still
+self-contained HTML with no runtime dependencies, and `node_modules/` and
+`package-lock.json` are gitignored. `package.json` also pins the exact esbuild
+and React versions the html files were built with, so a rebuild reproduces them.
+
+The single rule earns its place. Both apps are one large component whose render
+code reads dozens of values computed in `derivePeriod` / `processRoster`, and a
+value computed there but never **returned** is invisible until a user opens the
+exact panel that reads it — the app then dies with a ReferenceError. Nothing
+else catches that: esbuild turns an unresolved identifier into a global
+reference without complaint, and the resulting bundle builds and parses fine.
+That is a shipped crash (commit 3bca400: the DHA carry-in row referenced
+`dhaCarryInHrs`, a `derivePeriod` local that was never in its return object, so
+expanding DHA allowances took the app down).
+
+So: **add a field to `derivePeriod`'s return object, destructure it in the tab,
+and let `npm run lint` confirm it.** Never recompute in a tab to dodge the
+plumbing — that is what let the credit row hide the same mistake.
+
+Keep the config narrow. No style rules, no plugins; add a rule only if it
+catches a class of bug that actually ships. The globals list is an allowlist of
+browser APIs the apps use — every name added there is a name `no-undef` stops
+checking, so extend it only when the app genuinely depends on that API.
+
 ## Build
 
 Both html files are produced the same way (React pinned to the version already
