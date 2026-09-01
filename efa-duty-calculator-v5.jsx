@@ -1743,6 +1743,103 @@ function bldSec(flightNo, dep, arr, signOn, signOff, sectorDate, extra={}) {
 
 // Parse a Qantas SH Flight Crew Roster .txt file and return an allWeeks object.
 // Returns { weeks, firstWeekStart, errors } — weeks maps weekStart → day-of-week map.
+// How much of the header's "Carried In" does this roster already PRINT?
+//
+// Carried In/Out are Qantas's boundary-attribution figures, and the two sides
+// are NOT symmetrical in the file. The carried-OUT duty is always printed here
+// — either on the BP's last day or a day or two past it — and our base range
+// runs to rangeTo + 7, so it is always inside a by-date sum and always has to
+// be subtracted. The carried-IN duty usually is NOT printed here: it lives on
+// the PREVIOUS BP's roster, flagged there as carried out, so it has to be
+// added. BP3745 is that shape — header Carried In 11:27 (9:40), and the
+// 19 Apr QF7526 those hours belong to appears only on the BP3741 file.
+//
+// But some rosters print it, as LEADING ORPHAN CONTINUATION rows: duty rows
+// with no Duty(Role) code that sit before the first coded row, because the
+// pattern they belong to started in the previous BP and no pattern head
+// appears in this file. BP3755 (Nichols) opens with
+//
+//     16 Tue              7526            2245 1040  9:55  9:20
+//
+// and its header reads Carried In 9:55 (9:20) — the same duty. That roster's
+// stated Total Duty 114:49 / Total Credit 56:38 are the plain sums of the rows
+// dated inside the BP window, so Qantas counts it ONCE; adding the header
+// value on top of our own by-date sum would count it twice.
+//
+// It is not either/or, so this returns a QUANTITY rather than a flag. BP3721
+// prints two of the three duties making up its 18:03 carry-in (3:55 + 12:17)
+// and leaves the 1:51 post-midnight tail of 30 Nov unprinted — its stated
+// total is the by-date sum plus exactly that 1:51.
+//
+// Verified against every roster in the user's folder that carries hours in:
+// fully printed — BP3685, BP3741 (Tsunoda), BP3755 (Nichols), BP3761;
+// partly printed — BP3721; not printed — BP3745, BP3751, BP3755 (Clough),
+// BP3765, BP3771.
+function carriedInPrinted(topSection, bpStart) {
+  const none = { duty: "0:00", credit: "0:00" };
+  if (!topSection || !bpStart) return none;
+  const lines = topSection.split(/\r?\n/);
+  // Read the Duty and Credit columns by header offset, not by counting time
+  // fields — some duty rows (e.g. "LSN") print hours with no sign-on/sign-off.
+  const hdrLine = lines.find(l => l.startsWith("Date") && l.includes("S-On S-Of Duty"));
+  if (!hdrLine) return none;
+  const dutyCol = hdrLine.indexOf("Duty", hdrLine.indexOf("Service"));
+  const credCol = hdrLine.indexOf("Credit");
+  const portCol = hdrLine.indexOf("Port");
+  if (dutyCol < 0 || credCol < 0 || portCol < 0) return none;
+  const bpEnd = addDays(bpStart, 27);
+  let mon = parseInt(bpStart.slice(5, 7), 10) - 1;
+  let yr  = parseInt(bpStart.slice(0, 4), 10);
+  let lastDay = -1, dutyMins = 0, credMins = 0;
+  const mins = (s) => { const p = s.split(":"); return parseInt(p[0], 10) * 60 + parseInt(p[1], 10); };
+  for (const ln of lines) {
+    const m = ln.match(/^(\d{1,2})\s+(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)(.*)$/);
+    if (!m) continue;
+    const dayNum = parseInt(m[1], 10);
+    // Same month-rollover rule the schedule walk uses: a day number that drops
+    // by more than 5 is the next month, not a re-listing.
+    if (lastDay !== -1 && dayNum < lastDay - 5) { mon++; if (mon > 11) { mon = 0; yr++; } }
+    lastDay = dayNum;
+    // 6 or fewer leading spaces = a Duty(Role) code is present. The first such
+    // row is this BP's own first pattern, so the orphan run ends there.
+    if (/^\s{0,6}\S/.test(m[2])) break;
+    const duty = (ln.slice(dutyCol - 2, credCol).match(/\d{1,3}:\d{2}/) || [])[0];
+    if (!duty) continue;
+    const date = `${yr}-${String(mon + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+    if (date < bpStart || date > bpEnd) continue;
+    const cred = (ln.slice(credCol - 2, portCol).match(/\d{1,3}:\d{2}/) || [])[0];
+    dutyMins += mins(duty);
+    if (cred) credMins += mins(cred);
+  }
+  const fmt = (t) => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+  return { duty: fmt(dutyMins), credit: fmt(credMins) };
+}
+
+// Hours of the header's Carried In that still have to be ADDED to a by-date
+// sum — the whole of it when this roster does not print the duty, nothing when
+// it prints all of it, the remainder when it prints part. `kind` is "duty" or
+// "credit". Carried Out is not routed through here: it always applies in full.
+// Decimal hours → "H:MM", so an adjusted carry figure reads the same way as
+// the header's own HH:MM values beside it.
+function fmtHM(h) {
+  const t = Math.round((h || 0) * 60);
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+}
+
+function carriedInAddHrs(hdr, kind) {
+  if (!hdr) return 0;
+  const hm = (s) => {
+    if (!s || typeof s !== "string") return 0;
+    const p = s.trim().split(":").map(n => parseInt(n, 10));
+    if (p.length !== 2 || Number.isNaN(p[0]) || Number.isNaN(p[1])) return 0;
+    return p[0] + p[1] / 60;
+  };
+  const isCredit = kind === "credit";
+  const total   = hm(isCredit ? hdr.carriedInCredit        : hdr.carriedInDuty);
+  const printed = hm(isCredit ? hdr.carriedInPrintedCredit : hdr.carriedInPrintedDuty);
+  return Math.max(0, total - printed);
+}
+
 function parseQantasRoster(text) {
   const errors = [];
   const weeks = {};
@@ -2389,11 +2486,17 @@ function parseQantasRoster(text) {
   const hdrCredMatch = text.match(/Total Credit Hours Carried In \(Out\)\s*:\s*(\d+:\d+)\s*\(\s*(\d+:\d+)\s*\)/);
   const hdrTotDuty = (text.match(/Total Duty Hours \(Total TAFB\)\s*:\s*(\d+:\d+)/) || [])[1] || null;
   const hdrTotCred = (text.match(/Total Credit Hours\s*:\s*(\d+:\d+)/) || [])[1] || null;
+  const hdrCarryPrinted = carriedInPrinted(topSection, bpStart);
   const headerCarry = {
     carriedInDuty:   hdrDutyMatch ? hdrDutyMatch[1] : null,
     carriedOutDuty:  hdrDutyMatch ? hdrDutyMatch[2] : null,
     carriedInCredit: hdrCredMatch ? hdrCredMatch[1] : null,
     carriedOutCredit:hdrCredMatch ? hdrCredMatch[2] : null,
+    // How much of the Carried In this roster already prints inside the BP
+    // window, so a by-date sum holds it and only the remainder is added.
+    // See carriedInPrinted() / carriedInAddHrs().
+    carriedInPrintedDuty:   hdrCarryPrinted.duty,
+    carriedInPrintedCredit: hdrCarryPrinted.credit,
     totalDuty:       hdrTotDuty,
     totalCredit:     hdrTotCred,
   };
@@ -2539,7 +2642,12 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           };
           const selectedBpForDha = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const bpHdrDha = selectedBpForDha?.headerCarry;
-          const headerDutyDeltaHrs = bpHdrDha ? hm2hLocal(bpHdrDha.carriedInDuty) - hm2hLocal(bpHdrDha.carriedOutDuty) : 0;
+          // Carried-out always applies; carried-in only to the extent this
+          // roster does not already print it inside the BP window, which the
+          // by-date sum would then already hold. See carriedInAddHrs().
+          const headerDutyDeltaHrs = bpHdrDha
+            ? carriedInAddHrs(bpHdrDha, "duty") - hm2hLocal(bpHdrDha.carriedOutDuty)
+            : 0;
           const monthTotal = monthTotalRaw + headerDutyDeltaHrs * dhaRateForAdj;
 
           const monthByType={};
@@ -2691,7 +2799,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           };
           const selectedBpForItems = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const bpHdrItems = selectedBpForItems?.headerCarry;
-          const dhaCarryInHrs  = bpHdrItems ? hm2hDha(bpHdrItems.carriedInDuty)  : 0;
+          const dhaCarryInHrs  = carriedInAddHrs(bpHdrItems, "duty");
           const dhaCarryOutHrs = bpHdrItems ? hm2hDha(bpHdrItems.carriedOutDuty) : 0;
           const dhaCarryDeltaHrs = dhaCarryInHrs - dhaCarryOutHrs;
           const dhaTotal = dhaTotalRaw + dhaCarryDeltaHrs * dhaRateForItems;
@@ -2981,8 +3089,8 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           };
           const selectedBpEntry = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const bpHdr = selectedBpEntry?.headerCarry;
-          const headerDutyDelta   = bpHdr ? hm2h(bpHdr.carriedInDuty)   - hm2h(bpHdr.carriedOutDuty)   : 0;
-          const headerCreditDelta = bpHdr ? hm2h(bpHdr.carriedInCredit) - hm2h(bpHdr.carriedOutCredit) : 0;
+          const headerDutyDelta   = bpHdr ? carriedInAddHrs(bpHdr, "duty")   - hm2h(bpHdr.carriedOutDuty)   : 0;
+          const headerCreditDelta = bpHdr ? carriedInAddHrs(bpHdr, "credit") - hm2h(bpHdr.carriedOutCredit) : 0;
           const creditTotal = creditTotalRaw + headerCreditDelta;
           // Overtime hours and hourly rate are rounded to 2 dp before multiplying
           // so the displayed values (e.g. "3.87h × $231.85/h = $897.26") reconcile.
@@ -4853,7 +4961,7 @@ export default function App() {
                     const carry = matchedBp?.headerCarry;
                     const carryLine = (carry && (carry.carriedInDuty || carry.carriedOutDuty || carry.carriedInCredit || carry.carriedOutCredit))
                       ? <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 3, fontFamily: mono, letterSpacing: 0.2 }}>
-                          <span style={{color:"var(--purple)"}}>Qantas header</span> · duty in/out {carry.carriedInDuty || "0:00"}/{carry.carriedOutDuty || "0:00"} · credit in/out {carry.carriedInCredit || "0:00"}/{carry.carriedOutCredit || "0:00"}
+                          <span style={{color:"var(--purple)"}}>Qantas header</span> · duty in/out {carry.carriedInDuty || "0:00"}/{carry.carriedOutDuty || "0:00"} · credit in/out {carry.carriedInCredit || "0:00"}/{carry.carriedOutCredit || "0:00"}{carry.carriedInPrintedDuty !== "0:00" ? ` · ${carry.carriedInPrintedDuty} of the carry-in already on this roster` : ""}
                         </div>
                       : null;
                     return <>{dateLine}{carryLine}</>;
@@ -5024,7 +5132,7 @@ export default function App() {
                               <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
                                 <div style={{fontSize:12,fontWeight:600,color:"var(--purple)",lineHeight:1.35}}>🕐 Carry-in / Carry-out (Qantas)</div>
                                 <div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
-                                  {bpHdrItems.carriedInDuty !== "0:00" ? `+${bpHdrItems.carriedInDuty} carried in from prev BP` : ""}
+                                  {bpHdrItems.carriedInDuty !== "0:00" ? `+${fmtHM(dhaCarryInHrs)} carried in from prev BP${bpHdrItems.carriedInPrintedDuty !== "0:00" ? ` (${bpHdrItems.carriedInDuty} less ${bpHdrItems.carriedInPrintedDuty} already on this roster)` : ""}` : ""}
                                   {bpHdrItems.carriedInDuty !== "0:00" && bpHdrItems.carriedOutDuty !== "0:00" ? " · " : ""}
                                   {bpHdrItems.carriedOutDuty !== "0:00" ? `−${bpHdrItems.carriedOutDuty} carried out to next BP` : ""}
                                 </div>
@@ -5166,7 +5274,7 @@ export default function App() {
                               <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
                                 <div style={{fontSize:12,fontWeight:600,color:"var(--purple)",lineHeight:1.35}}>Carry-in / Carry-out (Qantas)</div>
                                 <div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
-                                  {bpHdr.carriedInCredit !== "0:00" ? `+${bpHdr.carriedInCredit} carried in` : ""}
+                                  {bpHdr.carriedInCredit !== "0:00" ? `+${fmtHM(carriedInAddHrs(bpHdr, "credit"))} carried in${bpHdr.carriedInPrintedCredit !== "0:00" ? ` (${bpHdr.carriedInCredit} less ${bpHdr.carriedInPrintedCredit} already on this roster)` : ""}` : ""}
                                   {bpHdr.carriedInCredit !== "0:00" && bpHdr.carriedOutCredit !== "0:00" ? " · " : ""}
                                   {bpHdr.carriedOutCredit !== "0:00" ? `−${bpHdr.carriedOutCredit} carried out` : ""}
                                 </div>

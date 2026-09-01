@@ -79,6 +79,39 @@ Duty hours are the opposite and are untouched by this: they split at midnight
 and settle through the roster header's Carried In/Out. `mealStayOwned` must
 never feed DHA or credit hours.
 
+### Carried In is not always additive
+
+The header's two carry figures are not symmetrical, and only one of them can be
+applied unconditionally.
+
+- **Carried Out** always applies. That duty is printed on this roster — on the
+  BP's last day or a day or two past it — and `isInBaseRange` runs to
+  `rangeTo + 7`, so it is always inside a by-date sum and always subtracted.
+- **Carried In** applies only to the extent the roster does NOT already print
+  it. Usually it prints nothing: the duty lives on the previous BP's roster,
+  flagged there as carried out, so the whole figure is added (BP3745 carries in
+  11:27, and the 19 Apr QF7526 it belongs to appears only on the BP3741 file).
+  But some rosters print it as **leading orphan continuation rows** — duty rows
+  with no Duty(Role) code, sitting before the first coded row, because the
+  pattern started in the previous BP and no pattern head appears here. BP3755
+  (Nichols) opens with `16 Tue <blank> 7526 2245 1040 9:55 9:20` and its header
+  reads Carried In 9:55 (9:20) — the same duty. That roster's stated Total Duty
+  114:49 / Total Credit 56:38 are the plain in-window sums, so Qantas counts it
+  ONCE; adding the header figure on top would count it twice.
+
+It is a quantity, not a flag: BP3721 prints two of the three duties making up
+its 18:03 carry-in and leaves the 1:51 post-midnight tail of 30 Nov unprinted.
+`carriedInPrinted()` measures the printed part at parse time (stored on
+`headerCarry` as `carriedInPrintedDuty`/`carriedInPrintedCredit`) and
+`carriedInAddHrs()` returns the remainder. Both are on the parity surface — they
+are byte-identical in the two sources and both apps must keep using them.
+
+Verified against every roster in the user's `Rosters` folder that carries hours
+in — fully printed: BP3685, BP3741 (Tsunoda), BP3755 (Nichols), BP3761; partly
+printed: BP3721; not printed: BP3745, BP3751, BP3755 (Clough), BP3765, BP3771 —
+by checking each header's stated totals against the by-date sums. Re-verify that
+way after any change here, rather than reasoning from the EA.
+
 Only a selected BP has a sign-on rule to apply; a plain calendar month view has
 no patterns of its own, so it stays date-based.
 
