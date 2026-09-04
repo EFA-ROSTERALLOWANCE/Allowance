@@ -638,6 +638,64 @@ function mealsCoveredPerDay(ci, co, nights, hotelFromStr) {
     return {dayNum:i+1, date, isFullDay, presStart, presEnd, ...meals};
   });
 }
+// Meal window for a ground duty away from base.
+//
+// A ground duty earns Cl. 6.24 meals for the whole time the pilot is AT that
+// port on this duty period — not just the bracket printed against the duty
+// code. The duty code's own sign-on is the pattern's flight-level time, so a
+// sim that runs 1900–2359 after the pilot landed at the port at 1639 reports
+// only 30 min of the 1730–1930 dinner window, and the strict >30 test then
+// silently drops a dinner that is plainly owed. (BP3761, 1 Aug 26: QF536 lands
+// BNE 1639, SIM261A 1900, sign-off 2359 — no dinner; the next night's sim is
+// the first sector of its duty so it carries the 1800 sign-on and IS paid.
+// Same port, same sim, same trip, different answer.)
+//
+// So walk the sectors linked into this duty period (the parser sets
+// continueDuty on every sector of a period but the last) and widen the window
+// to the pilot's actual presence at `port`: back to the arrival that brought
+// them there, forward to the departure that takes them away. A hotel between
+// two sectors ends the duty period — that time is a slip, and the hotel meal
+// rules above own it.
+//
+// Returns null when the sector has no usable times.
+function groundDutyMealWindow(day, idx, tripDate) {
+  const sec = day.sectors[idx];
+  const port = sec.depAirport || sec.arrAirport;
+  const sDate = resolveSectorDate(sec, idx, day, tripDate);
+  const onRaw = parseTime(sec.aSignOn);
+  let offMin = parseTime(sec.aSignOff);
+  if (onRaw == null || offMin == null) return null;
+  let onMin = onRaw;
+  if (offMin <= onMin) offMin = 1440;
+  const hotels = getHotels(day);
+  const linked = (i) => day.sectors[i]?.continueDuty && !hotels.some(h => h.afterSectorIdx === i);
+  // Backwards: earliest arrival at this port within the duty period.
+  for (let j = idx - 1; j >= 0; j--) {
+    const prev = day.sectors[j];
+    if (!linked(j)) break;
+    if (prev.arrAirport !== port) break;         // pilot was not at this port yet
+    const pDate = resolveSectorDate(prev, j, day, tripDate);
+    if (pDate && sDate && pDate < sDate) { onMin = 0; break; }  // at port since before midnight
+    const t = parseTime(prev.aSignOff);
+    if (t == null) break;
+    if (t < onMin) onMin = t;
+    if (prev.depAirport !== port) break;         // this is the sector that brought them here
+  }
+  // Forwards: latest departure from this port within the duty period.
+  for (let j = idx + 1; j < day.sectors.length; j++) {
+    if (!linked(j - 1)) break;
+    const next = day.sectors[j];
+    if (next.depAirport !== port) break;         // does not continue from this port
+    const nDate = resolveSectorDate(next, j, day, tripDate);
+    if (nDate && sDate && nDate > sDate) { offMin = 1440; break; }  // still there past midnight
+    const dep = parseTime(next.aSignOn);
+    if (dep != null && dep > offMin) offMin = dep;
+    if (next.arrAirport !== port) break;         // this sector flies them out
+    const arr = parseTime(next.aSignOff);
+    if (arr != null && arr > offMin) offMin = arr;
+  }
+  return { onMin, offMin, sDate, port };
+}
 
 // ─── Sector factory ───────────────────────────────────────────────────────────
 let _sectorId = 0;
@@ -950,13 +1008,12 @@ function calcAllowances(day, role, yearIdx, tripDate) {
     // Skip ground duties conducted at home base — sims/ground schools at
     // the pilot's own base don't earn meal allowances.
     if (tripBaseA && sec.depAirport === tripBaseA) return;
+    // Window = the pilot's presence at this port across the duty period, not
+    // the duty code's own bracket (see groundDutyMealWindow).
+    const gw = groundDutyMealWindow(day, idx, tripDate);
+    if (!gw) return;
+    const { onMin, offMin, port } = gw;
     const sDate = sec.sectorDate;
-    // Convert "HH:MM" strings to minutes-from-midnight (parseTime handles this).
-    const onMin = parseTime(sec.aSignOn);
-    let offMin = parseTime(sec.aSignOff);
-    if (onMin == null || offMin == null) return;
-    if (offMin <= onMin) offMin = 1440;
-    const port = sec.depAirport || sec.arrAirport;
     const zone = port ? zoneFrom(port) : "domestic";
     const dest = (getDestinations(sDate)[zone]) || getDestinations(sDate).domestic;
     MEAL_WINDOWS.forEach(w => {
@@ -1237,14 +1294,12 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
     // Skip ground duties conducted at home base — sims/ground schools at the
     // pilot's own base don't earn meal allowances.
     if (tripBaseC && sec.depAirport === tripBaseC) return;
-    const sDate = resolveSectorDate(sec, idx, day, tripDate);
+    // Window = the pilot's presence at this port across the duty period, not
+    // the duty code's own bracket (see groundDutyMealWindow).
+    const gw = groundDutyMealWindow(day, idx, tripDate);
+    if (!gw) return;
+    const { onMin, offMin, sDate, port } = gw;
     if (!sDate) return;
-    // Convert "HH:MM" strings to minutes-from-midnight (parseTime handles this).
-    const onMin = parseTime(sec.aSignOn);
-    let offMin = parseTime(sec.aSignOff);
-    if (onMin == null || offMin == null) return;
-    if (offMin <= onMin) offMin = 1440;
-    const port = sec.depAirport || sec.arrAirport;
     const zone = port ? zoneFrom(port) : "domestic";
     const dest = (getDestinations(sDate)[zone]) || getDestinations(sDate).domestic;
     MEAL_WINDOWS.forEach(w => {

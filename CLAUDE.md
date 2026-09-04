@@ -23,8 +23,8 @@ Shared engine surface (must stay logically identical in both sources):
   `TRANSIT_REMOVAL_DATE`, `MEAL_RATE_YEARS`, `MEAL_WINDOWS` timing (`wS/wE/key`),
   and every `AIRPORTS` entry's `code`/`tz`/`utcOffset`.
 - Helpers: `applyTransitShift`, `getUtcOffsetHours`, `utcMins`, `calcDutyHours`,
-  `splitDhaByMidnight`, `totalSlipMins`, `mealsCoveredPerDay`, `resolveSectorDate`,
-  `getHotels`, `getDestinations`.
+  `splitDhaByMidnight`, `totalSlipMins`, `mealsCoveredPerDay`,
+  `groundDutyMealWindow`, `resolveSectorDate`, `getHotels`, `getDestinations`.
 - Core: `calcAllowancesByDate` and `parseQantasRoster` (incl. AS48→DVA,
   OL48/OL06→DDO, OL13/OL11→reserve-activation detection).
 
@@ -78,6 +78,26 @@ EA — and note payslip PDF columns are offset, so check the earnings rows sum t
 Duty hours are the opposite and are untouched by this: they split at midnight
 and settle through the roster header's Carried In/Out. `mealStayOwned` must
 never feed DHA or credit hours.
+
+### A ground duty's meals follow the port, not the duty code
+
+`groundDutyMealWindow` decides which Cl. 6.24 meals a ground duty away from
+base earns, and the window it returns is the pilot's **presence at that port
+across the whole duty period** — not the bracket printed against the duty code.
+The parser gives a non-first sector of a duty its own flight-level times, so the
+duty code's bracket starts when the sim starts, not when the pilot got there.
+
+BP3761, 1 Aug 26 is the case that exposed it: QF536 lands BNE 1639, SIM261A
+runs 1900–2359. The sim's own bracket overlaps the 1730–1930 dinner window by
+exactly 30 minutes, and the strict `>30` test then drops the dinner. The next
+night's SIM261B is the first sector of its duty, so it carries the 1800 duty
+sign-on, clears 30 minutes and IS paid — same port, same sim, same trip, two
+different answers. The window now runs 1639→2359 and both nights pay.
+
+The walk stops at the edges of the duty period, and a hotel between two sectors
+is such an edge: that time is a slip and the hotel meal rules above own it, so
+the window must never reach across one (or the stay's meals are paid twice).
+The `>30` test itself is unchanged.
 
 ### Carried In is not always additive
 
