@@ -9,7 +9,7 @@ const INDEX_YEARS = [
 ];
 const RATES = {
   DVA_CPT:400, DVA_FO:250, DDO_CPT:1231, DDO_FO:837,
-  DHA_CPT:17.51, DHA_FO:11.41, MISSED_MEAL:83.40, ACCOM_OPTOUT:75,
+  DHA_CPT:17.51, DHA_FO:11.39, MISSED_MEAL:83.40, ACCOM_OPTOUT:75,
 };
 // Pick the EBA indexation year (INDEX_YEARS index) that applies to a date.
 // Rates step up on each EBA anniversary (1 Jan 2027 / 2028 / 2029), derived
