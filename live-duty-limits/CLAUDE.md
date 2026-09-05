@@ -110,6 +110,47 @@ delegated `input` listener therefore patches the sector card's header text by ha
 re-rendering the card. If you add a field to a sector card, add it to that patch or the header
 goes stale.
 
-Colours are CSS custom properties on `:root`, matching Route-map's palette (this is the second
-phone app in the family). Dark only, on purpose — it is read at night. No hex literals in
-inline styles.
+## Day / night
+
+Colours are CSS custom properties, never hex literals in a style. The palette is defined **three
+times**, with the same token names and the same values as the Fatigue Assessor:
+
+- `:root` — the light palette, and the base.
+- `@media (prefers-color-scheme:dark) :root:not([data-theme="light"])` — dark applied
+  automatically from the device.
+- `:root[data-theme="dark"]` — dark applied explicitly by the header toggle.
+
+So the phone's own setting wins until the reader picks a side, and then the toggle wins in both
+directions. `<html>` carries **no** `data-theme` in the source — hardcoding one there would pin
+every reader to that theme whatever their phone says.
+
+Rules when touching colour:
+
+- **A token needs a value in all three blocks.** Miss one and it goes undefined in that theme,
+  which fails silently and reads as a rendering bug.
+- **Never concatenate alpha onto a colour** — `` `${c}40` `` cannot work on a `var()`. Use
+  `color-mix(in srgb, var(--x), transparent N%)`.
+- `color-scheme` is set per theme and inputs take `color-scheme:inherit`, so the native date and
+  time pickers — which this app leans on heavily — follow the theme too.
+
+Theme is display only: `themeIsDark`/`syncThemeBtn` flip the attribute and nothing is persisted,
+so a reload returns to the device setting. The button shows what tapping it will *do*, not what
+is currently on, and a `matchMedia` listener keeps it honest if the phone flips underneath.
+
+## iPhone
+
+The app is read on a phone in Edge or Safari, which share the WebKit quirks. The `── Phone`
+block in the stylesheet is not decoration:
+
+- **`-webkit-text-size-adjust:100%`.** Without it iOS inflates text in narrow columns and the
+  page renders visibly larger than anywhere else — the layout boxes stay put while the type
+  grows, which is what it looks like when someone reports "it's huge on my phone".
+- **Every input and select is 16px.** Focusing a control under 16px zooms the viewport and iOS
+  does not zoom back out.
+- **Tap targets are 44px minimum**, and `env(safe-area-inset-*)` padding keeps content out of
+  the notch and the home indicator.
+- `@media (hover:none)` drops hover affordances, which otherwise stick after a tap.
+
+`.grp label` is a **descendant** selector on purpose. It was `.grp > label`, and the two-up date
+and sign-on row puts its labels one div deeper — so those two rendered unstyled, at body size in
+sentence case, beside small uppercase ones. If you add a nested layout, check the labels.

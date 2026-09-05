@@ -52,6 +52,11 @@ default, and never folded silently into a figure. See the TODO in `index.html` �
 and whether it stacks on the live figure or only the planning one still need confirming
 against the FAM.
 
+## Day or night
+
+The page follows your phone's own light/dark setting, and the ☾/☀ button in the header overrides
+it either way. Nothing is persisted, so a reload goes back to following the device.
+
 ## Patterns
 
 The pairing list comes from the [Route-map](https://github.com/EFA-ROSTERALLOWANCE/Route-map)
