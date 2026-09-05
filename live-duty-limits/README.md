@@ -20,7 +20,7 @@ dependencies and no network call.
 - **Actual off blocks** on any sector, when the delay has already happened. Everything after
   it slides. A time typed with no date resolves to the nearest occurrence, so pushing at 00:40
   against an expected 23:50 reads as 50 minutes late, not 23 hours early.
-- **2 or 3 crew**, and whether you are willing to use the extra hour.
+- **2 or 3 crew**, and which **s 6.14 extension of duty** you are willing to use.
 - **Live or planning limits.** Live (s 6.8.2) is the default and is the right basis on the day:
   it is what Flight Crew Operations may amend a roster to once it has moved. Planning (s 6.8.1)
   is the tighter figure the roster was built to, and is there for comparison.
@@ -47,10 +47,37 @@ Two things the app is careful about, because they change the answer by hours:
 - **Four or more sectors reverts an augmented duty to the two-pilot table** (s 6.9), so the
   third pilot can be buying nothing.
 
-The **extra hour** is modelled as a flat hour on top of whichever FDP limit applies, off by
-default, and never folded silently into a figure. See the TODO in `index.html` — the clause
-and whether it stacks on the live figure or only the planning one still need confirming
-against the FAM.
+## Extensions of duty (s 6.14)
+
+An FCM may extend a duty **already commenced**, where they consider themselves mentally and
+physically fit for it and it is operationally necessary to complete the objective of the duty.
+The app offers what the clause offers, off by default and never folded silently into a figure:
+
+| | Worth | Conditions |
+|---|---|---|
+| **FCM extension** | +1:00 basic crew, +2:00 augmented | Duty already commenced; all FCMs explicitly consulted |
+| **Split duty** | up to +4:00 | Basic crew only; not planned as a split duty nor already extended; a split duty rest period of at least 4 hours |
+
+Three things this gets right that a flat "extra hour" toggle would not:
+
+- **It lifts flight deck duty as well as the FDP.** The clause raises both, so the s 6.13 block
+  limit moves with the table figure.
+- **It does not lift the duty period.** s 6.14 says nothing about the Rostering Protocol's
+  cl 2.4 16 hours, so that ceiling stays put — which is why, with an extension on, it is often
+  the row holding you. On the 7345 at three crew, s 6.9's 16 h plus two makes 18 h and the duty
+  period answers instead.
+- **The split-duty rest does not have to have been planned.** A delay that grows a turnaround
+  past four hours creates one. The app measures the longest break in the duty *as entered*, so
+  the extension unlocks when the delay makes it real — and says so when it hasn't.
+
+Selecting an extension whose conditions aren't met applies **nothing** and tells you why, rather
+than handing you hours you don't have.
+
+One additional sector may also be flown under the same clause, and using discretion means at
+least one FCM submits an Intelex Fatigue Report, retained for five years. And the rule that
+decides what the whole answer is really about: **once you are airborne on the final sector**,
+delays no longer bind — the flight may continue to the planned destination or alternate at the
+PIC's discretion. The number this app gives you is a limit on *pushing*, not on landing.
 
 ## Day or night
 

@@ -70,13 +70,33 @@ hour, three crew). If you change either function, that test is what proves you d
   sign-on time** (s 6.10.1). The prior-rest field only appears when the origin is outside, and
   blank means unknown, which takes the shorter row.
 
-## The extra hour is not yet nailed down
+## s 6.14 extensions — three things that are easy to get wrong
 
-`EXTRA_HOUR` adds a flat hour to whichever FDP limit applies. It is off by default and every
-panel that uses it says so. **The clause is unconfirmed** — see the TODO on the constant — and
-so is whether it stacks on the s 6.8.2 live figure or only on the s 6.8.1 planning one. Settle
-that against the FAM before anyone relies on it, and mirror whatever it turns out to be into
-the Fatigue Assessor if that repo grows the same switch.
+`resolveExtension` is the whole of it. Read the clause before touching it, because a flat
+"+1 hour" model is wrong in three separate ways:
+
+- **It is +1 h basic and +2 h augmented**, not a flat hour (`EXT_HOURS`).
+- **It raises flight deck duty AND the FDP.** The clause says "flight deck duty and FDP limits
+  (including combined Standby plus FDP limits) may be increased" — so `computeDuty` adds `ext.h`
+  to `fddLimMin` as well as `fdpLimMin`. Missing that hands back an FDP you cannot legally fly.
+- **It does NOT raise the duty period.** s 6.14 says nothing about Rostering Protocol cl 2.4, so
+  `dpLimMin` stays at 16 h. This is not an oversight to be tidied up later: it is why the
+  binding limit hands over to the duty period once an extension is on, and there is a test for
+  exactly that.
+
+The four-hour split duty extension is basic crew only and needs a rest period of at least four
+hours *in the duty as entered* — not as scheduled, because a delay growing a turnaround past
+four hours creates one, which is the live case this app exists for. `resolveExtension` returns
+**zero hours with a `blocked` reason** whenever a condition fails, rather than the entitlement:
+the safe direction to be wrong in is the short one, and the UI shows the reason instead of
+silently refusing. "Not already extended" in the clause is why the two extensions are exclusive
+rather than cumulative — keep them a radio, never checkboxes.
+
+`renderExtRow` rebuilds rather than toggles, because the labels depend on crew and the split
+option does not exist at all on three. A button whose label lies is worse than no button.
+
+If the Fatigue Assessor ever grows the same switch, mirror this — it is a limit, so it is on the
+same "must not disagree" footing as the tables.
 
 ## Patterns are generated, not written
 

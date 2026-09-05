@@ -126,6 +126,12 @@ input[type=date],input[type=time]{min-width:0;}
 .opt.active{background:var(--accent);color:var(--on-accent);border-color:var(--accent);}
 .opt.active small{opacity:.85;}
 .opt.active.amber{background:var(--amber);border-color:var(--amber);color:var(--on-accent);}
+/* An extension whose conditions are not met stays selectable — tapping it is
+   how you find out WHY it does not apply — but it must never look like it is
+   giving you hours it is not. */
+.opt.off{opacity:.6;}
+.opt.active.off{opacity:1;background:var(--red-w);color:var(--red);
+  border-color:color-mix(in srgb,var(--red),transparent 55%);}
 
 .btn{display:block;width:100%;text-align:center;padding:11px;border-radius:10px;font-size:14px;
   font-weight:700;background:var(--panel2);color:var(--ink2);border:1px solid var(--line);
@@ -262,11 +268,9 @@ footer b{color:var(--ink2);}
         more buys the longer row. Blank means unknown, and the shorter row is used.</p>
     </div>
     <div class="grp">
-      <label>Extension</label>
-      <div class="btnRow" id="extraRow">
-        <div class="opt" data-extra="0">No extension<small>table limit</small></div>
-        <div class="opt" data-extra="1">Use the extra hour<small>+1:00 on the FDP</small></div>
-      </div>
+      <label>Extension of duty · s 6.14</label>
+      <div class="btnRow" id="extraRow"></div>
+      <p class="hint" id="extHint"></p>
     </div>
   </div>
 
@@ -405,12 +409,33 @@ const DP_MAX_HOURS = 16;
    time. That is also where sign-off lands when nothing follows it. */
 const POST_BLOCKS_MIN = 15;
 
-/* The extension the operating crew may accept on the day. Modelled as a flat
-   hour on top of whichever FDP limit applies, off by default and never folded
-   silently into a figure — every panel that uses it says so.
-   TODO confirm the clause and whether it stacks on the s 6.8.2 live figure or
-   only on the s 6.8.1 planning one before this is relied on. */
-const EXTRA_HOUR = 1;
+/* s 6.14 Extensions of Duty. An FCM may extend a duty ALREADY COMMENCED,
+   providing they consider themselves mentally and physically fit for it, and
+   where it is operationally necessary to complete the objective of the duty.
+   The clause raises "flight deck duty and FDP limits (including combined
+   Standby plus FDP limits)" — so it lifts BOTH the s 6.8/6.9/6.10 table and
+   the s 6.13 flight deck duty limit, on whichever basis is in force, live
+   included. It says nothing about the Rostering Protocol's duty period, so
+   cl 2.4's 16 hours does NOT move, and with an extension applied it is often
+   what binds instead.
+
+   By the amounts below, and one additional sector may be flown. */
+const EXT_HOURS = { 2:1, 3:2 };        /* basic crew one hour; augmented two */
+const EXT_EXTRA_SECTORS = 1;
+
+/* The other half of s 6.14: a BASIC CREW FDP already commenced, not planned
+   as a split duty and not already extended, may be extended by up to four
+   hours where the crew is provided a split duty rest period of at least four
+   hours. "Not already extended" is why this and the hour above are exclusive
+   rather than cumulative. The rest period does not have to have been planned
+   — a delay that grows a turnaround past four hours creates one, which is
+   exactly the situation this app is opened in. */
+const SPLIT_EXT_HOURS = 4;
+const SPLIT_REST_MIN = 4 * 60;
+
+/* Every use of discretion under s 6.14 requires at least one FCM on the crew
+   to submit an Intelex Fatigue Report, retained by EFA for five years. */
+const EXT_REPORT = "at least one FCM must submit an Intelex Fatigue Report";
 
 /* How close is too close. 30 minutes or 93% of the limit is the Fatigue
    Assessor's near-limit band, and the same band is used here so a duty that
@@ -711,6 +736,37 @@ function fddLimit(crew, sectors){
     : { h: FDD_BASIC_SINGLE, clause:"s 6.13", label:"Basic crew, single sector" };
 }
 
+/* Which s 6.14 extension is available, and what it is worth.
+
+   Returns zero hours rather than the entitlement whenever a condition is not
+   met, because the safe direction to be wrong in is the short one: an app
+   that hands you four hours you do not have is worse than one that makes you
+   check. `blocked` says why, so the UI can explain rather than just refuse.
+
+     "none"   the table figure, unextended
+     "fcm"    the FCM's own extension — one hour basic, two augmented
+     "split"  the four-hour split duty extension, basic crew only, and only
+              where a rest period of at least four hours exists in the duty */
+function resolveExtension(mode, crew, longestGroundMin){
+  if(mode === "fcm"){
+    const h = EXT_HOURS[crew >= 3 ? 3 : 2];
+    return { mode, h, clause:"s 6.14",
+      label:(crew >= 3 ? "Augmented crew, two hours" : "Basic crew, one hour") };
+  }
+  if(mode === "split"){
+    const base = { mode, clause:"s 6.14", label:"Split duty, up to four hours" };
+    if(crew >= 3)
+      return { ...base, h:0, blocked:"s 6.14 offers the four-hour split duty extension to basic crew "
+        + "operations only. On three crew the extension is two hours." };
+    if(longestGroundMin < SPLIT_REST_MIN)
+      return { ...base, h:0, blocked:"The four-hour extension needs a split duty rest period of at "
+        + "least " + fmtDur(SPLIT_REST_MIN) + ". The longest break in this duty is "
+        + fmtDur(longestGroundMin) + "." };
+    return { ...base, h:SPLIT_EXT_HOURS, restH:longestGroundMin };
+  }
+  return { mode:"none", h:0 };
+}
+
 /* Severity against a limit, on the Fatigue Assessor's near-limit band. */
 function against(usedMin, limitMin){
   if(limitMin == null) return { sev:"info", left:null, pct:0 };
@@ -766,10 +822,18 @@ function computeDuty(inp){
 
   const fdpBase = hasOps ? fdpLimit({ crew:inp.crew, sectors:limitSectors, startMin,
     outside, prevOdpH:inp.prevOdpH, basis:inp.basis }) : null;
-  const fdpLimMin = fdpBase ? (fdpBase.h + (inp.extraHour ? EXTRA_HOUR : 0)) * 60 : null;
 
+  /* s 6.14 raises flight deck duty and FDP limits together, so the extension
+     is resolved once and added to both. The split duty variant keys off the
+     longest break actually in the duty, which a delay can grow into one. */
+  const grounds = secs.slice(0, -1).map(x => x.ground || 0);
+  const longestGround = grounds.length ? Math.max(...grounds) : 0;
+  const ext = resolveExtension(inp.extension || "none", inp.crew, longestGround);
+
+  const fdpLimMin = fdpBase ? (fdpBase.h + ext.h) * 60 : null;
   const blockMinTotal = secs.filter(s => !s.pax).reduce((a,s) => a + s.block, 0);
   const fdd = fddLimit(inp.crew, limitSectors);
+  const fddLimMin = (fdd.h + ext.h) * 60;
 
   const fdpUsed = hasOps ? fdpEndAbs - onAbs : null;
   const dpUsed  = signOffAbs - onAbs;
@@ -778,12 +842,12 @@ function computeDuty(inp){
     onAbs, secs, lastOp, hasOps, fdpEndAbs, signOffAbs, limitSectors, startMin, outside,
     origin: inp.origin || secs[0].dep,
     dest: secs[secs.length-1].arr,
-    fdpBase, fdpLimMin, fdpUsed, extraHour: !!inp.extraHour,
+    fdpBase, fdpLimMin, fdpUsed, ext, longestGround,
     dpUsed, dpLimMin: DP_MAX_HOURS * 60,
-    blockMin: blockMinTotal, fdd, fddLimMin: fdd.h * 60,
+    blockMin: blockMinTotal, fdd, fddLimMin,
     fdpAssess: hasOps ? against(fdpUsed, fdpLimMin) : null,
     dpAssess: against(dpUsed, DP_MAX_HOURS * 60),
-    fddAssess: against(blockMinTotal, fdd.h * 60),
+    fddAssess: against(blockMinTotal, fddLimMin),
   };
 }
 
@@ -818,9 +882,9 @@ function latestPush(d, k){
       key:"fdp",
       at: d.onAbs + d.fdpLimMin - POST_BLOCKS_MIN - runTo(d.lastOp),
       label:"Flight duty period",
-      clause: d.fdpBase.clause + (d.extraHour ? " + extension" : ""),
+      clause: d.fdpBase.clause + (d.ext.h ? " + s 6.14" : ""),
       note: fmtDur(d.fdpLimMin) + " from sign-on (" + d.fdpBase.label
-            + (d.extraHour ? ", plus the extra hour" : "") + ")",
+            + (d.ext.h ? ", plus " + fmtDur(d.ext.h*60) + " under s 6.14" : "") + ")",
     });
   }
   caps.push({
@@ -828,7 +892,12 @@ function latestPush(d, k){
     at: d.onAbs + d.dpLimMin - POST_BLOCKS_MIN - runTo(s.length-1),
     label:"Duty period",
     clause:"Protocol cl 2.4",
-    note: fmtDur(d.dpLimMin) + " sign-on to sign-off, dead-head home included",
+    /* Only say "dead-head included" where one actually is. It is the reason
+       this ceiling can sit below the FDP, so it earns a mention — but only
+       when it is true. */
+    note: fmtDur(d.dpLimMin) + " sign-on to sign-off"
+          + (s.some(x => x.pax) ? ", dead-head home included" : "")
+          + (d.ext.h ? ", which s 6.14 does not extend" : ""),
   });
 
   caps.sort((a,b) => a.at - b.at);
@@ -863,7 +932,7 @@ const state = {
   signOn: "21:50",
   crew: 2,
   basis: "live",
-  extraHour: false,
+  extension: "none",   /* "none" | "fcm" | "split" — s 6.14 */
   leadIn: 60,            /* sign-on to first off blocks */
   prevOdpH: null,        /* only asked for outside the usual area */
   patternId: "",
@@ -1076,15 +1145,15 @@ function renderLimits(d){
   const host = $("limits");
   if(!d){ host.innerHTML = ""; return; }
   const rows = [];
+  const extNote = d.ext.h ? ", incl. " + fmtDur(d.ext.h*60) + " under s 6.14" : "";
   if(d.hasOps){
     rows.push(limitRow("Flight duty period", d.fdpBase.clause, d.fdpBase.label, d.fdpUsed, d.fdpLimMin,
-      d.fdpAssess, (d.limitSectors === 1 ? "1 sector" : d.limitSectors + " sectors")
-        + (d.extraHour ? ", incl. the extra hour" : "")));
+      d.fdpAssess, (d.limitSectors === 1 ? "1 sector" : d.limitSectors + " sectors") + extNote));
   }
   rows.push(limitRow("Duty period", "Protocol cl 2.4", "Sign-on to sign-off", d.dpUsed, d.dpLimMin, d.dpAssess,
     d.secs.some(s => s.pax) ? "dead-head included" : null));
   rows.push(limitRow("Flight deck duty", d.fdd.clause, d.fdd.label, d.blockMin, d.fddLimMin, d.fddAssess,
-    "block time — a delay on the bay does not move it"));
+    "block time — a delay on the bay does not move it" + extNote));
   let notes = "";
   if(d.crew >= 3 && d.limitSectors > 3)
     notes += "<p class='hint'><b>Four or more sectors reverts to the two-pilot table</b> (s 6.9), so the "
@@ -1097,9 +1166,20 @@ function renderLimits(d){
     notes += "<p class='hint'><b>" + esc(d.origin) + " is outside the usual operational area</b> (s 6.7.4), so "
       + "s 6.10.1 applies and the limit keys off the rest period before this duty, not the sign-on time."
       + (state.prevOdpH == null ? " Prior rest is unknown, so the shorter row is used." : "") + "</p>";
-  if(d.extraHour)
-    notes += "<p class='hint'><b>The extra hour is switched on.</b> It is added to the table figure above and "
-      + "is the crew's to accept or not — the figures below it assume you have.</p>";
+  if(d.ext.h)
+    notes += "<p class='hint'><b>An s 6.14 extension of " + fmtDur(d.ext.h*60) + " is switched on.</b> It is "
+      + "added to the flight duty period and the flight deck duty figures above — s 6.14 raises both — and "
+      + "it is the crew's to accept or not, on the day, having considered themselves fit for it. It does "
+      + "<b>not</b> move the Rostering Protocol's 16 h duty period, which is why that row can be the one "
+      + "holding you once an extension is on. Using it means " + esc(EXT_REPORT) + ".</p>";
+  if(d.ext.blocked)
+    notes += "<p class='hint'><b>No extension is being applied.</b> " + esc(d.ext.blocked) + "</p>";
+  /* This is the one that decides what the answer above is really about: the
+     wire is a limit on PUSHING, not on landing. */
+  notes += "<p class='hint'><b>Once you are airborne on the final sector, the clock stops being a "
+    + "limit.</b> s 6.14: despite any limit or number in the manual, if delays arise after takeoff on the "
+    + "final sector of an FDP the flight may continue to the planned destination or alternate at the "
+    + "discretion of the PIC.</p>";
   host.innerHTML = "<table><tbody>" + rows.join("") + "</tbody></table>" + notes;
 }
 
@@ -1108,7 +1188,7 @@ function currentInput(){
   if(!state.sectors.length) return null;
   return {
     date: state.date, signOn: state.signOn, origin: state.sectors[0].dep,
-    crew: state.crew, basis: state.basis, extraHour: state.extraHour,
+    crew: state.crew, basis: state.basis, extension: state.extension,
     leadIn: state.leadIn, prevOdpH: state.prevOdpH, sectors: state.sectors,
   };
 }
@@ -1119,6 +1199,7 @@ function render(){
   /* Prior rest only changes the answer under s 6.10.1, so the field only
      exists on a duty that starts outside the usual operational area. */
   $("odpGrp").hidden = !(d && d.outside);
+  renderExtRow(d ? d.longestGround : 0);
   $("hdSub").textContent = d
     ? d.origin + " → " + d.dest + " · sign-on " + fmtTime(localAt(d.onAbs, d.origin).min)
       + " · " + (state.basis === "live" ? "live limits s 6.8.2" : "planning limits s 6.8.1")
@@ -1129,11 +1210,37 @@ function renderAll(){ renderSectors(); render(); }
 function setActive(rowId, attr, val){
   [...$(rowId).children].forEach(el => el.classList.toggle("active", el.dataset[attr] === String(val)));
 }
+/* The extension row is rebuilt rather than toggled: what s 6.14 is worth
+   depends on the crew — one hour basic, two augmented — and the four-hour
+   split duty extension is a basic crew provision that does not exist at all
+   on three. A button whose label lies is worse than no button. */
+function renderExtRow(longestGroundMin){
+  const fcmH = EXT_HOURS[state.crew >= 3 ? 3 : 2];
+  const splitOk = state.crew < 3;
+  const restOk = longestGroundMin >= SPLIT_REST_MIN;
+  const opts = [
+    { v:"none", t:"None", s:"table limit" },
+    { v:"fcm",  t:"+" + fmtDur(fcmH*60), s:state.crew >= 3 ? "augmented crew" : "basic crew" },
+  ];
+  if(splitOk) opts.push({ v:"split", t:"+" + fmtDur(SPLIT_EXT_HOURS*60), s:"split duty", off:!restOk });
+  $("extraRow").innerHTML = opts.map(o =>
+    '<div class="opt' + (state.extension === o.v ? " active amber" : "")
+    + (o.off ? " off" : "") + '" data-extra="' + o.v + '">' + esc(o.t)
+    + "<small>" + esc(o.s) + "</small></div>").join("");
+  $("extHint").innerHTML = state.extension === "none"
+    ? "An FCM may extend a duty <b>already commenced</b> where they consider themselves fit for it and it "
+      + "is operationally necessary to complete the objective of the duty. It lifts the FDP and flight deck "
+      + "duty limits together, and one additional sector may be flown."
+    : state.extension === "split"
+      ? "Basic crew, not planned as a split duty and not already extended, given a split duty rest period "
+        + "of at least " + fmtDur(SPLIT_REST_MIN) + ". The longest break in this duty is currently <b>"
+        + fmtDur(longestGroundMin) + "</b>" + (restOk ? ", which meets it." : ", which does not.")
+      : "Using it means " + esc(EXT_REPORT) + ", retained for five years. It does not move the 16 h duty "
+        + "period.";
+}
 function syncToggles(){
   setActive("crewRow", "crew", state.crew);
   setActive("basisRow", "basis", state.basis);
-  setActive("extraRow", "extra", state.extraHour ? 1 : 0);
-  [...$("extraRow").children].forEach(el => el.classList.toggle("amber", el.dataset.extra === "1"));
 }
 
 /* ── Theme ──────────────────────────────────────────────────────────────
@@ -1172,7 +1279,11 @@ function init(){
 
   $("crewRow").addEventListener("click", e => {
     const t = e.target.closest("[data-crew]"); if(!t) return;
-    state.crew = Number(t.dataset.crew); syncToggles(); render();
+    state.crew = Number(t.dataset.crew);
+    /* s 6.14 offers the four-hour split duty extension to basic crew only, so
+       it cannot survive a move to three. */
+    if(state.crew >= 3 && state.extension === "split") state.extension = "fcm";
+    syncToggles(); render();
   });
   $("basisRow").addEventListener("click", e => {
     const t = e.target.closest("[data-basis]"); if(!t) return;
@@ -1180,7 +1291,7 @@ function init(){
   });
   $("extraRow").addEventListener("click", e => {
     const t = e.target.closest("[data-extra]"); if(!t) return;
-    state.extraHour = t.dataset.extra === "1"; syncToggles(); render();
+    state.extension = t.dataset.extra; render();
   });
 
   $("addSector").addEventListener("click", () => {
