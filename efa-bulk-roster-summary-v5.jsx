@@ -722,6 +722,7 @@ function newSector(dep="", arr="") {
     flightNo:"", depAirport:dep, arrAirport:arr,
     sectorDate:"",
     aSignOn:"", aSignOff:"",
+    nilFlight:false,        // same-port P/A sector — the aircraft never moved, 0 credit
     missedMeal:false, continueDuty:false, reservePeriod:false,
   };
 }
@@ -1327,7 +1328,15 @@ function parseQantasRoster(text) {
       // as operating sectors: they get the 4-hour ground-duty cap on credit
       // hours, and they shouldn't earn block hours.
       const isGroundDuty = (dep === arr) || /^(CC|SIM|EF|GS|GD|TC)\b/i.test(flt);
-      flights.push({ sectorDate, flightNo: flt, dep, arr, depTime, arrTime, isPositioning, isGroundDuty });
+      // A same-port sector carrying a POSITIONING marker (the A or P next to the
+      // flight number) is a flight that never operated: the crew went to the
+      // airport and the aircraft did not move, so there is no block time and no
+      // credit. The marker is what separates it from a rostered ground duty at
+      // one port (SIM, CC, GS, IE19 …), which does earn min(duty, 4). It stays
+      // isGroundDuty so DHA and ground meals are unchanged — only the credit
+      // builder reads this flag. Mirrors efa-duty-calculator-v5.jsx.
+      const nilFlight = (dep === arr) && isPositioning;
+      flights.push({ sectorDate, flightNo: flt, dep, arr, depTime, arrTime, isPositioning, isGroundDuty, nilFlight });
     }
 
     if (flights.length === 0) return;
@@ -1384,6 +1393,7 @@ function parseQantasRoster(text) {
           flightDepDate: f.sectorDate,
           isPositioning: f.isGroundDuty ? false : f.isPositioning,
           isGroundDuty: f.isGroundDuty,
+          nilFlight: f.nilFlight,
         });
         allSectors.push(sec);
       });
@@ -1650,6 +1660,12 @@ function calcCreditHoursForWeeks(weeks, rangeFrom, rangeTo) {
           dayCredit += 2.5; dayCat.leave += 2.5; counts.leaveDays += 1;
         } else if (sec.reservePeriod) {
           dayCredit += 4; dayCat.reserve += 4; counts.reserveDays += 1;
+        } else if (sec.nilFlight) {
+          // Same-port positioning sector — the aircraft never left the ground,
+          // so block time is 0 and so is credit. It counts as neither an
+          // operating nor a positioning sector, and not as a ground duty.
+          // DHA and ground meals are unaffected.
+          return;
         } else if (sec.isGroundDuty) {
           const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
           if (on == null || off == null) return;
@@ -1661,6 +1677,10 @@ function calcCreditHoursForWeeks(weeks, rangeFrom, rangeTo) {
           const arrTime = sec.flightArrTime || sec.aSignOff;
           const depCode = sec.depAirport, arrCode = sec.arrAirport;
           if (!depTime || !arrTime || !depCode || !arrCode) return;
+          // Backstop for a same-port sector the parser did not tag nilFlight.
+          // Same reasoning: the aircraft never left the ground, so there is no
+          // block time and no credit. Mirrors efa-duty-calculator-v5.jsx.
+          if (depCode === arrCode) return;
           const depAp = AIRPORTS.find(a => a.code === depCode);
           const arrAp = AIRPORTS.find(a => a.code === arrCode);
           if (!depAp || !arrAp) return;

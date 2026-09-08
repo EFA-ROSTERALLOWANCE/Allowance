@@ -706,6 +706,7 @@ function newSector(dep="", arr="") {
     sectorDate:"",          // if different from trip day (multi-day)
     aSignOn:"", aSignOff:"",
     isPositioning:false,    // PAX / positioning flight — 0.5× credit
+    nilFlight:false,        // same-port P/A sector — the aircraft never moved, 0 credit
     missedMeal:false, continueDuty:false, reservePeriod:false,
     hasRosterPublishDiff:false, rosterPublishSignOff:"", rosterPublishSignOffDate:"",
     hasRosterPublishSignOnDiff:false, rosterPublishSignOn:"", rosterPublishSignOnDate:"",
@@ -2343,11 +2344,21 @@ function parseQantasRoster(text) {
         // (which uses continueDuty chains regardless), but ensures any future
         // ground-duty-aware logic added to either app behaves consistently.
         const isGroundDuty = (f.dep === f.arr);
+        // A same-port sector carrying a POSITIONING marker (P/A) is a flight
+        // that never operated: the crew went to the airport and the aircraft
+        // did not move, so there is no block time and no credit. That is a
+        // different animal from a rostered ground duty at one port (SIM, CC,
+        // GS, IE19 …), which does earn min(duty, 4) — the marker is what tells
+        // them apart. Seen as "12Jul A AN0001 PVG 0820 PVG 1844", which ARMS
+        // prints with Blk 0:00. It stays isGroundDuty so DHA and ground meals
+        // are unchanged; only the credit builder reads this flag.
+        const nilFlight = isGroundDuty && f.isPositioning;
         const sec = bldSec(f.flightNo, f.dep, f.arr, signOn, signOff, sectorDate, {
           flightDepTime: mkTime(f.depTime), flightArrTime: mkTime(f.arrTime),
           flightDepDate: f.sectorDate,
           isPositioning: isGroundDuty ? false : f.isPositioning,
           isGroundDuty,
+          nilFlight,
         });
         allSectors.push(sec);
       });
@@ -3056,6 +3067,18 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
                 } else if (sec.reservePeriod) {
                   // Reserve = flat 4h credit
                   creditItems.push({ date: secDate, label: sec.flightNo || "Reserve", credit: 4, type: "Reserve" });
+                } else if (sec.nilFlight) {
+                  // Same-port positioning sector — the aircraft never left the
+                  // ground, so block time is 0 and so is credit. It earns no
+                  // flight pay and adds nothing to the 70h overtime threshold.
+                  // DHA and ground meals are unaffected. Booked as a visible 0h
+                  // line so the breakdown says why the sector paid nothing.
+                  creditItems.push({
+                    date: secDate,
+                    label: `${sec.flightNo} ${sec.depAirport}→${sec.arrAirport} (same port — aircraft did not depart)`,
+                    credit: 0,
+                    type: "Nil",
+                  });
                 } else if (sec.isGroundDuty || /^(SIM|EF)\d*/i.test(sec.flightNo)) {
                   // SIM/EF and other ground duties = min(duty hours, 4)
                   const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
@@ -3088,6 +3111,21 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
                     : sec.flightArrTime;
                   const depCode = sec.depAirport, arrCode = sec.arrAirport;
                   if (!depTime || !arrTime || !depCode || !arrCode) return;
+                  // Backstop for a same-port sector the parser did not tag
+                  // nilFlight — i.e. one entered by hand. Same reasoning: the
+                  // aircraft never left the ground, so the gap between the two
+                  // clocks is time spent at the airport, not block time, and
+                  // credit is 0. Roster-parsed sectors are caught earlier by
+                  // the nilFlight branch. DHA is unaffected.
+                  if (depCode === arrCode) {
+                    creditItems.push({
+                      date: secDate,
+                      label: `${sec.flightNo} ${depCode}→${arrCode} (same port — aircraft did not depart)`,
+                      credit: 0,
+                      type: sec.isPositioning ? "Positioning" : "Operating",
+                    });
+                    return;
+                  }
                   const depAp = AIRPORTS.find(a => a.code === depCode);
                   const arrAp = AIRPORTS.find(a => a.code === arrCode);
                   if (!depAp || !arrAp) return;
