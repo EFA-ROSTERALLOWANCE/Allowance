@@ -4140,11 +4140,26 @@ export default function App() {
         .hrow:hover{background:rgba(56,189,248,0.08)!important;}
         .addBtn{transition:all 0.15s;} .addBtn:hover{background:var(--accentBg2)!important;border-color:var(--accent)!important;}
 
-        /* Responsive */
-        .topbar{background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 20px;min-height:52px;flex-wrap:wrap;}
+        /* Responsive — the top bar
+           Three groups, in this order: brand, controls (role / aircraft / EBA
+           index), actions (clock, ROSTER, APP, CLEAR, theme, help). The bar
+           wraps, so each group has to survive being pushed onto its own line:
+             - .topbar-controls keeps flex-basis auto, NOT 0. With flex:1 the
+               basis is 0, so on a narrow screen the group collapses to a thin
+               column and stacks its five controls vertically in the middle of
+               the bar (iPad portrait did exactly that). It still grows to fill
+               a wide bar, it just never shrinks below its content.
+             - .topbar-actions groups the buttons so they move as one and stay
+               right-aligned, instead of individually orphaning onto a new line.
+             - .seg keeps a segmented pair (Captain/F/Officer, A330/A320)
+               together when the controls row itself wraps. */
+        .topbar{background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px 12px;padding:0 20px;min-height:52px;flex-wrap:wrap;}
         .stickyhead{position:sticky;top:0;z-index:50;}
         .topbar-brand{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-        .topbar-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;}
+        .topbar-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1 1 auto;}
+        .topbar-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto;}
+        .seg{display:flex;align-items:center;gap:8px;}
+        .tabbar{background:var(--bg);border-bottom:1px solid var(--line);display:flex;padding:0 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
         .day-tabs{background:var(--bg);border-bottom:1px solid var(--line);padding:8px 12px;display:flex;gap:5px;overflow-x:auto;align-items:stretch;-webkit-overflow-scrolling:touch;}
         .hotel-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;margin-bottom:12px;align-items:end;}
         .summary-row{display:grid;grid-template-columns:125px 1fr auto;}
@@ -4154,9 +4169,12 @@ export default function App() {
         .main-content{max-width:980px;margin:0 auto;padding:16px 20px;}
 
         @media(max-width:768px){
+          /* Phone: one group per line, all left-aligned. */
           .topbar{padding:8px 12px;gap:8px;min-height:auto;flex-wrap:wrap;}
-          .topbar-brand{width:100%;}
-          .topbar-controls{width:100%;justify-content:flex-start;}
+          .topbar-brand{order:0;flex:1 0 100%;}
+          .topbar-controls{order:1;flex:1 0 100%;justify-content:flex-start;}
+          .topbar-actions{order:2;flex:1 0 100%;justify-content:flex-start;margin-left:0;}
+          .tabbar{padding:0 12px;}
           .day-tabs{padding:8px 8px;gap:4px;}
           .day-tabs .dpill{min-width:62px!important;padding:6px 8px!important;}
           .hotel-grid{grid-template-columns:1fr!important;gap:8px!important;}
@@ -4168,7 +4186,13 @@ export default function App() {
           .main-content{padding:12px 10px;}
         }
         @media(min-width:769px) and (max-width:1024px){
-          .topbar{flex-wrap:wrap;padding:8px 16px;gap:8px;}
+          /* Tablet portrait: two tidy rows — brand with the action buttons
+             ranged right, then the controls on their own full-width line. */
+          .topbar{flex-wrap:wrap;padding:8px 16px;gap:8px 10px;min-height:auto;}
+          .topbar-brand{order:0;}
+          .topbar-actions{order:1;}
+          .topbar-controls{order:2;flex:1 0 100%;}
+          .tabbar{padding:0 16px;}
           .day-tabs .dpill{min-width:72px!important;}
           .main-content{padding:16px 16px;}
         }
@@ -4236,75 +4260,83 @@ export default function App() {
           </div>
         </div>
         <div className="topbar-controls">
-          {[["cpt","Captain"],["fo","F/Officer"]].map(([r,lbl])=>(
-            <button key={r} onClick={()=>setRole(r)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:role===r?"var(--accentBg)":"transparent",border:`1px solid ${role===r?"var(--accent)":"var(--line)"}`,color:role===r?"var(--accent)":"var(--ink2)",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
-          ))}
-          {[["a330","A330"],["a320","A320"]].map(([ac,lbl])=>(
-            <button key={ac} onClick={()=>setAircraft(ac)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:aircraft===ac?"var(--accentBg)":"transparent",border:`1px solid ${aircraft===ac?"var(--accent)":"var(--line)"}`,color:aircraft===ac?"var(--accent)":"var(--ink2)",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
-          ))}
+          <div className="seg">
+            {[["cpt","Captain"],["fo","F/Officer"]].map(([r,lbl])=>(
+              <button key={r} onClick={()=>setRole(r)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:role===r?"var(--accentBg)":"transparent",border:`1px solid ${role===r?"var(--accent)":"var(--line)"}`,color:role===r?"var(--accent)":"var(--ink2)",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
+            ))}
+          </div>
+          <div className="seg">
+            {[["a330","A330"],["a320","A320"]].map(([ac,lbl])=>(
+              <button key={ac} onClick={()=>setAircraft(ac)} style={{padding:"4px 12px",borderRadius:6,cursor:"pointer",background:aircraft===ac?"var(--accentBg)":"transparent",border:`1px solid ${aircraft===ac?"var(--accent)":"var(--line)"}`,color:aircraft===ac?"var(--accent)":"var(--ink2)",fontSize:12,fontWeight:700,fontFamily:mono}}>{lbl}</button>
+            ))}
+          </div>
           <select value={yearIdx} onChange={e=>setYearIdx(+e.target.value)} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"4px 8px",fontFamily:mono,fontSize:12,cursor:"pointer"}}>
             {INDEX_YEARS.map((y,i)=><option key={i} value={i}>{y.label}</option>)}
           </select>
         </div>
-        <div style={{fontFamily:mono,fontSize:13,color:"var(--accent)",letterSpacing:1,flexShrink:0}}>{utc}</div>
-        <label style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}} title="Upload Qantas SH roster .txt file">
-          📄 ROSTER
-          <input type="file" accept=".txt,text/plain" onChange={e=>{handleRosterUpload(e.target.files);e.target.value="";}} style={{display:"none"}}/>
-        </label>
-        {/* Download App — saves the running .html so the user can keep an
-            offline copy. Clones the document, clears the React root in the
-            clone, and serialises so the saved file boots fresh from the
-            embedded bundle when reopened. */}
-        <button
-          onClick={()=>{
-            try{
-              const docClone=document.documentElement.cloneNode(true);
-              const rootEl=docClone.querySelector("#root");
-              if(rootEl)rootEl.innerHTML="";
-              const html="<!doctype html>\n"+docClone.outerHTML;
-              const blob=new Blob([html],{type:"text/html;charset=utf-8"});
-              const url=URL.createObjectURL(blob);
-              const a=document.createElement("a");
-              a.href=url;a.download="efa-duty-calculator.html";
-              document.body.appendChild(a);a.click();document.body.removeChild(a);
-              setTimeout(()=>URL.revokeObjectURL(url),1500);
-            }catch(err){alert("Couldn't generate offline copy: "+err.message);}
-          }}
-          title="Save this app as a standalone .html for offline use"
-          style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}}>
-          ⤓ APP
-        </button>
-        {confirmClearRoster ? (
-          <div style={{display:"flex",alignItems:"center",gap:6,background:"var(--redBg)",border:"1px solid color-mix(in srgb, var(--red) 38%, transparent)",borderRadius:8,padding:"4px 8px",flexShrink:0}}>
-            <span style={{fontSize:11,color:"var(--red)",fontFamily:mono}}>Clear all?</span>
-            <button onClick={clearRoster}
-              style={{background:"var(--red)",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
-              Yes, clear
-            </button>
-            <button onClick={()=>setConfirmClearRoster(false)}
-              style={{background:"transparent",border:"1px solid var(--muted)",borderRadius:5,color:"var(--ink2)",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <button onClick={()=>setConfirmClearRoster(true)} title="Clear all roster data and reset the calculator"
-            style={{background:"var(--panel)",border:"1px solid color-mix(in srgb, var(--red) 19%, transparent)",borderRadius:8,color:"var(--red)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5}}>
-            🗑 CLEAR
+        {/* Action group — kept in one wrapper so the buttons wrap together and
+            stay ranged right rather than orphaning one at a time. */}
+        <div className="topbar-actions">
+          <div style={{fontFamily:mono,fontSize:13,color:"var(--accent)",letterSpacing:1,flexShrink:0}}>{utc}</div>
+          <label style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}} title="Upload Qantas SH roster .txt file">
+            📄 ROSTER
+            <input type="file" accept=".txt,text/plain" onChange={e=>{handleRosterUpload(e.target.files);e.target.value="";}} style={{display:"none"}}/>
+          </label>
+          {/* Download App — saves the running .html so the user can keep an
+              offline copy. Clones the document, clears the React root in the
+              clone, and serialises so the saved file boots fresh from the
+              embedded bundle when reopened. */}
+          <button
+            onClick={()=>{
+              try{
+                const docClone=document.documentElement.cloneNode(true);
+                const rootEl=docClone.querySelector("#root");
+                if(rootEl)rootEl.innerHTML="";
+                const html="<!doctype html>\n"+docClone.outerHTML;
+                const blob=new Blob([html],{type:"text/html;charset=utf-8"});
+                const url=URL.createObjectURL(blob);
+                const a=document.createElement("a");
+                a.href=url;a.download="efa-duty-calculator.html";
+                document.body.appendChild(a);a.click();document.body.removeChild(a);
+                setTimeout(()=>URL.revokeObjectURL(url),1500);
+              }catch(err){alert("Couldn't generate offline copy: "+err.message);}
+            }}
+            title="Save this app as a standalone .html for offline use"
+            style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",gap:5}}>
+            ⤓ APP
           </button>
-        )}
-        <button onClick={toggleTheme} title={themeDark?"Switch to day (light) mode":"Switch to night (dark) mode"}
-          style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",justifyContent:"center",whiteSpace:"nowrap"}}>
-          {themeDark?"☀ Day":"🌙 Night"}
-        </button>
-        <button onClick={()=>setShowHelp(true)} title="How to use this calculator"
-          style={{background:"var(--panel)",border:"1px solid var(--accent)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,minWidth:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          ?
-        </button>
+          {confirmClearRoster ? (
+            <div style={{display:"flex",alignItems:"center",gap:6,background:"var(--redBg)",border:"1px solid color-mix(in srgb, var(--red) 38%, transparent)",borderRadius:8,padding:"4px 8px",flexShrink:0}}>
+              <span style={{fontSize:11,color:"var(--red)",fontFamily:mono}}>Clear all?</span>
+              <button onClick={clearRoster}
+                style={{background:"var(--red)",border:"none",borderRadius:5,color:"#fff",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono,fontWeight:700}}>
+                Yes, clear
+              </button>
+              <button onClick={()=>setConfirmClearRoster(false)}
+                style={{background:"transparent",border:"1px solid var(--muted)",borderRadius:5,color:"var(--ink2)",fontSize:11,cursor:"pointer",padding:"3px 8px",fontFamily:mono}}>
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button onClick={()=>setConfirmClearRoster(true)} title="Clear all roster data and reset the calculator"
+              style={{background:"var(--panel)",border:"1px solid color-mix(in srgb, var(--red) 19%, transparent)",borderRadius:8,color:"var(--red)",padding:"6px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5}}>
+              🗑 CLEAR
+            </button>
+          )}
+          <button onClick={toggleTheme} title={themeDark?"Switch to day (light) mode":"Switch to night (dark) mode"}
+            style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,letterSpacing:0.5,display:"flex",alignItems:"center",justifyContent:"center",whiteSpace:"nowrap"}}>
+            {themeDark?"☀ Day":"🌙 Night"}
+          </button>
+          <button onClick={()=>setShowHelp(true)} title="How to use this calculator"
+            style={{background:"var(--panel)",border:"1px solid var(--accent)",borderRadius:8,color:"var(--accent)",padding:"6px 10px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:mono,flexShrink:0,minWidth:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            ?
+          </button>
+        </div>
       </div>
       {showHelp && <HelpModal onClose={()=>setShowHelp(false)} />}
 
       {/* ── Tab bar ── */}
-      <div style={{background:"var(--bg)",borderBottom:"1px solid var(--line)",display:"flex",padding:"0 20px",overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
+      <div className="tabbar">
         {[["entry","DAY SUMMARY"],["rates","MEAL RATES"],["summary","WEEK SUMMARY"],["monthly","MONTH / ROSTER"],["paycheck","PAY CHECK"]].map(([id,lbl])=>(
           <button key={id} onClick={()=>setTab(id)} style={{background:"transparent",border:"none",color:tab===id?"var(--accent)":"var(--muted)",borderBottom:tab===id?"2px solid var(--accent)":"2px solid transparent",padding:"0 16px",height:44,fontSize:12,fontWeight:700,letterSpacing:1.5,fontFamily:mono,cursor:"pointer",whiteSpace:"nowrap",flexShrink:0}}>{lbl}</button>
         ))}
