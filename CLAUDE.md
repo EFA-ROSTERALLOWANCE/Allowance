@@ -275,3 +275,17 @@ Keep that shell byte-for-byte (it is CRLF; only the bundle is LF); only the
 `<script>` bundle changes between builds. Assert on line 38 being exactly
 `<script>` before writing, so a shell edit fails the build instead of silently
 emitting a bundle that sits outside any script tag.
+
+## Commits
+
+Every commit is authored as **`Claude <noreply@anthropic.com>`** — one convention across all the EFA repos.
+Set it in the clone's local config before the first commit (there is no global identity to fall back on):
+
+```
+git config user.name "Claude" && git config user.email "noreply@anthropic.com"
+```
+
+`git log --format='%an <%ae>'` is the check; older commits under another name are history, left as they are.
+**Never merge a pull request through the GitHub API or the green merge button** — GitHub attributes the
+merge commit to the authenticated account, so it lands under the owner's name. Merge locally instead:
+`git checkout main && git merge --no-ff <branch> && git push origin main`.
