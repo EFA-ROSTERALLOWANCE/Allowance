@@ -25,7 +25,7 @@ Shared engine surface (must stay logically identical in both sources):
 - Helpers: `applyTransitShift`, `getUtcOffsetHours`, `utcMins`, `calcDutyHours`,
   `splitDhaByMidnight`, `totalSlipMins`, `mealsCoveredPerDay`,
   `groundDutyMealWindow`, `resolveSectorDate`, `getHotels`, `getDestinations`.
-- Core: `calcAllowancesByDate` and `parseQantasRoster` (incl. AS48→DVA,
+- Core: `calcAllowancesByDate` and `parseQantasRoster` (incl. `carryActualCredit`, AS48→DVA,
   OL48/OL06→DDO, OL13/OL11→reserve-activation detection).
 
 Known intentional differences (NOT allowance drift — leave as-is):
@@ -131,6 +131,25 @@ in — fully printed: BP3685, BP3741 (Tsunoda), BP3755 (Nichols), BP3761; partly
 printed: BP3721; not printed: BP3745, BP3751, BP3755 (Clough), BP3765, BP3771 —
 by checking each header's stated totals against the by-date sums. Re-verify that
 way after any change here, rather than reasoning from the EA.
+
+### Credit carries are planned, not actual
+
+The header's **Credit** Carried In/Out is frozen at roster publish — the planned
+block of the boundary duties — while the **Duty** carry beside it is updated to
+actuals. BP3761 (Nielsen) carries in 12:41 (9:20): 12:41 is the 13 Jul QF7526's
+actual duty, but it flew 9:08 block, not 9:20. Our by-date credit is built from
+actual times, so the carry must be too.
+
+`carryActualCredit()` reads the pattern details (each flight line's `( n` is its
+position in the duty; each duty closes on a `Rpt … Rls … Blk Duty Cred` line),
+takes the TRAILING duties of the straddling pattern whose actual duty hours sum
+exactly to the header's duty carry, and prices them as the credit builder does
+(operating = actual Blk, positioning = 0.5 × block, same-port positioning = 0).
+The printed part of a carry-in is re-measured the same way. No exact match (a
+duty split at midnight, a ground duty in the carry) → the header's planned
+figure stands. The parser stores the actual in `carriedIn/OutCredit` and the
+header's own values in `carriedIn/OutCreditPlanned`. On the parity surface —
+byte-identical in both sources.
 
 Only a selected BP has a sign-on rule to apply; a plain calendar month view has
 no patterns of its own, so it stays date-based.

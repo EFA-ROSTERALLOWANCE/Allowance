@@ -1896,6 +1896,145 @@ function carriedInAddHrs(hdr, kind) {
   return Math.max(0, total - printed);
 }
 
+// The header's CREDIT carry figures are PLANNED, not actual.
+//
+// "Total Credit Hours Carried In (Out)" is frozen at roster publish: it is the
+// planned block of the boundary duties and is never updated when the actual
+// times come in. The DUTY carry beside it IS updated. BP3761 (Nielsen) carries
+// in 12:41 (9:20) for the 13 Jul QF7526 HKG→SYD — 12:41 is that duty's actual
+// Rpt 2240 → Rls 1321, but 9:20 is its planned block; the pattern details show
+// it flew 9:08. Our by-date sum is built from actual times, so the carry has to
+// be too, or every boundary trip is off by its block-time variance.
+//
+// The pattern details section holds the actuals. A pattern is a run of duty
+// periods — each flight line is marked "( 1", "( 2" … for its position in its
+// duty, and each duty closes on a "Rpt HHMM Rls HHMM … Blk Duty Cred" line.
+// A carried portion is always the TRAILING duties of the straddling pattern
+// (carry-in: the tail of a pattern that started last BP; carry-out: the tail
+// of one that runs past this BP's end). We find it by walking that pattern's
+// duties backwards until their actual duty hours equal the header's (actual)
+// duty carry — an exact-minute match, so a duty Qantas splits at midnight
+// (BP3721's 1:51 tail) or a shape we can't read returns null and the header's
+// planned figure stands, exactly as before.
+//
+// Each carried sector is credited the way the credit builder credits it:
+// operating = actual Blk as printed, positioning = 0.5 × block from the times,
+// a same-port positioning sector = 0. A ground duty in the carried portion
+// returns null (planned figure stands). The carry-in's PRINTED part (see
+// carriedInPrinted) is re-measured the same way, from the latest carried duty
+// back, so carriedInAddHrs() keeps subtracting like from like.
+function carryActualCredit(patternText, bpStart, carry) {
+  const res = { inCredit: null, inPrinted: null, outCredit: null };
+  if (!patternText || !bpStart || !carry) return res;
+  const mons = { Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11 };
+  const bpMon = parseInt(bpStart.slice(5, 7), 10) - 1;
+  const bpYr  = parseInt(bpStart.slice(0, 4), 10);
+  const bpEnd = addDays(bpStart, 27);
+  const mins = (s) => {
+    if (!s) return null;
+    const mm = String(s).trim().match(/^(-?)(\d{1,3}):(\d{2})$/);
+    if (!mm) return null;
+    return (mm[1] ? -1 : 1) * (parseInt(mm[2], 10) * 60 + parseInt(mm[3], 10));
+  };
+  const fmt = (t) => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+  const hhmm = (s) => parseInt(s.slice(0, 2), 10) * 60 + parseInt(s.slice(2), 10);
+
+  // Parse every pattern into its duty periods.
+  const patterns = [];
+  const blocks = patternText.split(/(?=^\s*Date\s+Flight\s+Depart\s+Arrive\s+Eq)/m);
+  for (const block of blocks) {
+    const duties = [];
+    let cur = [];
+    for (const ln of block.split(/\r?\n/)) {
+      const f = ln.match(/^(\d{2})([A-Za-z]{3})\s+([A-Z&]\s+)?(\S+)\s+([A-Z]{3})\s+(\d{4})\s+([A-Z]{3})\s+(\d{4})(.*)$/);
+      if (f) {
+        const mIdx = mons[f[2]];
+        if (mIdx == null) continue;
+        let yr = bpYr;
+        if (mIdx - bpMon > 6) yr--; else if (bpMon - mIdx > 6) yr++;
+        const date = `${yr}-${String(mIdx + 1).padStart(2, "0")}-${f[1]}`;
+        const blkStr = (f[9].match(/-?\d{1,3}:\d{2}/) || [])[0];
+        cur.push({ date, marker: f[3] ? f[3].trim() : "", dep: f[5], arr: f[7],
+                   depTime: f[6], arrTime: f[8], blk: mins(blkStr) });
+        continue;
+      }
+      const r = ln.match(/Rpt\s+\d{4}\s+Rls\s+\d{4}(.*)$/);
+      if (r) {
+        const t = r[1].match(/-?\d{1,3}:\d{2}/g) || [];
+        if (cur.length && t.length >= 3) duties.push({ sectors: cur, duty: mins(t[t.length - 2]) });
+        cur = [];
+      }
+    }
+    if (duties.length) patterns.push(duties);
+  }
+
+  // Actual credit of one sector, in minutes; null when it can't be priced.
+  const secCredit = (s) => {
+    const pos = s.marker === "P" || s.marker === "A";
+    if (s.dep === s.arr) return pos ? 0 : null;
+    if (s.marker === "&") return null;
+    if (!pos) return s.blk;
+    const depAp = AIRPORTS.find(a => a.code === s.dep);
+    const arrAp = AIRPORTS.find(a => a.code === s.arr);
+    if (!depAp || !arrAp) return null;
+    let b = (hhmm(s.arrTime) - getUtcOffsetHours(s.arr, s.date) * 60)
+          - (hhmm(s.depTime) - getUtcOffsetHours(s.dep, s.date) * 60);
+    if (b < 0) b += 1440;
+    return Math.round(b * 0.5);
+  };
+  const dutyCredit = (d) => {
+    let t = 0;
+    for (const s of d.sectors) { const c = secCredit(s); if (c == null) return null; t += c; }
+    return t;
+  };
+  // Trailing duties of `duties` whose duty hours sum to exactly `target` mins.
+  const tail = (duties, target) => {
+    let sum = 0;
+    for (let i = duties.length - 1; i >= 0; i--) {
+      if (duties[i].duty == null) return null;
+      sum += duties[i].duty;
+      if (sum === target) return duties.slice(i);
+      if (sum > target) return null;
+    }
+    return null;
+  };
+  const credOf = (duties) => {
+    let t = 0;
+    for (const d of duties) { const c = dutyCredit(d); if (c == null) return null; t += c; }
+    return t;
+  };
+
+  const inDuty = mins(carry.inDuty);
+  if (inDuty > 0) {
+    for (const duties of patterns) {
+      if (!(duties[0].sectors[0].date < bpStart)) continue;
+      const carried = tail(duties, inDuty);
+      if (!carried) continue;
+      const c = credOf(carried);
+      const pDuty = mins(carry.inPrintedDuty) || 0;
+      const printed = pDuty > 0 ? tail(carried, pDuty) : [];
+      const p = printed ? credOf(printed) : null;
+      if (c == null || p == null) continue;
+      res.inCredit = fmt(c);
+      res.inPrinted = fmt(p);
+      break;
+    }
+  }
+  const outDuty = mins(carry.outDuty);
+  if (outDuty > 0) {
+    for (const duties of patterns) {
+      const last = duties[duties.length - 1].sectors;
+      if (last[last.length - 1].date < addDays(bpEnd, -1)) continue;
+      const carried = tail(duties, outDuty);
+      const c = carried ? credOf(carried) : null;
+      if (c == null) continue;
+      res.outCredit = fmt(c);
+      break;
+    }
+  }
+  return res;
+}
+
 function parseQantasRoster(text) {
   const errors = [];
   const weeks = {};
@@ -2553,16 +2692,30 @@ function parseQantasRoster(text) {
   const hdrTotDuty = (text.match(/Total Duty Hours \(Total TAFB\)\s*:\s*(\d+:\d+)/) || [])[1] || null;
   const hdrTotCred = (text.match(/Total Credit Hours\s*:\s*(\d+:\d+)/) || [])[1] || null;
   const hdrCarryPrinted = carriedInPrinted(topSection, bpStart);
+  // The credit carries are PLANNED figures; swap in the actual block of the
+  // same duties where the pattern details let us. See carryActualCredit().
+  const hdrCarryActual = carryActualCredit(
+    patternSectionIdx > 0 ? text.substring(patternSectionIdx) : "", bpStart,
+    { inDuty: hdrDutyMatch ? hdrDutyMatch[1] : null,
+      outDuty: hdrDutyMatch ? hdrDutyMatch[2] : null,
+      inPrintedDuty: hdrCarryPrinted.duty });
+  const hdrCredIn  = hdrCredMatch ? hdrCredMatch[1] : null;
+  const hdrCredOut = hdrCredMatch ? hdrCredMatch[2] : null;
   const headerCarry = {
     carriedInDuty:   hdrDutyMatch ? hdrDutyMatch[1] : null,
     carriedOutDuty:  hdrDutyMatch ? hdrDutyMatch[2] : null,
-    carriedInCredit: hdrCredMatch ? hdrCredMatch[1] : null,
-    carriedOutCredit:hdrCredMatch ? hdrCredMatch[2] : null,
+    // Actual credit where it could be measured, else the header's planned value.
+    carriedInCredit:  hdrCredIn  && hdrCarryActual.inCredit  != null ? hdrCarryActual.inCredit  : hdrCredIn,
+    carriedOutCredit: hdrCredOut && hdrCarryActual.outCredit != null ? hdrCarryActual.outCredit : hdrCredOut,
+    // The header's own (planned) credit carries, kept for display.
+    carriedInCreditPlanned:  hdrCredIn,
+    carriedOutCreditPlanned: hdrCredOut,
     // How much of the Carried In this roster already prints inside the BP
     // window, so a by-date sum holds it and only the remainder is added.
-    // See carriedInPrinted() / carriedInAddHrs().
+    // See carriedInPrinted() / carriedInAddHrs(). Credit is re-measured in
+    // actuals alongside carriedInCredit, so the two stay like for like.
     carriedInPrintedDuty:   hdrCarryPrinted.duty,
-    carriedInPrintedCredit: hdrCarryPrinted.credit,
+    carriedInPrintedCredit: hdrCredIn && hdrCarryActual.inCredit != null ? hdrCarryActual.inPrinted : hdrCarryPrinted.credit,
     totalDuty:       hdrTotDuty,
     totalCredit:     hdrTotCred,
   };
@@ -5087,7 +5240,7 @@ export default function App() {
                     const carry = matchedBp?.headerCarry;
                     const carryLine = (carry && (carry.carriedInDuty || carry.carriedOutDuty || carry.carriedInCredit || carry.carriedOutCredit))
                       ? <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 3, fontFamily: mono, letterSpacing: 0.2 }}>
-                          <span style={{color:"var(--purple)"}}>Qantas header</span> · duty in/out {carry.carriedInDuty || "0:00"}/{carry.carriedOutDuty || "0:00"} · credit in/out {carry.carriedInCredit || "0:00"}/{carry.carriedOutCredit || "0:00"}{carry.carriedInPrintedDuty !== "0:00" ? ` · ${carry.carriedInPrintedDuty} of the carry-in already on this roster` : ""}
+                          <span style={{color:"var(--purple)"}}>Qantas header</span> · duty in/out {carry.carriedInDuty || "0:00"}/{carry.carriedOutDuty || "0:00"} · credit in/out {carry.carriedInCredit || "0:00"}/{carry.carriedOutCredit || "0:00"}{(carry.carriedInCredit !== carry.carriedInCreditPlanned || carry.carriedOutCredit !== carry.carriedOutCreditPlanned) ? ` actual block (header ${carry.carriedInCreditPlanned || "0:00"}/${carry.carriedOutCreditPlanned || "0:00"} planned)` : ""}{carry.carriedInPrintedDuty !== "0:00" ? ` · ${carry.carriedInPrintedDuty} of the carry-in already on this roster` : ""}
                         </div>
                       : null;
                     return <>{dateLine}{carryLine}</>;
@@ -5403,6 +5556,7 @@ export default function App() {
                                   {bpHdr.carriedInCredit !== "0:00" ? `+${fmtHM(creditCarryInHrs)} carried in${bpHdr.carriedInPrintedCredit !== "0:00" ? ` (${bpHdr.carriedInCredit} less ${bpHdr.carriedInPrintedCredit} already on this roster)` : ""}` : ""}
                                   {bpHdr.carriedInCredit !== "0:00" && bpHdr.carriedOutCredit !== "0:00" ? " · " : ""}
                                   {bpHdr.carriedOutCredit !== "0:00" ? `−${bpHdr.carriedOutCredit} carried out` : ""}
+                                  {(bpHdr.carriedInCredit !== bpHdr.carriedInCreditPlanned || bpHdr.carriedOutCredit !== bpHdr.carriedOutCreditPlanned) ? ` · actual block, not the header's planned ${bpHdr.carriedInCreditPlanned || "0:00"}/${bpHdr.carriedOutCreditPlanned || "0:00"}` : ""}
                                 </div>
                               </div>
                               <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:headerCreditDelta>=0?"var(--green)":"var(--red)"}}>
