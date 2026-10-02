@@ -2147,6 +2147,7 @@ function processRoster(text, yearIdx, fallbackName) {
     extraCreditHours,
     creditHourPay,
     grandTotal: mealTotal + dhaTotal + dayOffPayTotal + dvaTotal + creditHourPay,
+    yearIdx,
     // Qantas header's own boundary values so the UI can show what the carry
     // adjustment contributed (or subtracted from) the DHA and credit totals.
     headerCarry: hdr || null,
@@ -2180,6 +2181,41 @@ function processRoster(text, yearIdx, fallbackName) {
 
 // ─── Style tokens ─────────────────────────────────────────────────────────────
 const mono = "'IBM Plex Mono', ui-monospace, monospace";
+// ─── Captain pay-bracket confirmation ─────────────────────────────────────────
+// The paid bracket is derived from the pilot list's company join date. A pilot
+// upgraded from F/O restarts captain years of service at the upgrade, and the
+// list has no upgrade dates — so for those captains the derived bracket, and
+// the overtime priced from it, comes out higher than the payslip. Captains on
+// overtime are flagged until the user confirms or corrects their bracket in
+// the PAY BRACKET column. The choice is kept per pilot (staff no, else name),
+// so it applies to every BP of theirs in the batch.
+function pilotKey(r) { return r.staffNo || r.pilotName; }
+
+function needsBracketConfirm(r) {
+  return r.role === "cpt" && r.extraCreditHours > 0 && r.annualSalary != null && !r.bracketConfirmed;
+}
+
+// Re-price a result at bracket `idx` (index into bracketsForRole(r.role)).
+function applyBracketOverride(r, idx) {
+  const list = bracketsForRole(r.role);
+  const derivedIdx = list.findIndex(b => b.id === r.paidBracket?.id);
+  const annualSalary = lookupAnnualSalary(r.fleet, r.role, idx, r.yearIdx);
+  const creditHourRate = annualSalary != null
+    ? Math.round((annualSalary / CREDIT_HOUR_DIVISOR) * 100) / 100
+    : null;
+  const creditHourPay = creditHourRate != null ? r.extraCreditHours * creditHourRate : 0;
+  return {
+    ...r,
+    paidBracket: list[idx] || null,
+    annualSalary,
+    creditHourRate,
+    creditHourPay,
+    grandTotal: r.grandTotal - r.creditHourPay + creditHourPay,
+    bracketConfirmed: true,
+    bracketOverridden: idx !== derivedIdx,
+  };
+}
+
 const COL = {
   bg: "#FAF7F2",
   card: "#FFFFFF",
@@ -2218,7 +2254,7 @@ function HelpModal({ onClose }) {
     ["Set the pay year", "The EBA INDEXATION year applies the matching indexation to every allowance, salary and overtime rate for all pilots at once. When you upload rosters it's selected automatically from the earliest bid period's start date, so you usually don't need to touch it — you can still override it."],
     ["Upload the rosters", "Tap SELECT .TXT FILES and pick up to 200 EFA webCIS bid-period .txt files — typically one bid period's rosters for many pilots. Each pilot's name, rank, fleet and base are read from the file header."],
     ["Let it process", "A progress bar shows files being parsed. Each pilot is matched against the EFA pilot list to set their years-of-service bracket (pilots who joined after 1 Jan 2026 don't receive the one-time tier bump)."],
-    ["Read the summary table", "The SUMMARY view lists one row per pilot: allowances (DHA, meals, day-off, DVA), credit hours, overtime / credit-hour pay and the grand total. Click any column heading to sort."],
+    ["Read the summary table", "The SUMMARY view lists one row per pilot: allowances (DHA, meals, day-off, DVA), credit hours, overtime / credit-hour pay and the grand total. Click any column heading to sort. Captains on overtime get a bracket selector in PAY BRACKET: confirm it, or change it if they were upgraded from F/O (captain years of service restart at upgrade, so the joining-date bracket overstates their OT)."],
     ["Open a pilot's detail", "Click a pilot's row to expand a full breakdown — every allowance type, credit-hour category and their salary bracket for the selected year."],
     ["Compare with STATS", "Switch to the STATS view for a chart across all bid periods — toggle the series on and off, flip the x-axis between BP and pilot name, and click a bar segment for its detail."],
     ["Export & housekeeping", "EXPORT CSV saves the whole table, ⤓ DOWNLOAD APP saves a standalone offline copy of this tool, and CLEAR removes all loaded rosters."],
@@ -2365,6 +2401,16 @@ function BreakdownPanel({ r }) {
                   padding: "2px 8px", borderRadius: 4,
                 }}>{r.paidBracket ? r.paidBracket.label : "—"}</span>
               </div>
+              {r.bracketOverridden && (
+                <div style={{ fontSize: 10, color: COL.muted, fontStyle: "italic", marginTop: 4 }}>
+                  Set manually — captain years of service restart at upgrade from F/O.
+                </div>
+              )}
+              {needsBracketConfirm(r) && (
+                <div style={{ fontSize: 10, color: "#A85D04", fontWeight: 700, marginTop: 4 }}>
+                  ⚠ Unconfirmed — if upgraded from F/O, this bracket overstates OT. Confirm it in the PAY BRACKET column.
+                </div>
+              )}
             </>
           ) : (
             <div style={{ fontSize: 11, color: COL.muted, fontStyle: "italic" }}>
@@ -2539,7 +2585,16 @@ function BreakdownPanel({ r }) {
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [results, setResults] = useState([]);
+  const [rawResults, setResults] = useState([]);
+  // Pay bracket the user confirmed/picked per captain: { [pilotKey]: idx }.
+  // Cleared on every upload and CLEAR — see needsBracketConfirm.
+  const [bracketOverrides, setBracketOverrides] = useState({});
+  const results = useMemo(() => rawResults.map(r => {
+    const k = pilotKey(r);
+    return r.role === "cpt" && k in bracketOverrides ? applyBracketOverride(r, bracketOverrides[k]) : r;
+  }), [rawResults, bracketOverrides]);
+  const unconfirmedCount = results.filter(needsBracketConfirm).length;
+  const setBracket = (r, idx) => setBracketOverrides(o => ({ ...o, [pilotKey(r)]: idx }));
   const [yearIdx, setYearIdx] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -2635,6 +2690,7 @@ export default function App() {
       if (i % 5 === 4) await new Promise(r => setTimeout(r, 0));
     }
     setResults(out);
+    setBracketOverrides({});
     setProcessing(false);
   };
 
@@ -2695,7 +2751,7 @@ export default function App() {
       return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = [];
-    rows.push(["Pilot", "Staff No", "Role", "Fleet", "Bid Period", "Period From", "Period To", "Matched Pilot", "Join Date", "Years of Service", "Actual Bracket", "Paid Bracket", "Annual Salary (AUD)", "Per-Hour Rate (AUD)", "Meal Allowances (AUD)", "DHA (AUD)", "Credit Hours", "Hours Over 70", "OT Pay (AUD)", "Total Earned (AUD)"].map(esc).join(","));
+    rows.push(["Pilot", "Staff No", "Role", "Fleet", "Bid Period", "Period From", "Period To", "Matched Pilot", "Join Date", "Years of Service", "Actual Bracket", "Paid Bracket", "Annual Salary (AUD)", "Per-Hour Rate (AUD)", "Meal Allowances (AUD)", "DHA (AUD)", "Credit Hours", "Hours Over 70", "OT Pay (AUD)", "Total Earned (AUD)", "Bracket Confirmed"].map(esc).join(","));
     sorted.forEach(r => {
       rows.push([
         r.pilotName,
@@ -2718,6 +2774,7 @@ export default function App() {
         r.extraCreditHours.toFixed(2),
         r.creditHourPay.toFixed(2),
         (r.grandTotal || 0).toFixed(2),
+        r.bracketConfirmed ? (r.bracketOverridden ? "Yes (changed)" : "Yes") : needsBracketConfirm(r) ? "No" : "",
       ].map(esc).join(","));
     });
     rows.push("");
@@ -2731,7 +2788,7 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
-  const clearAll = () => { setResults([]); setError(""); };
+  const clearAll = () => { setResults([]); setBracketOverrides({}); setError(""); };
 
   const SortHeader = ({ k, children, align = "left" }) => (
     <th onClick={() => setSort(k)}
@@ -2949,6 +3006,17 @@ export default function App() {
               <StatCard label="OT PAY" value={`$${fmtAUD(totals.creditHourPay)}`} accent={"#A85D04"} />
             </div>
 
+            {unconfirmedCount > 0 && (
+              <div style={{
+                background: "#FFF8E6", border: `1px solid ${COL.amber}`, borderRadius: 10,
+                padding: "10px 14px", marginBottom: 14, fontSize: 12, lineHeight: 1.5, color: COL.text,
+              }}>
+                <b style={{ color: "#A85D04" }}>⚠ {unconfirmedCount} captain row{unconfirmedCount !== 1 ? "s" : ""} on overtime with an unconfirmed pay bracket.</b>{" "}
+                Brackets come from the pilot list's joining date, but a captain upgraded from F/O restarts years of
+                service at the upgrade — so their OT pay may be overstated. Confirm or correct each one in the PAY BRACKET column.
+              </div>
+            )}
+
             {/* Table */}
             <div style={{
               background: COL.card, border: `1px solid ${COL.border}`, borderRadius: 10,
@@ -3007,7 +3075,34 @@ export default function App() {
                           </span>
                         </td>
                         <td style={{ padding: "12px 14px", fontFamily: mono, fontSize: 12 }}>
-                          {r.paidBracket ? (
+                          {r.role === "cpt" && r.extraCreditHours > 0 && r.annualSalary != null ? (
+                            <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                              <select
+                                value={CPT_BRACKETS.findIndex(b => b.id === r.paidBracket?.id)}
+                                onChange={e => setBracket(r, parseInt(e.target.value, 10))}
+                                title="Captain years of service restart at upgrade from F/O"
+                                style={{
+                                  padding: "3px 4px", borderRadius: 4, fontFamily: mono, fontSize: 12, fontWeight: 700,
+                                  background: bracketBg(r.paidBracket?.id), color: bracketFg(r.paidBracket?.id),
+                                  border: `1px solid ${needsBracketConfirm(r) ? COL.amber : COL.border}`, cursor: "pointer",
+                                }}>
+                                {CPT_BRACKETS.map((b, bi) => <option key={b.id} value={bi}>{b.short}</option>)}
+                              </select>
+                              {needsBracketConfirm(r) ? (
+                                <button
+                                  onClick={() => setBracket(r, CPT_BRACKETS.findIndex(b => b.id === r.paidBracket?.id))}
+                                  title="Confirm this bracket is correct for this captain"
+                                  style={{
+                                    padding: "3px 7px", borderRadius: 4, border: "none", cursor: "pointer",
+                                    background: COL.amber, color: "#FFF", fontFamily: mono, fontSize: 10, fontWeight: 700,
+                                  }}>✓ confirm</button>
+                              ) : (
+                                <span style={{ fontSize: 10, color: COL.green, fontWeight: 700 }}>
+                                  ✓{r.bracketOverridden ? " set" : ""}
+                                </span>
+                              )}
+                            </div>
+                          ) : r.paidBracket ? (
                             <span style={{
                               display: "inline-block", padding: "3px 8px", borderRadius: 4,
                               background: bracketBg(r.paidBracket.id),
