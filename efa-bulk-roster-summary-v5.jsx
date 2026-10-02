@@ -2115,14 +2115,16 @@ function processRoster(text, yearIdx, fallbackName) {
   const fleet = detectedFleet || (matchedPilot ? normaliseFleet(matchedPilot.fleet) : null);
 
   // ── Annual salary + over-70 credit-hour pay ────────────────────────────────
-  // Round the hourly rate and extra credit hours to 2 dp before multiplying so
-  // the displayed values reconcile (e.g. "3.87h × $231.85/h = $897.26" rather
-  // than $896.50 from full-precision multiplication that hides trailing decimals).
+  // Payroll's rounding (ADD HR PAY): hourly rate to the cent, extra credit
+  // hours to the THOUSANDTH of an hour, then multiply. Verified against BP3765
+  // (Quach): 74:26.5 credit → 4.442h × $346.20 = $1,537.82 to the cent; 2 dp
+  // hours gave $1,537.13. Hours are displayed to 2 dp. Same rule as the main
+  // calculator's derivePeriod.
   const annualSalary = lookupAnnualSalary(fleet, role, paidBIdx, yearIdx);
   const creditHourRate = annualSalary != null
     ? Math.round((annualSalary / CREDIT_HOUR_DIVISOR) * 100) / 100
     : null;
-  const extraCreditHours = Math.max(0, Math.round((creditHoursTotal - CREDIT_HOUR_THRESHOLD) * 100) / 100);
+  const extraCreditHours = Math.max(0, Math.round((creditHoursTotal - CREDIT_HOUR_THRESHOLD) * 1000) / 1000);
   const creditHourPay = creditHourRate != null ? extraCreditHours * creditHourRate : 0;
 
   return {
