@@ -5252,6 +5252,31 @@ export default function App() {
 
           return (
             <div className="fadein">
+              {/* Captain YOS confirmation — repeated at the top of the page so
+                  it can't be missed; the overtime panel further down has the
+                  same prompt. See yosNeedsConfirm in derivePeriod. */}
+              {yosNeedsConfirm && (
+                <div style={{marginBottom:18,padding:"14px 16px",background:"var(--amberBg)",border:"2px solid var(--yellow)",borderRadius:10,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+                  <div style={{flex:"1 1 320px"}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"var(--yellow)",fontFamily:mono,marginBottom:4}}>⚠ CONFIRM YOUR YEARS OF SERVICE</div>
+                    <div style={{fontSize:12,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
+                      {useYos >= 0
+                        ? <>This period has <b>{overtimeHrs.toFixed(2)}h</b> overtime, worked out at <b>{YOS_OPTIONS[useYos].label}</b> = <b>${fmtAUD(overtimePay)}</b>. </>
+                        : <>This period has <b>{overtimeHrs.toFixed(2)}h</b> overtime — select your years of service to price it. </>}
+                      If you were upgraded from F/O, captain years of service restart at your upgrade, so the auto-set value (from your joining date) will be higher than your payslip.
+                    </div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                    <select value={useYos} onChange={e=>{ const v=+e.target.value; setYos(v); setYosConfirmed(v); }} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"6px 8px",fontFamily:mono,fontSize:12,cursor:"pointer"}}>
+                      <option value={-1}>— Select —</option>
+                      {YOS_OPTIONS.map(o=><option key={o.idx} value={o.idx}>{o.label}</option>)}
+                    </select>
+                    {useYos >= 0 && (
+                      <button onClick={()=>setYosConfirmed(useYos)} style={{background:"var(--yellow)",border:"none",borderRadius:6,color:"var(--panel)",padding:"7px 14px",fontFamily:mono,fontSize:12,fontWeight:700,cursor:"pointer"}}>✓ {YOS_OPTIONS[useYos].label} is correct</button>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* Month navigator */}
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
                 <div>
