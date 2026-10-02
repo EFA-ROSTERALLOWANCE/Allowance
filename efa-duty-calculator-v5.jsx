@@ -5892,6 +5892,26 @@ export default function App() {
                     ))}
                   </div>
                 )}
+                {d.payStays.length>0 && (()=>{
+                  const staysTotal = d.payStays.reduce((s,x)=>s+x.total,0);
+                  const mealsPaid = pc.mealRows.reduce((s,r)=>s+(r.paid||0),0);
+                  return (
+                    <div style={{marginTop:12,paddingTop:10,borderTop:"2px solid var(--line)",fontFamily:mono}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:10}}>
+                        <span style={{fontSize:11,fontWeight:700,letterSpacing:1,color:"var(--ink2)"}}>
+                          TOTAL — {d.payStays.length} STAY{d.payStays.length!==1?"S":""}
+                        </span>
+                        <span style={{fontSize:15,fontWeight:700,color:"var(--accent)"}}>${fmtAUD(staysTotal)}</span>
+                      </div>
+                      {paySlip.meals.length>0 && (
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:10,marginTop:4}}>
+                          <span style={{fontSize:11,color:"var(--muted)"}}>Paid on payslip</span>
+                          <span style={{fontSize:13,fontWeight:700,color:Math.abs(mealsPaid-staysTotal)>=0.005?"var(--red)":"var(--green)"}}>${fmtAUD(mealsPaid)}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </Card>
 
               {/* ── DUTY HOUR AL + OVERTIME ── */}
