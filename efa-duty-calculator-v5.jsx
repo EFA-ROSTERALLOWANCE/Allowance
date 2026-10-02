@@ -2725,7 +2725,7 @@ function parseQantasRoster(text) {
 // Derive every figure the Month/Roster and Pay Check views need for one date
 // range. Pure - depends only on state values, never on JSX - so both tabs read
 // the same numbers instead of each maintaining its own copy of this maths.
-function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
                         pilotJoiningDate, customFrom, customTo, monthView }) {
           // Parse monthView "YYYY-MM" to get year and month
           const [mvYear,mvMonth]=monthView.split("-").map(Number);
@@ -3359,7 +3359,14 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           const effectiveYos = pilotJoiningDate
             ? computeYosTier(pilotJoiningDate, effRefDate, role)
             : yos;
-          const useYos = effectiveYos >= 0 ? effectiveYos : yos;
+          // A Years of Service the user picked or confirmed wins over the
+          // join-date derivation. Captains need it: a pilot upgraded from F/O
+          // restarts captain YOS at the upgrade, and the pilot list only
+          // carries the company join date — so the derived tier, and the
+          // overtime paid at it, comes out higher than the payslip.
+          const useYos = yosConfirmed >= 0 ? yosConfirmed
+                       : effectiveYos >= 0 ? effectiveYos : yos;
+          const yosNeedsConfirm = role === "cpt" && overtimeHrs > 0 && yosConfirmed < 0;
           const overtimePay = (overtimeHrs > 0 && useYos >= 0)
             ? overtimeHrs * (Math.round((SALARY[aircraft][role][useYos][yearIdx] / 750) * 100) / 100)
             : 0;
@@ -3376,7 +3383,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
                    dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,
                    mealItems, mealTotal, stays, payStays,
                    creditItems, creditTotal, headerCreditDelta, creditCarryInHrs, bpHdr,
-                   overtimeHrs, overtimePay, effectiveYos, useYos,
+                   overtimeHrs, overtimePay, effectiveYos, useYos, yosNeedsConfirm,
                    selectedBpForItems, bpHdrItems,
                    isBpSelected, includeOvertime, monthGrandTotal };
 }
@@ -3762,6 +3769,10 @@ export default function App() {
   // post-2026 BP shows the bumped bracket, both based on the matched pilot's
   // join date rather than whatever YOS was last set at upload.
   const [pilotJoiningDate,setPilotJoiningDate]=useState(null);
+  // Years of Service the user has picked or confirmed in the overtime panel
+  // (-1 = not yet). Overrides the join-date tier — see derivePeriod. Reset on
+  // every upload and CLEAR, since a new roster may be a different pilot.
+  const [yosConfirmed,setYosConfirmed]=useState(-1);
   const [yearIdx,setYearIdx]=useState(0);
   // allWeeks: { [weekStartStr]: { MON:..., TUE:..., ... } }
   const [allWeeks,setAllWeeks]=useState(()=>({[getMon(today)]:{...Object.fromEntries(DAY_NAMES.map(k=>[k,emptyDay()]))}}));
@@ -4093,6 +4104,7 @@ export default function App() {
       if (lastDetectedAircraft) setAircraft(lastDetectedAircraft);
       if (lastDetectedYos >= 0) setYos(lastDetectedYos);
       if (lastDetectedJoiningDate) setPilotJoiningDate(lastDetectedJoiningDate);
+      setYosConfirmed(-1);
 
       // Merge BP entries: dedupe by bp number, keep sorted ascending so the
       // BP selector buttons always render in chronological order regardless
@@ -4142,6 +4154,7 @@ export default function App() {
     setConfirmClearRoster(false);
     setRosterBPs([]);
     setPilotJoiningDate(null);
+    setYosConfirmed(-1);
     // Payslip figures are personal pay data — they must not survive a CLEAR.
     clearPaySlip();
   }
@@ -5231,10 +5244,10 @@ export default function App() {
           const { mvYear, mvMonth, monthName, useCustom, rangeLabel, weeksInRange,
                   monthTypes, trips, dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,
                   mealItems, mealTotal, stays, creditItems, creditTotal, headerCreditDelta, creditCarryInHrs,
-                  bpHdr, overtimeHrs, overtimePay, effectiveYos, useYos,
+                  bpHdr, overtimeHrs, overtimePay, effectiveYos, useYos, yosNeedsConfirm,
                   selectedBpForItems, bpHdrItems,
                   isBpSelected, includeOvertime, monthGrandTotal }
-            = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+            = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
                              pilotJoiningDate, customFrom, customTo, monthView });
 
           return (
@@ -5595,15 +5608,23 @@ export default function App() {
                               </div>
                               <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
                                 <span style={{fontSize:11,color:"var(--ink2)",fontFamily:mono}}>Years of Service:</span>
-                                <select value={useYos} onChange={e=>setYos(+e.target.value)} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"4px 8px",fontFamily:mono,fontSize:11,cursor:"pointer"}}>
+                                <select value={useYos} onChange={e=>{ const v=+e.target.value; setYos(v); setYosConfirmed(v); }} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"4px 8px",fontFamily:mono,fontSize:11,cursor:"pointer"}}>
                                   <option value={-1}>— Select —</option>
                                   {YOS_OPTIONS.filter(o=> role==="fo" ? o.idx<=2 : true).map(o=><option key={o.idx} value={o.idx}>{o.label}</option>)}
                                 </select>
                                 {useYos < 0 && <span style={{fontSize:12,fontWeight:700,color:"var(--red)",fontFamily:mono}}>Select Years of Service!</span>}
-                                {pilotJoiningDate && effectiveYos >= 0 && effectiveYos !== yos && (
+                                {yosConfirmed < 0 && pilotJoiningDate && effectiveYos >= 0 && effectiveYos !== yos && (
                                   <span style={{fontSize:10,color:"var(--muted)",fontFamily:mono,fontStyle:"italic"}}>(auto-set for this BP)</span>
                                 )}
                               </div>
+                              {yosNeedsConfirm && useYos >= 0 && (
+                                <div style={{marginTop:10,padding:"8px 12px",background:"var(--panel)",borderRadius:8,border:"1px solid var(--yellow)",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+                                  <span style={{flex:"1 1 260px",fontSize:11,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
+                                    <b style={{color:"var(--yellow)"}}>Confirm your Years of Service.</b> If you were upgraded from F/O, captain years of service restart at your upgrade — the auto-set value counts from your joining date and will overstate overtime against your payslip.
+                                  </span>
+                                  <button onClick={()=>setYosConfirmed(useYos)} style={{background:"var(--yellow)",border:"none",borderRadius:6,color:"var(--panel)",padding:"5px 12px",fontFamily:mono,fontSize:11,fontWeight:700,cursor:"pointer"}}>✓ {YOS_OPTIONS[useYos].label} is correct</button>
+                                </div>
+                              )}
                               {useYos >= 0 && (()=>{
                                 const sal = SALARY[aircraft][role][useYos][yearIdx];
                                 // Round hourly rate and overtime hours to 2 dp BEFORE multiplying.
@@ -5662,7 +5683,7 @@ export default function App() {
 
         {/* ══ PAY CHECK ══ */}
         {tab==="paycheck"&&(()=>{
-          const d = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+          const d = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
                                    pilotJoiningDate, customFrom, customTo, monthView });
           const bp = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const pc = derivePayCheck(paySlip, d);
@@ -5954,10 +5975,11 @@ export default function App() {
                   <MInput label="OVERTIME — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={140}/>
                   <div style={{paddingBottom:4}}>
                     <Delta paid={pc.ot?.paid ?? null} calc={d.overtimePay} off={pc.ot?.off}/>
-                    <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"var(--red)":"var(--faint)",fontFamily:mono,marginTop:3}}>
+                    <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"var(--red)":d.yosNeedsConfirm?"var(--yellow)":"var(--faint)",fontFamily:mono,marginTop:3}}>
                       {d.useYos<0&&d.overtimeHrs>0
                         ? "select Years of Service to resolve overtime"
                         : `${d.creditTotal.toFixed(2)}h credit · ${d.overtimeHrs.toFixed(2)}h over 70h`}
+                      {d.yosNeedsConfirm && d.useYos>=0 && ` · at ${YOS_OPTIONS[d.useYos].label} — confirm Years of Service on MONTH / ROSTER (resets on upgrade to CPT)`}
                     </div>
                   </div>
                 </div>
