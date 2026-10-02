@@ -277,7 +277,8 @@ const MEAL_RATE_YEARS = [
   // From 1 July 2026: new domestic AU meal + incidental schedule (company-
   // announced). International brackets carry forward as the upper-tier
   // ATO TD2025/4 amounts.
-  { label: "From 1 July 2026 - Paid from 15 June", from: "2026-06-15", rates: {
+  // ATO TD 2026/4 (2026–27), top band ($272,681+): Table 3 domestic, Table 8 overseas.
+  { label: "15 Jun 2026 onwards · TD 2026/4 (2026–27) top band", from: "2026-06-15", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:43.65, lunch:61.70, dinner:86.35, incidental:36.30},
     group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
@@ -288,7 +289,8 @@ const MEAL_RATE_YEARS = [
   // per company schedule effective 20 March 2026). Per-meal rounding rule:
   // breakfast = lunch = nominal/3 rounded DOWN to the cent; dinner =
   // nominal − (breakfast + lunch).
-  { label: "2026-2027", from: "2026-02-22", rates: {
+  // ATO TD 2025/4 (2025–26), top band ($263,851+): Table 3 domestic, Table 8 overseas.
+  { label: "22 Feb – 14 Jun 2026 · TD 2025/4 (2025–26) top band", from: "2026-02-22", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:42.15, lunch:59.60, dinner:83.40, incidental:35.05},
     group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
@@ -296,14 +298,16 @@ const MEAL_RATE_YEARS = [
   }},
   // 19 May 2025 – 21 Feb 2026: prior schedule (lower-tier amounts; same
   // B=L rounded-down / D catch-up rule so daily sums are exact).
-  { label: "19 May 2025 – 21 Feb 2026", from: "2025-05-19", rates: {
+  // ATO TD 2025/4 (2025–26), middle band ($148,251–$263,850): Table 2 domestic, Table 7 overseas.
+  { label: "19 May 2025 – 21 Feb 2026 · TD 2025/4 (2025–26) middle band", from: "2025-05-19", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:37.85, lunch:53.45, dinner:75.00, incidental:35.05},
     group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
     group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"var(--purple)",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
   }},
   // Pre-19 May 2025: oldest schedule (fallback for any earlier date).
-  { label: "Pre-19 May 2025", from: "2000-01-01", rates: {
+  // ATO TD 2024/3 (2024–25), middle band ($143,651–$255,670): Table 2 domestic, Table 7 overseas.
+  { label: "Before 19 May 2025 · TD 2024/3 (2024–25) middle band", from: "2000-01-01", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:36.90, lunch:52.10, dinner:73.10, incidental:34.25},
     group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
     group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
@@ -1750,12 +1754,14 @@ function HelpModal({ onClose }) {
     ["Set who you are", "Pick your rank (Captain / F/Officer) and aircraft (A330 / A320) in the top bar. When you upload a roster these are detected automatically, so you usually don't need to touch them."],
     ["Choose the pay year", "The EBA year selector applies the right indexation to every rate. When you upload a roster it's set automatically from the bid period's start date — and updates as you click between BP chips — so you usually don't need to touch it. You can still pick a year to project."],
     ["Upload your roster", "Tap 📄 ROSTER and choose your Qantas SH bid-period .txt file. You can upload several BP files one after another to view multiple bid periods together — boundary trips that span two BPs are handled for you."],
-    ["Work through the tabs", "DAY SUMMARY — every sector and allowance for one day. MEAL RATES — the reference meal-rate table. WEEK SUMMARY — totals for a week. MONTH / ROSTER — totals across a whole bid period. PAY CHECK — compare what you were actually paid against those totals."],
-    ["See a bid period's total", "On MONTH / ROSTER, click a BP chip (e.g. “BP 3761”) to show that bid period's total allowances and overtime. A BP shows the same total whether it's loaded on its own or alongside its neighbour."],
+    ["DAY SUMMARY tab", "The row of day buttons across the top is one week (use ‹ › to change week); each shows the date, the route flown and that day's allowance total. Tap a day to see its sectors — flight, ports and sign-on/sign-off times — plus any hotel with its check-in and check-out, and extras such as accommodation opt-out nights or an extra day-off payment. Everything is editable, so you can also build a day by hand. Below that, the results split the day's DHA and meals (breakfast, lunch, dinner, incidentals) by calendar date, show which meals each date covers, and tag anything carried in from a trip that started on another day. On the day a multi-day trip starts, a whole-trip total is shown too."],
+    ["MEAL RATES tab", "The EA meal allowance schedule (Cl. 6.22–6.24): every airport with the meal zone it falls in, and the breakfast, lunch, dinner and incidental rates for each zone. Pick a rate period from the selector to see the rates that applied at a given time — use it to check the rate behind any meal line."],
+    ["WEEK SUMMARY tab", "One row per day of the current week with that day's allowances — tap a row to open it in DAY SUMMARY. Underneath are the week's total and a breakdown by allowance type."],
+    ["MONTH / ROSTER tab — the totals", "Click a BP chip (e.g. “BP 3761”) to show that whole bid period, or use the month picker for a calendar month. The heading shows the dates and, for a BP, the Qantas roster header's carried-in/out duty and credit. The big card is the total allowances for the period — including overtime when a BP is selected — followed by every pattern (tap one to open it in DAY SUMMARY) and a breakdown by allowance type. A BP shows the same total whether it's loaded on its own or alongside its neighbour."],
+    ["MONTH / ROSTER tab — the detail", "Further down, each section lists line items: DHA allowances (one line per duty with its hours), trip totals (one line per hotel stay, which is how payroll pays meals — in the BP the pattern signed on in), every meal and incidental payment, and credit hours per sector or duty with the credit total. For a BP, ROSTER VIEW at the bottom shows the raw roster file. Expand any section to see how each figure is built, and use Export CSV to save a copy."],
+    ["Overtime & Years of Service", "If a BP's credit is over 70 hours, the credit section shows the overtime: hours over 70 × (salary ÷ 750). The salary depends on your years of service, filled in from the pilot list when your name is found — otherwise pick it. Captains are asked to confirm it, in a banner at the top of MONTH / ROSTER and in the overtime panel: if you were upgraded from F/O your captain years of service restart at the upgrade, so the auto-set value (from your joining date) would overstate overtime against your payslip."],
     ["Or use a custom range", "Set the Custom range dates for any window you like. Custom ranges show just the allowances captured in those dates — overtime and the Qantas header duty/credit carry are deliberately excluded."],
-    ["Set Years of Service", "Overtime pay needs your years of service. It's filled in automatically when your name is found in the pilot list; otherwise pick it from the selector."],
-    ["Dig into the detail", "Expand the DHA, meal, credit-hour and pattern breakdowns to see every line item and how each figure is built. Use Export CSV to save a copy."],
-    ["Check your payslip", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA, overtime and CANCEL ACCOM — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
+    ["PAY CHECK tab", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA, overtime and CANCEL ACCOM — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
     ["Or enter it by hand", "No PDF, or a payslip it can't read? Select a BP chip and type the lines in yourself. “Pre-fill from this roster” adds a meal line per hotel stay with the dates already filled, so you only type the amounts. Anything read from a PDF stays editable."],
     ["Reading the result", "Every line shows the calculator's own figure beside yours, with a ✓ or the dollar difference. The headline is the total variance. It also flags a stay with no matching payslip line — an unpaid trip — and a payment the calculator says you weren't owed. A difference is a prompt to check, not proof of an error: these are estimates."],
     ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster and payslip data and resets everything. On PAY CHECK, 🗑 CLEAR PAYSLIP drops just the payslip figures and keeps your roster. Nothing is saved between sessions — it all clears when you reload."],
@@ -2725,7 +2731,7 @@ function parseQantasRoster(text) {
 // Derive every figure the Month/Roster and Pay Check views need for one date
 // range. Pure - depends only on state values, never on JSX - so both tabs read
 // the same numbers instead of each maintaining its own copy of this maths.
-function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
                         pilotJoiningDate, customFrom, customTo, monthView }) {
           // Parse monthView "YYYY-MM" to get year and month
           const [mvYear,mvMonth]=monthView.split("-").map(Number);
@@ -3359,7 +3365,14 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
           const effectiveYos = pilotJoiningDate
             ? computeYosTier(pilotJoiningDate, effRefDate, role)
             : yos;
-          const useYos = effectiveYos >= 0 ? effectiveYos : yos;
+          // A Years of Service the user picked or confirmed wins over the
+          // join-date derivation. Captains need it: a pilot upgraded from F/O
+          // restarts captain YOS at the upgrade, and the pilot list only
+          // carries the company join date — so the derived tier, and the
+          // overtime paid at it, comes out higher than the payslip.
+          const useYos = yosConfirmed >= 0 ? yosConfirmed
+                       : effectiveYos >= 0 ? effectiveYos : yos;
+          const yosNeedsConfirm = role === "cpt" && overtimeHrs > 0 && yosConfirmed < 0;
           const overtimePay = (overtimeHrs > 0 && useYos >= 0)
             ? overtimeHrs * (Math.round((SALARY[aircraft][role][useYos][yearIdx] / 750) * 100) / 100)
             : 0;
@@ -3376,7 +3389,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
                    dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,
                    mealItems, mealTotal, stays, payStays,
                    creditItems, creditTotal, headerCreditDelta, creditCarryInHrs, bpHdr,
-                   overtimeHrs, overtimePay, effectiveYos, useYos,
+                   overtimeHrs, overtimePay, effectiveYos, useYos, yosNeedsConfirm,
                    selectedBpForItems, bpHdrItems,
                    isBpSelected, includeOvertime, monthGrandTotal };
 }
@@ -3762,6 +3775,10 @@ export default function App() {
   // post-2026 BP shows the bumped bracket, both based on the matched pilot's
   // join date rather than whatever YOS was last set at upload.
   const [pilotJoiningDate,setPilotJoiningDate]=useState(null);
+  // Years of Service the user has picked or confirmed in the overtime panel
+  // (-1 = not yet). Overrides the join-date tier — see derivePeriod. Reset on
+  // every upload and CLEAR, since a new roster may be a different pilot.
+  const [yosConfirmed,setYosConfirmed]=useState(-1);
   const [yearIdx,setYearIdx]=useState(0);
   // allWeeks: { [weekStartStr]: { MON:..., TUE:..., ... } }
   const [allWeeks,setAllWeeks]=useState(()=>({[getMon(today)]:{...Object.fromEntries(DAY_NAMES.map(k=>[k,emptyDay()]))}}));
@@ -4093,6 +4110,7 @@ export default function App() {
       if (lastDetectedAircraft) setAircraft(lastDetectedAircraft);
       if (lastDetectedYos >= 0) setYos(lastDetectedYos);
       if (lastDetectedJoiningDate) setPilotJoiningDate(lastDetectedJoiningDate);
+      setYosConfirmed(-1);
 
       // Merge BP entries: dedupe by bp number, keep sorted ascending so the
       // BP selector buttons always render in chronological order regardless
@@ -4142,6 +4160,7 @@ export default function App() {
     setConfirmClearRoster(false);
     setRosterBPs([]);
     setPilotJoiningDate(null);
+    setYosConfirmed(-1);
     // Payslip figures are personal pay data — they must not survive a CLEAR.
     clearPaySlip();
   }
@@ -5231,14 +5250,39 @@ export default function App() {
           const { mvYear, mvMonth, monthName, useCustom, rangeLabel, weeksInRange,
                   monthTypes, trips, dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,
                   mealItems, mealTotal, stays, creditItems, creditTotal, headerCreditDelta, creditCarryInHrs,
-                  bpHdr, overtimeHrs, overtimePay, effectiveYos, useYos,
+                  bpHdr, overtimeHrs, overtimePay, effectiveYos, useYos, yosNeedsConfirm,
                   selectedBpForItems, bpHdrItems,
                   isBpSelected, includeOvertime, monthGrandTotal }
-            = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+            = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
                              pilotJoiningDate, customFrom, customTo, monthView });
 
           return (
             <div className="fadein">
+              {/* Captain YOS confirmation — repeated at the top of the page so
+                  it can't be missed; the overtime panel further down has the
+                  same prompt. See yosNeedsConfirm in derivePeriod. */}
+              {yosNeedsConfirm && (
+                <div style={{marginBottom:18,padding:"14px 16px",background:"var(--amberBg)",border:"2px solid var(--yellow)",borderRadius:10,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+                  <div style={{flex:"1 1 320px"}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"var(--yellow)",fontFamily:mono,marginBottom:4}}>⚠ CONFIRM YOUR YEARS OF SERVICE</div>
+                    <div style={{fontSize:12,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
+                      {useYos >= 0
+                        ? <>This period has <b>{overtimeHrs.toFixed(2)}h</b> overtime, worked out at <b>{YOS_OPTIONS[useYos].label}</b> = <b>${fmtAUD(overtimePay)}</b>. </>
+                        : <>This period has <b>{overtimeHrs.toFixed(2)}h</b> overtime — select your years of service to price it. </>}
+                      If you were upgraded from F/O, captain years of service restart at your upgrade, so the auto-set value (from your joining date) will be higher than your payslip.
+                    </div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                    <select value={useYos} onChange={e=>{ const v=+e.target.value; setYos(v); setYosConfirmed(v); }} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"6px 8px",fontFamily:mono,fontSize:12,cursor:"pointer"}}>
+                      <option value={-1}>— Select —</option>
+                      {YOS_OPTIONS.map(o=><option key={o.idx} value={o.idx}>{o.label}</option>)}
+                    </select>
+                    {useYos >= 0 && (
+                      <button onClick={()=>setYosConfirmed(useYos)} style={{background:"var(--yellow)",border:"none",borderRadius:6,color:"var(--panel)",padding:"7px 14px",fontFamily:mono,fontSize:12,fontWeight:700,cursor:"pointer"}}>✓ {YOS_OPTIONS[useYos].label} is correct</button>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* Month navigator */}
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
                 <div>
@@ -5595,15 +5639,23 @@ export default function App() {
                               </div>
                               <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
                                 <span style={{fontSize:11,color:"var(--ink2)",fontFamily:mono}}>Years of Service:</span>
-                                <select value={useYos} onChange={e=>setYos(+e.target.value)} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"4px 8px",fontFamily:mono,fontSize:11,cursor:"pointer"}}>
+                                <select value={useYos} onChange={e=>{ const v=+e.target.value; setYos(v); setYosConfirmed(v); }} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"4px 8px",fontFamily:mono,fontSize:11,cursor:"pointer"}}>
                                   <option value={-1}>— Select —</option>
                                   {YOS_OPTIONS.filter(o=> role==="fo" ? o.idx<=2 : true).map(o=><option key={o.idx} value={o.idx}>{o.label}</option>)}
                                 </select>
                                 {useYos < 0 && <span style={{fontSize:12,fontWeight:700,color:"var(--red)",fontFamily:mono}}>Select Years of Service!</span>}
-                                {pilotJoiningDate && effectiveYos >= 0 && effectiveYos !== yos && (
+                                {yosConfirmed < 0 && pilotJoiningDate && effectiveYos >= 0 && effectiveYos !== yos && (
                                   <span style={{fontSize:10,color:"var(--muted)",fontFamily:mono,fontStyle:"italic"}}>(auto-set for this BP)</span>
                                 )}
                               </div>
+                              {yosNeedsConfirm && useYos >= 0 && (
+                                <div style={{marginTop:10,padding:"8px 12px",background:"var(--panel)",borderRadius:8,border:"1px solid var(--yellow)",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+                                  <span style={{flex:"1 1 260px",fontSize:11,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
+                                    <b style={{color:"var(--yellow)"}}>Confirm your Years of Service.</b> If you were upgraded from F/O, captain years of service restart at your upgrade — the auto-set value counts from your joining date and will overstate overtime against your payslip.
+                                  </span>
+                                  <button onClick={()=>setYosConfirmed(useYos)} style={{background:"var(--yellow)",border:"none",borderRadius:6,color:"var(--panel)",padding:"5px 12px",fontFamily:mono,fontSize:11,fontWeight:700,cursor:"pointer"}}>✓ {YOS_OPTIONS[useYos].label} is correct</button>
+                                </div>
+                              )}
                               {useYos >= 0 && (()=>{
                                 const sal = SALARY[aircraft][role][useYos][yearIdx];
                                 // Round hourly rate and overtime hours to 2 dp BEFORE multiplying.
@@ -5662,7 +5714,7 @@ export default function App() {
 
         {/* ══ PAY CHECK ══ */}
         {tab==="paycheck"&&(()=>{
-          const d = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yearIdx,
+          const d = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
                                    pilotJoiningDate, customFrom, customTo, monthView });
           const bp = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const pc = derivePayCheck(paySlip, d);
@@ -5954,10 +6006,11 @@ export default function App() {
                   <MInput label="OVERTIME — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={140}/>
                   <div style={{paddingBottom:4}}>
                     <Delta paid={pc.ot?.paid ?? null} calc={d.overtimePay} off={pc.ot?.off}/>
-                    <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"var(--red)":"var(--faint)",fontFamily:mono,marginTop:3}}>
+                    <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"var(--red)":d.yosNeedsConfirm?"var(--yellow)":"var(--faint)",fontFamily:mono,marginTop:3}}>
                       {d.useYos<0&&d.overtimeHrs>0
                         ? "select Years of Service to resolve overtime"
                         : `${d.creditTotal.toFixed(2)}h credit · ${d.overtimeHrs.toFixed(2)}h over 70h`}
+                      {d.yosNeedsConfirm && d.useYos>=0 && ` · at ${YOS_OPTIONS[d.useYos].label} — confirm Years of Service on MONTH / ROSTER (resets on upgrade to CPT)`}
                     </div>
                   </div>
                 </div>
