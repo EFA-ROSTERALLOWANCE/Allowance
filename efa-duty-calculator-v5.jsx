@@ -277,7 +277,8 @@ const MEAL_RATE_YEARS = [
   // From 1 July 2026: new domestic AU meal + incidental schedule (company-
   // announced). International brackets carry forward as the upper-tier
   // ATO TD2025/4 amounts.
-  { label: "From 1 July 2026 - Paid from 15 June", from: "2026-06-15", rates: {
+  // ATO TD 2026/4 (2026–27), top band ($272,681+): Table 3 domestic, Table 8 overseas.
+  { label: "15 Jun 2026 onwards · TD 2026/4 (2026–27) top band", from: "2026-06-15", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:43.65, lunch:61.70, dinner:86.35, incidental:36.30},
     group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
@@ -288,7 +289,8 @@ const MEAL_RATE_YEARS = [
   // per company schedule effective 20 March 2026). Per-meal rounding rule:
   // breakfast = lunch = nominal/3 rounded DOWN to the cent; dinner =
   // nominal − (breakfast + lunch).
-  { label: "2026-2027", from: "2026-02-22", rates: {
+  // ATO TD 2025/4 (2025–26), top band ($263,851+): Table 3 domestic, Table 8 overseas.
+  { label: "22 Feb – 14 Jun 2026 · TD 2025/4 (2025–26) top band", from: "2026-02-22", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:42.15, lunch:59.60, dinner:83.40, incidental:35.05},
     group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
@@ -296,14 +298,16 @@ const MEAL_RATE_YEARS = [
   }},
   // 19 May 2025 – 21 Feb 2026: prior schedule (lower-tier amounts; same
   // B=L rounded-down / D catch-up rule so daily sums are exact).
-  { label: "19 May 2025 – 21 Feb 2026", from: "2025-05-19", rates: {
+  // ATO TD 2025/4 (2025–26), middle band ($148,251–$263,850): Table 2 domestic, Table 7 overseas.
+  { label: "19 May 2025 – 21 Feb 2026 · TD 2025/4 (2025–26) middle band", from: "2025-05-19", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:37.85, lunch:53.45, dinner:75.00, incidental:35.05},
     group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
     group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"var(--purple)",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
   }},
   // Pre-19 May 2025: oldest schedule (fallback for any earlier date).
-  { label: "Pre-19 May 2025", from: "2000-01-01", rates: {
+  // ATO TD 2024/3 (2024–25), middle band ($143,651–$255,670): Table 2 domestic, Table 7 overseas.
+  { label: "Before 19 May 2025 · TD 2024/3 (2024–25) middle band", from: "2000-01-01", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:36.90, lunch:52.10, dinner:73.10, incidental:34.25},
     group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
     group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
