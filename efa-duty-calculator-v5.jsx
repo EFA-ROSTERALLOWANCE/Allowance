@@ -3345,10 +3345,12 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
           const headerDutyDelta   = bpHdr ? carriedInAddHrs(bpHdr, "duty") - hm2h(bpHdr.carriedOutDuty)   : 0;
           const headerCreditDelta = bpHdr ? creditCarryInHrs              - hm2h(bpHdr.carriedOutCredit) : 0;
           const creditTotal = creditTotalRaw + headerCreditDelta;
-          // Overtime hours and hourly rate are rounded to 2 dp before multiplying
-          // so the displayed values (e.g. "3.87h × $231.85/h = $897.26") reconcile.
-          // See the detail panel further down — same rounding applied there.
-          const overtimeHrs = creditTotal > 70 ? Math.round((creditTotal - 70) * 100) / 100 : 0;
+          // Payroll's rounding (ADD HR PAY): hourly rate to the cent, overtime
+          // hours to the THOUSANDTH of an hour, then multiply. Verified against
+          // BP3765 (Quach): 74:26.5 credit → 4.442h × $346.20 = $1,537.82 to the
+          // cent; 2 dp hours gave $1,537.13. Hours are DISPLAYED to 2 dp, so the
+          // shown product can differ from the shown inputs by a few cents.
+          const overtimeHrs = creditTotal > 70 ? Math.round((creditTotal - 70) * 1000) / 1000 : 0;
           // Derive the effective YOS for THIS view's date range. The static
           // `yos` state is set at upload time and reflects whichever roster
           // file was processed last — which is wrong when multiple BPs span
@@ -5658,13 +5660,9 @@ export default function App() {
                               )}
                               {useYos >= 0 && (()=>{
                                 const sal = SALARY[aircraft][role][useYos][yearIdx];
-                                // Round hourly rate and overtime hours to 2 dp BEFORE multiplying.
-                                // Otherwise the user sees e.g. "$231.85/h × 3.87h = $896.50" because
-                                // full-precision values (231.8531… × 3.867…) are used internally,
-                                // and the displayed product looks wrong against the displayed inputs.
+                                // Rate shown for reference; overtimeHrs / overtimePay come from
+                                // derivePeriod (payroll rounding: rate to the cent, hours to 3 dp).
                                 const hourlyRate = Math.round((sal / 750) * 100) / 100;
-                                const overtimeHrs = Math.round((creditTotal - 70) * 100) / 100;
-                                const overtimePay = overtimeHrs * hourlyRate;
                                 return (
                                   <div style={{marginTop:10,padding:"10px 12px",background:"var(--panel)",borderRadius:8,border:"1px solid var(--line)"}}>
                                     <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:4,fontSize:11,fontFamily:mono,color:"var(--ink2)"}}>
