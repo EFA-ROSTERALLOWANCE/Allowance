@@ -1755,7 +1755,7 @@ function HelpModal({ onClose }) {
     ["Or use a custom range", "Set the Custom range dates for any window you like. Custom ranges show just the allowances captured in those dates — overtime and the Qantas header duty/credit carry are deliberately excluded."],
     ["Set Years of Service", "Overtime pay needs your years of service. It's filled in automatically when your name is found in the pilot list; otherwise pick it from the selector."],
     ["Dig into the detail", "Expand the DHA, meal, credit-hour and pattern breakdowns to see every line item and how each figure is built. Use Export CSV to save a copy."],
-    ["Check your payslip", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA and overtime — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
+    ["Check your payslip", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA, overtime and CANCEL ACCOM — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
     ["Or enter it by hand", "No PDF, or a payslip it can't read? Select a BP chip and type the lines in yourself. “Pre-fill from this roster” adds a meal line per hotel stay with the dates already filled, so you only type the amounts. Anything read from a PDF stays editable."],
     ["Reading the result", "Every line shows the calculator's own figure beside yours, with a ✓ or the dollar difference. The headline is the total variance. It also flags a stay with no matching payslip line — an unpaid trip — and a payment the calculator says you weren't owed. A difference is a prompt to check, not proof of an error: these are estimates."],
     ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster and payslip data and resets everything. On PAY CHECK, 🗑 CLEAR PAYSLIP drops just the payslip figures and keeps your roster. Nothing is saved between sessions — it all clears when you reload."],
@@ -3395,7 +3395,7 @@ const PC_DAY_OFF = /^(ddo|extra_ddo|ddo_rp)/;
 const PC_DVA     = /^(dva|extra_dva|dva_rp)/;
 let _payRowId = 0;
 
-const emptyPaySlip = () => ({ dha:"", overtime:"", meals:[], callIns:[], dvas:[] });
+const emptyPaySlip = () => ({ dha:"", overtime:"", accom:"", meals:[], callIns:[], dvas:[] });
 
 function pcMoney(s) {
   if (s == null || String(s).trim() === "") return null;
@@ -3568,6 +3568,7 @@ const PC_CODES = [
   { re: /^(DAY\s*OFF|DDO)\b/i,         kind: "callIn" },
   { re: /^(DUTY\s*VAR|DVA)\b/i,        kind: "dva" },
   { re: /^(OVERTIME|O\/?TIME|OT)\b/i,  kind: "overtime" },
+  { re: /^CANCEL\s*ACCOM/i,           kind: "accom" },
 ];
 const PC_DATE = /^(\d{2})-(\d{2})-(\d{2})$/;
 
@@ -3578,7 +3579,7 @@ function pcDate(s) {
 }
 
 function pcParsePayslip(rows) {
-  const out = { meals: [], callIns: [], dvas: [], dha: null, overtime: null, periodEnd: null, ignored: [] };
+  const out = { meals: [], callIns: [], dvas: [], dha: null, overtime: null, accom: null, periodEnd: null, ignored: [] };
   for (const row of rows) {
     const cells = row.cells.map(c => c.t.trim()).filter(Boolean);
     if (!cells.length) continue;
@@ -3618,6 +3619,10 @@ function pcParsePayslip(rows) {
       else if (mk.kind === "dva")      out.dvas.push({ date: dates[0] || "", amount: amt });
       else if (mk.kind === "dha")      out.dha = { amount: amt, from: dates[0] || "", to: dates[1] || "" };
       else if (mk.kind === "overtime") out.overtime = { amount: amt };
+      // Printed against the BP range, not the night, so one figure per BP —
+      // summed in case payroll splits it over more than one line.
+      else if (mk.kind === "accom")
+        out.accom = { amount: ((out.accom ? +out.accom.amount : 0) + amount).toFixed(2) };
     });
   }
   return out;
@@ -3703,10 +3708,18 @@ function derivePayCheck(paySlip, d) {
   const dha = dhaPaid != null ? cmp(dhaPaid, d.dhaTotal)   : null;
   const ot  = otPaid  != null ? cmp(otPaid,  d.overtimePay) : null;
 
+  // ── Accommodation opt-out (payslip: CANCEL ACCOM) ──
+  // Entered by hand on the day view; the payslip pays it as one line dated
+  // with the BP range, so it is compared as a single BP total.
+  const accomCalc  = itemsById(/^accom$/);
+  const accomTotal = accomCalc.reduce((s, i) => s + i.amount, 0);
+  const accomPaid  = pcMoney(paySlip.accom);
+  const accom = accomPaid != null ? cmp(accomPaid, accomTotal) : null;
+
   const sum = (ns) => ns.reduce((a, b) => a + b, 0);
   const paidTotal = sum([
     ...mealRows.map(r => r.paid || 0), ...callIns.rows.map(r => r.paid || 0),
-    ...dvas.rows.map(r => r.paid || 0), dhaPaid || 0, otPaid || 0,
+    ...dvas.rows.map(r => r.paid || 0), dhaPaid || 0, otPaid || 0, accomPaid || 0,
   ]);
   // Only count the app's side of lines the payslip actually declared, so the
   // grand total compares like with like.
@@ -3719,12 +3732,15 @@ function derivePayCheck(paySlip, d) {
     ...dvas.unmatched.map(i => i.amount),
     dhaPaid != null ? d.dhaTotal : 0,
     otPaid  != null ? d.overtimePay : 0,
+    // Counted whether or not the payslip declares it, like an unmatched stay,
+    // so an opt-out payroll missed shows up in the grand total.
+    accomTotal,
   ]);
 
   const anyInput = mealRows.length || callIns.rows.length || dvas.rows.length
-    || dhaPaid != null || otPaid != null;
+    || dhaPaid != null || otPaid != null || accomPaid != null;
   return {
-    mealRows, unmatchedStays, callIns, dvas, dha, ot, anyInput,
+    mealRows, unmatchedStays, callIns, dvas, dha, ot, accom, accomCalc, accomTotal, anyInput,
     paidTotal, calcTotal, delta: paidTotal - calcTotal,
     off: differs(paidTotal, calcTotal),
     // Expected one-off lines for this BP (day-off / call-in and DVA), exposed
@@ -3813,11 +3829,12 @@ export default function App() {
         throw new Error("this browser can't decompress PDFs — enter the lines by hand");
       const parsed = pcParsePayslip(await pcPdfRows(await file.arrayBuffer()));
       const found = parsed.meals.length + parsed.callIns.length + parsed.dvas.length
-                  + (parsed.dha?1:0) + (parsed.overtime?1:0);
+                  + (parsed.dha?1:0) + (parsed.overtime?1:0) + (parsed.accom?1:0);
       if (!found) throw new Error("no earnings lines recognised — is this a Qantas payslip?");
       setPaySlip({
         dha:      parsed.dha ? parsed.dha.amount : "",
         overtime: parsed.overtime ? parsed.overtime.amount : "",
+        accom:    parsed.accom ? parsed.accom.amount : "",
         meals:    parsed.meals.map(m=>({id:`p${++_payRowId}`,from:m.from,to:m.to,amount:m.amount})),
         callIns:  parsed.callIns.map(c=>({id:`p${++_payRowId}`,date:c.date,amount:c.amount})),
         dvas:     parsed.dvas.map(c=>({id:`p${++_payRowId}`,date:c.date,amount:c.amount})),
@@ -3836,7 +3853,8 @@ export default function App() {
       setPayPdf({ ok:true, name:file.name, periodEnd:parsed.periodEnd, picked,
                   dhaPeriod: parsed.dha && parsed.dha.from ? [parsed.dha.from, parsed.dha.to] : null,
                   counts:{ meals:parsed.meals.length, callIns:parsed.callIns.length,
-                           dvas:parsed.dvas.length, dha:!!parsed.dha, overtime:!!parsed.overtime },
+                           dvas:parsed.dvas.length, dha:!!parsed.dha, overtime:!!parsed.overtime,
+                           accom:!!parsed.accom },
                   ignored:[...new Set(parsed.ignored)] });
     } catch (err) {
       setPayPdf({ err: (err && err.message) || "could not read that PDF", name:file.name });
@@ -5661,7 +5679,7 @@ export default function App() {
           // Upload a payslip PDF and have every line read off it. Offered in
           // both states: with no BP chosen yet, the PDF's DUTY HOUR AL period
           // says which bid period it belongs to and selects it.
-          const hasPayData = !!payPdf || !!paySlip.dha || !!paySlip.overtime
+          const hasPayData = !!payPdf || !!paySlip.dha || !!paySlip.overtime || !!paySlip.accom
             || paySlip.meals.length > 0 || paySlip.callIns.length > 0 || paySlip.dvas.length > 0;
           const UploadPanel = (
             <Card style={{marginBottom:18}}>
@@ -5714,7 +5732,8 @@ export default function App() {
                         payPdf.counts.meals && `${payPdf.counts.meals} meal line${payPdf.counts.meals!==1?"s":""}`,
                         payPdf.counts.callIns && `${payPdf.counts.callIns} call-in`,
                         payPdf.counts.dvas && `${payPdf.counts.dvas} DVA`,
-                        payPdf.counts.overtime && "overtime"].filter(Boolean).join(" · ")}
+                        payPdf.counts.overtime && "overtime",
+                        payPdf.counts.accom && "accommodation opt-out"].filter(Boolean).join(" · ")}
                       {payPdf.picked
                         ? <><br/><span style={{color:"var(--accent)"}}>Selected BP {payPdf.picked} from the duty hour allowance period.</span></>
                         : payPdf.dhaPeriod
@@ -5744,6 +5763,10 @@ export default function App() {
           }));
           (pc.dayOffCalc || []).forEach(it => expLines.push({ code: "CALL IN", detail: fmtShort(it.date), amount: it.amount }));
           (pc.dvaCalc || []).forEach(it => expLines.push({ code: "DUTY VAR AL", detail: fmtShort(it.date), amount: it.amount }));
+          if (pc.accomTotal > 0.005) {
+            const nights = pc.accomCalc.reduce((s, i) => s + (i.qty || 0), 0);
+            expLines.push({ code: "CANCEL ACCOM", detail: `${nights} night${nights !== 1 ? "s" : ""}`, amount: pc.accomTotal });
+          }
           if (d.includeOvertime && d.overtimePay > 0.005)
             expLines.push({ code: "OVERTIME", detail: `${d.overtimeHrs.toFixed(2)} h`, amount: d.overtimePay });
           const expTotal = expLines.reduce((s, l) => s + l.amount, 0);
@@ -5937,6 +5960,24 @@ export default function App() {
                         : `${d.creditTotal.toFixed(2)}h credit · ${d.overtimeHrs.toFixed(2)}h over 70h`}
                     </div>
                   </div>
+                </div>
+              </Card>
+
+              {/* ── CANCEL ACCOM (accommodation opt-out) ── */}
+              <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>CANCEL ACCOM — ACCOMMODATION OPT-OUT</div>
+              <Card style={{marginBottom:18}}>
+                <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap"}}>
+                  <MInput label="CANCEL ACCOM — PAID $" value={paySlip.accom} onChange={v=>setPayField("accom",v)} width={140}/>
+                  <div style={{paddingBottom:4}}>
+                    <Delta paid={pc.accom?.paid ?? null} calc={pc.accomTotal} off={pc.accom?.off}/>
+                  </div>
+                </div>
+                <div style={{marginTop:10,fontSize:11,color:"var(--muted)",fontFamily:mono,lineHeight:1.8}}>
+                  {pc.accomCalc.length===0
+                    ? "No opt-out nights entered for this BP — add them on the day view (Accommodation opt-out)."
+                    : pc.accomCalc.map((it,i)=>(
+                        <div key={i}>{it.icon} {fmtShort(it.date)} · {it.qty} night{it.qty!==1?"s":""} · ${fmtAUD(it.amount)}</div>
+                      ))}
                 </div>
               </Card>
 
