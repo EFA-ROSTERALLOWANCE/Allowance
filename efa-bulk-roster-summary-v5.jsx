@@ -499,6 +499,14 @@ const SALARIES = {
 
 const CREDIT_HOUR_THRESHOLD = 70;
 const CREDIT_HOUR_DIVISOR = 750;
+// Overtime hourly rate as payroll prices ADD HR PAY: annual salary ÷ CREDIT_HOUR_DIVISOR,
+// TRUNCATED to the cent (not rounded). BP3765 Peters (A330 CPT 7+y):
+// $275,463.77 ÷ 750 = $367.285… → $367.28; × 4.433h = $1,628.15, matching the
+// payslip, where rounding to $367.29 gave $1,628.20. The epsilon keeps an exact
+// cent (e.g. $346.20) from flooring a cent low through float error.
+function otHourlyRate(annualSalary) {
+  return Math.floor((annualSalary / CREDIT_HOUR_DIVISOR) * 100 + 1e-6) / 100;
+}
 
 function lookupAnnualSalary(fleet, role, bracketIdx, yearIdx) {
   if (!fleet || bracketIdx < 0) return null;
@@ -2115,14 +2123,14 @@ function processRoster(text, yearIdx, fallbackName) {
   const fleet = detectedFleet || (matchedPilot ? normaliseFleet(matchedPilot.fleet) : null);
 
   // ── Annual salary + over-70 credit-hour pay ────────────────────────────────
-  // Payroll's rounding (ADD HR PAY): hourly rate to the cent, extra credit
+  // Payroll's rounding (ADD HR PAY): hourly rate truncated to the cent (otHourlyRate), extra credit
   // hours to the THOUSANDTH of an hour, then multiply. Verified against BP3765
   // (Quach): 74:26.5 credit → 4.442h × $346.20 = $1,537.82 to the cent; 2 dp
   // hours gave $1,537.13. Hours are displayed to 2 dp. Same rule as the main
   // calculator's derivePeriod.
   const annualSalary = lookupAnnualSalary(fleet, role, paidBIdx, yearIdx);
   const creditHourRate = annualSalary != null
-    ? Math.round((annualSalary / CREDIT_HOUR_DIVISOR) * 100) / 100
+    ? otHourlyRate(annualSalary)
     : null;
   const extraCreditHours = Math.max(0, Math.round((creditHoursTotal - CREDIT_HOUR_THRESHOLD) * 1000) / 1000);
   const creditHourPay = creditHourRate != null ? extraCreditHours * creditHourRate : 0;
@@ -2207,7 +2215,7 @@ function applyBracketOverride(r, idx) {
   const derivedIdx = list.findIndex(b => b.id === r.paidBracket?.id);
   const annualSalary = lookupAnnualSalary(r.fleet, r.role, idx, r.yearIdx);
   const creditHourRate = annualSalary != null
-    ? Math.round((annualSalary / CREDIT_HOUR_DIVISOR) * 100) / 100
+    ? otHourlyRate(annualSalary)
     : null;
   const creditHourPay = creditHourRate != null ? r.extraCreditHours * creditHourRate : 0;
   return {

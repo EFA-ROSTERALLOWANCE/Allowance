@@ -47,6 +47,14 @@ const SALARY = {
     ],
   },
 };
+// Overtime hourly rate as payroll prices ADD HR PAY: annual salary ÷ 750,
+// TRUNCATED to the cent (not rounded). BP3765 Peters (A330 CPT 7+y):
+// $275,463.77 ÷ 750 = $367.285… → $367.28; × 4.433h = $1,628.15, matching the
+// payslip, where rounding to $367.29 gave $1,628.20. The epsilon keeps an exact
+// cent (e.g. $346.20) from flooring a cent low through float error.
+function otHourlyRate(annualSalary) {
+  return Math.floor((annualSalary / 750) * 100 + 1e-6) / 100;
+}
 const YOS_OPTIONS = [
   { label: "Less than 3 years", idx: 0 },
   { label: "3–5 years", idx: 1 },
@@ -3345,7 +3353,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
           const headerDutyDelta   = bpHdr ? carriedInAddHrs(bpHdr, "duty") - hm2h(bpHdr.carriedOutDuty)   : 0;
           const headerCreditDelta = bpHdr ? creditCarryInHrs              - hm2h(bpHdr.carriedOutCredit) : 0;
           const creditTotal = creditTotalRaw + headerCreditDelta;
-          // Payroll's rounding (ADD HR PAY): hourly rate to the cent, overtime
+          // Payroll's rounding (ADD HR PAY): hourly rate truncated to the cent (otHourlyRate), overtime
           // hours to the THOUSANDTH of an hour, then multiply. Verified against
           // BP3765 (Quach): 74:26.5 credit → 4.442h × $346.20 = $1,537.82 to the
           // cent; 2 dp hours gave $1,537.13. Hours are DISPLAYED to 2 dp, so the
@@ -3376,7 +3384,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
                        : effectiveYos >= 0 ? effectiveYos : yos;
           const yosNeedsConfirm = role === "cpt" && overtimeHrs > 0 && yosConfirmed < 0;
           const overtimePay = (overtimeHrs > 0 && useYos >= 0)
-            ? overtimeHrs * (Math.round((SALARY[aircraft][role][useYos][yearIdx] / 750) * 100) / 100)
+            ? overtimeHrs * otHourlyRate(SALARY[aircraft][role][useYos][yearIdx])
             : 0;
           // Overtime is only meaningful over a whole BP (the 70h threshold is a
           // per-BP figure). Include it in the headline total only when a BP is
@@ -5662,7 +5670,7 @@ export default function App() {
                                 const sal = SALARY[aircraft][role][useYos][yearIdx];
                                 // Rate shown for reference; overtimeHrs / overtimePay come from
                                 // derivePeriod (payroll rounding: rate to the cent, hours to 3 dp).
-                                const hourlyRate = Math.round((sal / 750) * 100) / 100;
+                                const hourlyRate = otHourlyRate(sal);
                                 return (
                                   <div style={{marginTop:10,padding:"10px 12px",background:"var(--panel)",borderRadius:8,border:"1px solid var(--line)"}}>
                                     <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:4,fontSize:11,fontFamily:mono,color:"var(--ink2)"}}>
