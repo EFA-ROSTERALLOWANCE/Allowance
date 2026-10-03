@@ -2265,10 +2265,10 @@ function HelpModal({ onClose }) {
   }, [onClose]);
 
   const steps = [
-    ["Set the pay year", "The EBA INDEXATION year applies the matching indexation to every allowance, salary and overtime rate for all pilots at once. When you upload rosters it's selected automatically from the earliest bid period's start date, so you usually don't need to touch it — you can still override it."],
+    ["Set the pay year", "The EBA INDEXATION year applies the matching indexation to every allowance, salary and ADD HR PAY rate for all pilots at once. When you upload rosters it's selected automatically from the earliest bid period's start date, so you usually don't need to touch it — you can still override it."],
     ["Upload the rosters", "Tap SELECT .TXT FILES and pick up to 200 EFA webCIS bid-period .txt files — typically one bid period's rosters for many pilots. Each pilot's name, rank, fleet and base are read from the file header."],
     ["Let it process", "A progress bar shows files being parsed. Each pilot is matched against the EFA pilot list to set their years-of-service bracket (pilots who joined after 1 Jan 2026 don't receive the one-time tier bump)."],
-    ["Read the summary table", "The SUMMARY view lists one row per pilot: allowances (DHA, meals, day-off, DVA), credit hours, overtime / credit-hour pay and the grand total. Click any column heading to sort. Captains on overtime get a bracket selector in PAY BRACKET: confirm it, or change it if they were upgraded from F/O (captain years of service restart at upgrade, so the joining-date bracket overstates their OT)."],
+    ["Read the summary table", "The SUMMARY view lists one row per pilot: allowances (DHA, meals, day-off, DVA), credit hours, ADD HR PAY (credit-hour pay over 70h) and the grand total. Click any column heading to sort. Captains with ADD HR PAY get a bracket selector in PAY BRACKET: confirm it, or change it if they were upgraded from F/O (captain years of service restart at upgrade, so the joining-date bracket overstates their ADD HR PAY)."],
     ["Open a pilot's detail", "Click a pilot's row to expand a full breakdown — every allowance type, credit-hour category and their salary bracket for the selected year."],
     ["Compare with STATS", "Switch to the STATS view for a chart across all bid periods — toggle the series on and off, flip the x-axis between BP and pilot name, and click a bar segment for its detail."],
     ["Export & housekeeping", "EXPORT CSV saves the whole table, ⤓ DOWNLOAD APP saves a standalone offline copy of this tool, and CLEAR removes all loaded rosters."],
@@ -2380,7 +2380,7 @@ function BreakdownPanel({ r }) {
           ${fmtAUD(r.grandTotal || 0)}
         </div>
         <div style={{ fontSize: 10, fontFamily: mono, opacity: 0.7, fontWeight: 400 }}>
-          ${fmtAUD(r.mealTotal)} meals + ${fmtAUD(r.dhaTotal)} DHA{r.dayOffPayTotal > 0 ? ` + ${fmtAUD(r.dayOffPayTotal)} day-off` : ""} + ${fmtAUD(r.creditHourPay)} OT
+          ${fmtAUD(r.mealTotal)} meals + ${fmtAUD(r.dhaTotal)} DHA{r.dayOffPayTotal > 0 ? ` + ${fmtAUD(r.dayOffPayTotal)} day-off` : ""} + ${fmtAUD(r.creditHourPay)} ADD HR PAY
         </div>
       </div>
 
@@ -2422,7 +2422,7 @@ function BreakdownPanel({ r }) {
               )}
               {needsBracketConfirm(r) && (
                 <div style={{ fontSize: 10, color: "#A85D04", fontWeight: 700, marginTop: 4 }}>
-                  ⚠ Unconfirmed — if upgraded from F/O, this bracket overstates OT. Confirm it in the PAY BRACKET column.
+                  ⚠ Unconfirmed — if upgraded from F/O, this bracket overstates ADD HR PAY. Confirm it in the PAY BRACKET column.
                 </div>
               )}
             </>
@@ -2435,7 +2435,7 @@ function BreakdownPanel({ r }) {
 
         {/* Salary & OT pay */}
         <div style={cardStyle}>
-          <div style={{ ...headerStyle, color: "#A85D04" }}>Salary &amp; OT</div>
+          <div style={{ ...headerStyle, color: "#A85D04" }}>Salary &amp; ADD HR PAY</div>
           {r.annualSalary != null ? (
             <>
               <div style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", fontSize: 12, fontFamily: mono }}>
@@ -2459,7 +2459,7 @@ function BreakdownPanel({ r }) {
                 <span>{r.extraCreditHours.toFixed(2)}h</span>
               </div>
               <div style={{ borderTop: `1px solid ${COL.borderSoft}`, marginTop: 6, paddingTop: 6, display: "flex", justifyContent: "space-between", fontSize: 12, fontFamily: mono, fontWeight: 800, color: "#A85D04" }}>
-                <span>OT pay</span><span>${fmtAUD(r.creditHourPay)}</span>
+                <span>ADD HR PAY</span><span>${fmtAUD(r.creditHourPay)}</span>
               </div>
             </>
           ) : (
@@ -2765,7 +2765,7 @@ export default function App() {
       return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const rows = [];
-    rows.push(["Pilot", "Staff No", "Role", "Fleet", "Bid Period", "Period From", "Period To", "Matched Pilot", "Join Date", "Years of Service", "Actual Bracket", "Paid Bracket", "Annual Salary (AUD)", "Per-Hour Rate (AUD)", "Meal Allowances (AUD)", "DHA (AUD)", "Credit Hours", "Hours Over 70", "OT Pay (AUD)", "Total Earned (AUD)", "Bracket Confirmed"].map(esc).join(","));
+    rows.push(["Pilot", "Staff No", "Role", "Fleet", "Bid Period", "Period From", "Period To", "Matched Pilot", "Join Date", "Years of Service", "Actual Bracket", "Paid Bracket", "Annual Salary (AUD)", "Per-Hour Rate (AUD)", "Meal Allowances (AUD)", "DHA (AUD)", "Credit Hours", "Hours Over 70", "ADD HR PAY (AUD)", "Total Earned (AUD)", "Bracket Confirmed"].map(esc).join(","));
     sorted.forEach(r => {
       rows.push([
         r.pilotName,
@@ -3017,7 +3017,7 @@ export default function App() {
               <StatCard label="MEAL TOTAL" value={`$${fmtAUD(totals.meal)}`} accent={COL.amber} />
               <StatCard label="DHA TOTAL" value={`$${fmtAUD(totals.dha)}`} accent={COL.accent} />
               <StatCard label="CREDIT HRS" value={`${totals.credit.toFixed(2)}h`} accent={COL.green} />
-              <StatCard label="OT PAY" value={`$${fmtAUD(totals.creditHourPay)}`} accent={"#A85D04"} />
+              <StatCard label="ADD HR PAY" value={`$${fmtAUD(totals.creditHourPay)}`} accent={"#A85D04"} />
             </div>
 
             {unconfirmedCount > 0 && (
@@ -3025,9 +3025,9 @@ export default function App() {
                 background: "#FFF8E6", border: `1px solid ${COL.amber}`, borderRadius: 10,
                 padding: "10px 14px", marginBottom: 14, fontSize: 12, lineHeight: 1.5, color: COL.text,
               }}>
-                <b style={{ color: "#A85D04" }}>⚠ {unconfirmedCount} captain row{unconfirmedCount !== 1 ? "s" : ""} on overtime with an unconfirmed pay bracket.</b>{" "}
+                <b style={{ color: "#A85D04" }}>⚠ {unconfirmedCount} captain row{unconfirmedCount !== 1 ? "s" : ""} with ADD HR PAY and an unconfirmed pay bracket.</b>{" "}
                 Brackets come from the pilot list's joining date, but a captain upgraded from F/O restarts years of
-                service at the upgrade — so their OT pay may be overstated. Confirm or correct each one in the PAY BRACKET column.
+                service at the upgrade — so their ADD HR PAY may be overstated. Confirm or correct each one in the PAY BRACKET column.
               </div>
             )}
 
@@ -3047,7 +3047,7 @@ export default function App() {
                       <SortHeader k="mealTotal" align="right">MEAL ALLOWANCES</SortHeader>
                       <SortHeader k="dhaTotal" align="right">DHA</SortHeader>
                       <SortHeader k="creditHours" align="right">CREDIT HRS</SortHeader>
-                      <SortHeader k="creditHourPay" align="right">OT PAY</SortHeader>
+                      <SortHeader k="creditHourPay" align="right">ADD HR PAY</SortHeader>
                       <SortHeader k="grandTotal" align="right">TOTAL</SortHeader>
                     </tr>
                   </thead>
@@ -3226,8 +3226,8 @@ export default function App() {
             dhaH:    { color: "#7C5CD6", label: "DHA hours",         side: "L", unit: "h", desc: "Duty hours eligible for the Duty Hour Allowance (DHA)." },
             meal:    { color: "#D4A80A", label: "Meal allow.",       side: "R", unit: "$", desc: "Per-meal allowances (breakfast / lunch / dinner / incidentals)." },
             dhaD:    { color: "#1E8AC0", label: "DHA $",             side: "R", unit: "$", desc: "Duty hour allowance pay." },
-            ot:      { color: "#A85D04", label: "Overtime",          side: "R", unit: "$", desc: "Credit-hour pay over the 70-hour BP threshold." },
-            total:   { color: "#1A1A2E", label: "Total allowances",  side: "R", unit: "$", desc: "Sum of meal allowances, DHA payments, and overtime (when applicable) for the BP." },
+            ot:      { color: "#A85D04", label: "ADD HR PAY",        side: "R", unit: "$", desc: "Credit-hour pay over the 70-hour BP threshold." },
+            total:   { color: "#1A1A2E", label: "Total allowances",  side: "R", unit: "$", desc: "Sum of meal allowances, DHA payments, and ADD HR PAY (when applicable) for the BP." },
           };
 
           // Build the per-row segment lists, filtering out zero values.
@@ -3850,7 +3850,7 @@ export default function App() {
                   extras.push({ label: "Meal allowances", value: `$${fmtAUD(r.mealTotal || 0)}` });
                   extras.push({ label: "DHA payments",   value: `$${fmtAUD(r.dhaTotal  || 0)}` });
                   if ((r.creditHourPay || 0) > 0) {
-                    extras.push({ label: "Overtime", value: `$${fmtAUD(r.creditHourPay)}` });
+                    extras.push({ label: "ADD HR PAY", value: `$${fmtAUD(r.creditHourPay)}` });
                   }
                 }
                 return (
