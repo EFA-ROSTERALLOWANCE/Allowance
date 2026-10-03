@@ -1765,11 +1765,11 @@ function HelpModal({ onClose }) {
     ["DAY SUMMARY tab", "The row of day buttons across the top is one week (use ‹ › to change week); each shows the date, the route flown and that day's allowance total. Tap a day to see its sectors — flight, ports and sign-on/sign-off times — plus any hotel with its check-in and check-out, and extras such as accommodation opt-out nights or an extra day-off payment. Everything is editable, so you can also build a day by hand. Below that, the results split the day's DHA and meals (breakfast, lunch, dinner, incidentals) by calendar date, show which meals each date covers, and tag anything carried in from a trip that started on another day. On the day a multi-day trip starts, a whole-trip total is shown too."],
     ["MEAL RATES tab", "The EA meal allowance schedule (Cl. 6.22–6.24): every airport with the meal zone it falls in, and the breakfast, lunch, dinner and incidental rates for each zone. Pick a rate period from the selector to see the rates that applied at a given time — use it to check the rate behind any meal line."],
     ["WEEK SUMMARY tab", "One row per day of the current week with that day's allowances — tap a row to open it in DAY SUMMARY. Underneath are the week's total and a breakdown by allowance type."],
-    ["MONTH / ROSTER tab — the totals", "Click a BP chip (e.g. “BP 3761”) to show that whole bid period, or use the month picker for a calendar month. The heading shows the dates and, for a BP, the Qantas roster header's carried-in/out duty and credit. The big card is the total allowances for the period — including overtime when a BP is selected — followed by every pattern (tap one to open it in DAY SUMMARY) and a breakdown by allowance type. A BP shows the same total whether it's loaded on its own or alongside its neighbour."],
+    ["MONTH / ROSTER tab — the totals", "Click a BP chip (e.g. “BP 3761”) to show that whole bid period, or use the month picker for a calendar month. The heading shows the dates and, for a BP, the Qantas roster header's carried-in/out duty and credit. The big card is the total allowances for the period — including ADD HR PAY when a BP is selected — followed by every pattern (tap one to open it in DAY SUMMARY) and a breakdown by allowance type. A BP shows the same total whether it's loaded on its own or alongside its neighbour."],
     ["MONTH / ROSTER tab — the detail", "Further down, each section lists line items: DHA allowances (one line per duty with its hours), trip totals (one line per hotel stay, which is how payroll pays meals — in the BP the pattern signed on in), every meal and incidental payment, and credit hours per sector or duty with the credit total. For a BP, ROSTER VIEW at the bottom shows the raw roster file. Expand any section to see how each figure is built, and use Export CSV to save a copy."],
-    ["Overtime & Years of Service", "If a BP's credit is over 70 hours, the credit section shows the overtime: hours over 70 × (salary ÷ 750). The salary depends on your years of service, filled in from the pilot list when your name is found — otherwise pick it. Captains are asked to confirm it, in a banner at the top of MONTH / ROSTER and in the overtime panel: if you were upgraded from F/O your captain years of service restart at the upgrade, so the auto-set value (from your joining date) would overstate overtime against your payslip."],
-    ["Or use a custom range", "Set the Custom range dates for any window you like. Custom ranges show just the allowances captured in those dates — overtime and the Qantas header duty/credit carry are deliberately excluded."],
-    ["PAY CHECK tab", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA, overtime and CANCEL ACCOM — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
+    ["ADD HR PAY & Years of Service", "If a BP's credit is over 70 hours, the credit section shows ADD HR PAY: hours over 70 × (salary ÷ 750). The salary depends on your years of service, filled in from the pilot list when your name is found — otherwise pick it. Captains are asked to confirm it, in a banner at the top of MONTH / ROSTER and in the ADD HR PAY panel: if you were upgraded from F/O your captain years of service restart at the upgrade, so the auto-set value (from your joining date) would overstate ADD HR PAY against your payslip."],
+    ["Or use a custom range", "Set the Custom range dates for any window you like. Custom ranges show just the allowances captured in those dates — ADD HR PAY and the Qantas header duty/credit carry are deliberately excluded."],
+    ["PAY CHECK tab", "PAY CHECK compares what you were actually paid against the figures above. Tap 📄 Upload payslip PDF and the earnings lines are read straight off it — CR MEALS ATO, DUTY HOUR AL, call-ins, DVA, ADD HR PAY and CANCEL ACCOM — and the matching bid period is selected for you. The PDF is read inside your browser and is never uploaded anywhere."],
     ["Or enter it by hand", "No PDF, or a payslip it can't read? Select a BP chip and type the lines in yourself. “Pre-fill from this roster” adds a meal line per hotel stay with the dates already filled, so you only type the amounts. Anything read from a PDF stays editable."],
     ["Reading the result", "Every line shows the calculator's own figure beside yours, with a ✓ or the dollar difference. The headline is the total variance. It also flags a stay with no matching payslip line — an unpaid trip — and a payment the calculator says you weren't owed. A difference is a prompt to check, not proof of an error: these are estimates."],
     ["Housekeeping", "⤓ APP saves a standalone offline copy of the calculator, ☾ toggles dark mode, and 🗑 CLEAR removes all loaded roster and payslip data and resets everything. On PAY CHECK, 🗑 CLEAR PAYSLIP drops just the payslip figures and keeps your roster. Nothing is saved between sessions — it all clears when you reload."],
@@ -3590,7 +3590,7 @@ const PC_CODES = [
   { re: /^CALL\s*IN\b/i,               kind: "callIn" },
   { re: /^(DAY\s*OFF|DDO)\b/i,         kind: "callIn" },
   { re: /^(DUTY\s*VAR|DVA)\b/i,        kind: "dva" },
-  { re: /^(OVERTIME|O\/?TIME|OT)\b/i,  kind: "overtime" },
+  { re: /^(ADD\s*HR\s*PAY|OVERTIME|O\/?TIME|OT)\b/i, kind: "overtime" },
   { re: /^CANCEL\s*ACCOM/i,           kind: "accom" },
 ];
 const PC_DATE = /^(\d{2})-(\d{2})-(\d{2})$/;
@@ -5277,8 +5277,8 @@ export default function App() {
                     <div style={{fontSize:13,fontWeight:700,color:"var(--yellow)",fontFamily:mono,marginBottom:4}}>⚠ CONFIRM YOUR YEARS OF SERVICE</div>
                     <div style={{fontSize:12,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
                       {useYos >= 0
-                        ? <>This period has <b>{overtimeHrs.toFixed(2)}h</b> overtime, worked out at <b>{YOS_OPTIONS[useYos].label}</b> = <b>${fmtAUD(overtimePay)}</b>. </>
-                        : <>This period has <b>{overtimeHrs.toFixed(2)}h</b> overtime — select your years of service to price it. </>}
+                        ? <>This period has <b>{overtimeHrs.toFixed(2)}h</b> ADD HR PAY, worked out at <b>{YOS_OPTIONS[useYos].label}</b> = <b>${fmtAUD(overtimePay)}</b>. </>
+                        : <>This period has <b>{overtimeHrs.toFixed(2)}h</b> ADD HR PAY — select your years of service to price it. </>}
                       If you were upgraded from F/O, captain years of service restart at your upgrade, so the auto-set value (from your joining date) will be higher than your payslip.
                     </div>
                   </div>
@@ -5363,9 +5363,9 @@ export default function App() {
                   </div>
                   <div style={{fontSize:11,color:"var(--ink2)",marginTop:3,fontFamily:mono}}>
                     {weeksInRange.length} week{weeksInRange.length!==1?"s":""} with data
-                    {includeOvertime && overtimePay>0&&<span style={{color:"var(--yellow)",fontWeight:700}}> · incl. overtime ${fmtAUD(overtimePay)} ({overtimeHrs.toFixed(2)}h over 70h)</span>}
-                    {includeOvertime && overtimeHrs>0&&yos<0&&<span style={{color:"var(--red)",fontWeight:700}}> · overtime pending (select YOS!)</span>}
-                    {!isBpSelected && overtimeHrs>0&&<span style={{color:"var(--muted)",fontStyle:"italic"}}> · overtime excluded (select a BP to include)</span>}
+                    {includeOvertime && overtimePay>0&&<span style={{color:"var(--yellow)",fontWeight:700}}> · incl. ADD HR PAY ${fmtAUD(overtimePay)} ({overtimeHrs.toFixed(2)}h over 70h)</span>}
+                    {includeOvertime && overtimeHrs>0&&yos<0&&<span style={{color:"var(--red)",fontWeight:700}}> · ADD HR PAY pending (select YOS!)</span>}
+                    {!isBpSelected && overtimeHrs>0&&<span style={{color:"var(--muted)",fontStyle:"italic"}}> · ADD HR PAY excluded (select a BP to include)</span>}
                   </div>
                 </div>
                 <div style={{fontSize:44,opacity:0.06}}>📅</div>
@@ -5645,7 +5645,7 @@ export default function App() {
                           {creditTotal > 70 && (
                             <div style={{padding:"12px 14px",background:"var(--amberBg)",borderTop:"1px solid color-mix(in srgb, var(--yellow) 31%, transparent)"}}>
                               <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:8}}>
-                                <span style={{fontSize:11,fontWeight:700,color:"var(--yellow)",fontFamily:mono}}>⚠ OVERTIME: {(creditTotal - 70).toFixed(2)}h above 70h threshold</span>
+                                <span style={{fontSize:11,fontWeight:700,color:"var(--yellow)",fontFamily:mono}}>⚠ ADD HR PAY: {(creditTotal - 70).toFixed(2)}h above 70h threshold</span>
                               </div>
                               <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
                                 <span style={{fontSize:11,color:"var(--ink2)",fontFamily:mono}}>Years of Service:</span>
@@ -5661,7 +5661,7 @@ export default function App() {
                               {yosNeedsConfirm && useYos >= 0 && (
                                 <div style={{marginTop:10,padding:"8px 12px",background:"var(--panel)",borderRadius:8,border:"1px solid var(--yellow)",display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
                                   <span style={{flex:"1 1 260px",fontSize:11,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
-                                    <b style={{color:"var(--yellow)"}}>Confirm your Years of Service.</b> If you were upgraded from F/O, captain years of service restart at your upgrade — the auto-set value counts from your joining date and will overstate overtime against your payslip.
+                                    <b style={{color:"var(--yellow)"}}>Confirm your Years of Service.</b> If you were upgraded from F/O, captain years of service restart at your upgrade — the auto-set value counts from your joining date and will overstate ADD HR PAY against your payslip.
                                   </span>
                                   <button onClick={()=>setYosConfirmed(useYos)} style={{background:"var(--yellow)",border:"none",borderRadius:6,color:"var(--panel)",padding:"5px 12px",fontFamily:mono,fontSize:11,fontWeight:700,cursor:"pointer"}}>✓ {YOS_OPTIONS[useYos].label} is correct</button>
                                 </div>
@@ -5678,10 +5678,10 @@ export default function App() {
                                       <span style={{textAlign:"right",fontWeight:700}}>${fmtAUD(sal)}</span>
                                       <span>Hourly rate (salary ÷ 750)</span>
                                       <span style={{textAlign:"right",fontWeight:700}}>${fmtAUD(hourlyRate)}/h</span>
-                                      <span>Overtime hours ({creditTotal.toFixed(2)} − 70)</span>
+                                      <span>Hours over 70 ({creditTotal.toFixed(2)} − 70)</span>
                                       <span style={{textAlign:"right",fontWeight:700}}>{overtimeHrs.toFixed(2)}h</span>
                                       <div style={{gridColumn:"1 / -1",borderTop:"1px solid var(--line)",marginTop:4,paddingTop:6,display:"flex",justifyContent:"space-between"}}>
-                                        <span style={{fontWeight:700,color:"var(--yellow)"}}>Overtime payment</span>
+                                        <span style={{fontWeight:700,color:"var(--yellow)"}}>ADD HR PAY</span>
                                         <span style={{fontWeight:700,fontSize:14,color:"var(--green)"}}>${fmtAUD(overtimePay)}</span>
                                       </div>
                                     </div>
@@ -5790,7 +5790,7 @@ export default function App() {
                         payPdf.counts.meals && `${payPdf.counts.meals} meal line${payPdf.counts.meals!==1?"s":""}`,
                         payPdf.counts.callIns && `${payPdf.counts.callIns} call-in`,
                         payPdf.counts.dvas && `${payPdf.counts.dvas} DVA`,
-                        payPdf.counts.overtime && "overtime",
+                        payPdf.counts.overtime && "ADD HR PAY",
                         payPdf.counts.accom && "accommodation opt-out"].filter(Boolean).join(" · ")}
                       {payPdf.picked
                         ? <><br/><span style={{color:"var(--accent)"}}>Selected BP {payPdf.picked} from the duty hour allowance period.</span></>
@@ -5826,7 +5826,7 @@ export default function App() {
             expLines.push({ code: "CANCEL ACCOM", detail: `${nights} night${nights !== 1 ? "s" : ""}`, amount: pc.accomTotal });
           }
           if (d.includeOvertime && d.overtimePay > 0.005)
-            expLines.push({ code: "OVERTIME", detail: `${d.overtimeHrs.toFixed(2)} h`, amount: d.overtimePay });
+            expLines.push({ code: "ADD HR PAY", detail: `${d.overtimeHrs.toFixed(2)} h`, amount: d.overtimePay });
           const expTotal = expLines.reduce((s, l) => s + l.amount, 0);
           const expCols = "minmax(112px,1.3fr) 1fr minmax(88px,auto)";
 
@@ -5874,7 +5874,7 @@ export default function App() {
                     Select a bid period — open <strong>MONTH / ROSTER</strong> and click a BP chip, or
                     upload a payslip above and the right one is chosen for you.
                     <div style={{fontSize:11,color:"var(--muted)",marginTop:8,fontFamily:mono,lineHeight:1.6}}>
-                      A payslip is only comparable against a whole bid period: the 70-hour overtime
+                      A payslip is only comparable against a whole bid period: the 70-hour ADD HR PAY
                       threshold and the roster header's carried in/out hours both settle per BP, so an
                       arbitrary date range cannot be reconciled.
                     </div>
@@ -5996,7 +5996,7 @@ export default function App() {
               </Card>
 
               {/* ── DUTY HOUR AL + OVERTIME ── */}
-              <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>DUTY HOURS &amp; OVERTIME</div>
+              <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>DUTY HOURS &amp; ADD HR PAY</div>
               <Card style={{marginBottom:18}}>
                 <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap",marginBottom:12}}>
                   <MInput label="DUTY HOUR AL — PAID $" value={paySlip.dha} onChange={v=>setPayField("dha",v)} width={140}/>
@@ -6009,12 +6009,12 @@ export default function App() {
                   </div>
                 </div>
                 <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap"}}>
-                  <MInput label="OVERTIME — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={140}/>
+                  <MInput label="ADD HR PAY — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={140}/>
                   <div style={{paddingBottom:4}}>
                     <Delta paid={pc.ot?.paid ?? null} calc={d.overtimePay} off={pc.ot?.off}/>
                     <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"var(--red)":d.yosNeedsConfirm?"var(--yellow)":"var(--faint)",fontFamily:mono,marginTop:3}}>
                       {d.useYos<0&&d.overtimeHrs>0
-                        ? "select Years of Service to resolve overtime"
+                        ? "select Years of Service to resolve ADD HR PAY"
                         : `${d.creditTotal.toFixed(2)}h credit · ${d.overtimeHrs.toFixed(2)}h over 70h`}
                       {d.yosNeedsConfirm && d.useYos>=0 && ` · at ${YOS_OPTIONS[d.useYos].label} — confirm Years of Service on MONTH / ROSTER (resets on upgrade to CPT)`}
                     </div>
