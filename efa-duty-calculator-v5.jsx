@@ -1480,16 +1480,60 @@ function SHead({children}) {
   return <div style={{fontSize:11,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:12}}>{children}</div>;
 }
 
+// Captain Years of Service confirmation, shown at the top of MONTH / ROSTER and
+// PAY CHECK while yosNeedsConfirm (derivePeriod) holds. Confirming or picking
+// on either tab sets yosConfirmed, which clears it on both.
+function YosConfirmBanner({overtimeHrs,overtimePay,useYos,onPick,onConfirm}) {
+  return (
+    <div style={{marginBottom:18,padding:"14px 16px",background:"var(--amberBg)",border:"2px solid var(--yellow)",borderRadius:10,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+      <div style={{flex:"1 1 320px"}}>
+        <div style={{fontSize:13,fontWeight:700,color:"var(--yellow)",fontFamily:mono,marginBottom:4}}>⚠ CONFIRM YOUR YEARS OF SERVICE</div>
+        <div style={{fontSize:12,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
+          {useYos >= 0
+            ? <>This period has <b>{overtimeHrs.toFixed(2)}h</b> ADD HR PAY, worked out at <b>{YOS_OPTIONS[useYos].label}</b> = <b>${fmtAUD(overtimePay)}</b>. </>
+            : <>This period has <b>{overtimeHrs.toFixed(2)}h</b> ADD HR PAY — select your years of service to price it. </>}
+          If you were upgraded from F/O, captain years of service restart at your upgrade, so the auto-set value (from your joining date) will be higher than your payslip.
+        </div>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+        <select value={useYos} onChange={e=>onPick(+e.target.value)} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"6px 8px",fontFamily:mono,fontSize:12,cursor:"pointer"}}>
+          <option value={-1}>— Select —</option>
+          {YOS_OPTIONS.map(o=><option key={o.idx} value={o.idx}>{o.label}</option>)}
+        </select>
+        {useYos >= 0 && (
+          <button onClick={onConfirm} style={{background:"var(--yellow)",border:"none",borderRadius:6,color:"var(--panel)",padding:"7px 14px",fontFamily:mono,fontSize:12,fontWeight:700,cursor:"pointer"}}>✓ {YOS_OPTIONS[useYos].label} is correct</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Pay Check widgets ────────────────────────────────────────────────────────
+// Pay Check inputs share one fixed height and a fixed width so a row of date and
+// amount boxes lines up. Native date inputs (iPad Safari in particular) are taller
+// and wider than text inputs and ignore min/max width unless their native
+// appearance is turned off — that is what pushed them under the next field.
+const PC_FIELD = {
+  boxSizing:"border-box", height:34, width:"100%", display:"block",
+  background:"var(--bg)", border:"1px solid var(--line)", borderRadius:6,
+  padding:"0 8px", fontFamily:mono, fontSize:14, lineHeight:"32px",
+};
 function MInput({label,value,onChange,width=120}) {
   return (
-    <div style={{display:"flex",flexDirection:"column"}}>
+    <div style={{display:"flex",flexDirection:"column",width,flex:"0 0 auto"}}>
       <Lbl t={label}/>
       <input type="text" inputMode="decimal" value={value} placeholder="0.00"
-        onChange={e=>onChange(e.target.value)} style={{
-        background:"var(--bg)", border:"1px solid var(--line)", borderRadius:6,
-        color:value?"var(--ink)":"var(--muted)", padding:"5px 8px",
-        fontFamily:mono, fontSize:14, width:"100%", maxWidth:width, minWidth:90,
+        onChange={e=>onChange(e.target.value)} style={{...PC_FIELD, color:value?"var(--ink)":"var(--muted)"}}/>
+    </div>
+  );
+}
+function PDate({label,value,onChange}) {
+  return (
+    <div style={{display:"flex",flexDirection:"column",width:150,flex:"0 0 auto"}}>
+      <Lbl t={label}/>
+      <input type="date" value={value} onChange={e=>onChange(e.target.value)} style={{
+        ...PC_FIELD, color:value?"var(--ink)":"var(--muted)", colorScheme:"inherit",
+        WebkitAppearance:"none", appearance:"none", textAlign:"left",
       }}/>
     </div>
   );
@@ -1515,8 +1559,8 @@ function PayRowShell({children,onRemove}) {
       <div style={{display:"flex",gap:12,alignItems:"flex-end",flexWrap:"wrap"}}>
         {children}
         <button onClick={onRemove} title="Remove line" style={{
-          background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--red)",
-          fontSize:11,cursor:"pointer",padding:"4px 9px",fontFamily:mono,marginLeft:"auto"}}>Remove</button>
+          boxSizing:"border-box",height:34,background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--red)",
+          fontSize:11,cursor:"pointer",padding:"0 10px",fontFamily:mono,marginLeft:"auto"}}>Remove</button>
       </div>
     </ICard>
   );
@@ -1762,6 +1806,7 @@ function HelpModal({ onClose }) {
     ["Set who you are", "Pick your rank (Captain / F/Officer) and aircraft (A330 / A320) in the top bar. When you upload a roster these are detected automatically, so you usually don't need to touch them."],
     ["Choose the pay year", "The EBA year selector applies the right indexation to every rate. When you upload a roster it's set automatically from the bid period's start date — and updates as you click between BP chips — so you usually don't need to touch it. You can still pick a year to project."],
     ["Upload your roster", "Tap 📄 ROSTER and choose your Qantas SH bid-period .txt file. You can upload several BP files one after another to view multiple bid periods together — boundary trips that span two BPs are handled for you."],
+    ["Use a roster from after the BP ends", "Important: download the BP file once the bid period has finished. Only then does it carry the live (actual) block and duty times that payroll pays from — a roster downloaded before or during the BP still shows planned times, so its credit hours, ADD HR PAY, duty hours and meals won't match your payslip. Check the print date at the top right of the file: it should be after the BP's last day."],
     ["DAY SUMMARY tab", "The row of day buttons across the top is one week (use ‹ › to change week); each shows the date, the route flown and that day's allowance total. Tap a day to see its sectors — flight, ports and sign-on/sign-off times — plus any hotel with its check-in and check-out, and extras such as accommodation opt-out nights or an extra day-off payment. Everything is editable, so you can also build a day by hand. Below that, the results split the day's DHA and meals (breakfast, lunch, dinner, incidentals) by calendar date, show which meals each date covers, and tag anything carried in from a trip that started on another day. On the day a multi-day trip starts, a whole-trip total is shown too."],
     ["MEAL RATES tab", "The EA meal allowance schedule (Cl. 6.22–6.24): every airport with the meal zone it falls in, and the breakfast, lunch, dinner and incidental rates for each zone. Pick a rate period from the selector to see the rates that applied at a given time — use it to check the rate behind any meal line."],
     ["WEEK SUMMARY tab", "One row per day of the current week with that day's allowances — tap a row to open it in DAY SUMMARY. Underneath are the week's total and a breakdown by allowance type."],
@@ -3746,12 +3791,14 @@ function derivePayCheck(paySlip, d) {
   ]);
   // Only count the app's side of lines the payslip actually declared, so the
   // grand total compares like with like.
+  // A line with no amount typed yet (e.g. a pre-filled meal line) has not been
+  // declared, so neither side counts until the amount is in.
   const calcTotal = sum([
-    ...mealRows.map(r => (r.stay ? r.stay.total : 0)),
+    ...mealRows.map(r => (r.stay && r.paid != null ? r.stay.total : 0)),
     ...unmatchedStays.map(s => s.total),
-    ...callIns.rows.map(r => (r.item ? r.item.amount : 0)),
+    ...callIns.rows.map(r => (r.item && r.paid != null ? r.item.amount : 0)),
     ...callIns.unmatched.map(i => i.amount),
-    ...dvas.rows.map(r => (r.item ? r.item.amount : 0)),
+    ...dvas.rows.map(r => (r.item && r.paid != null ? r.item.amount : 0)),
     ...dvas.unmatched.map(i => i.amount),
     dhaPaid != null ? d.dhaTotal : 0,
     otPaid  != null ? d.overtimePay : 0,
@@ -3760,7 +3807,7 @@ function derivePayCheck(paySlip, d) {
     accomTotal,
   ]);
 
-  const anyInput = mealRows.length || callIns.rows.length || dvas.rows.length
+  const anyInput = [...mealRows, ...callIns.rows, ...dvas.rows].some(r => r.paid != null)
     || dhaPaid != null || otPaid != null || accomPaid != null;
   return {
     mealRows, unmatchedStays, callIns, dvas, dha, ot, accom, accomCalc, accomTotal, anyInput,
@@ -5272,26 +5319,8 @@ export default function App() {
                   it can't be missed; the overtime panel further down has the
                   same prompt. See yosNeedsConfirm in derivePeriod. */}
               {yosNeedsConfirm && (
-                <div style={{marginBottom:18,padding:"14px 16px",background:"var(--amberBg)",border:"2px solid var(--yellow)",borderRadius:10,display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}}>
-                  <div style={{flex:"1 1 320px"}}>
-                    <div style={{fontSize:13,fontWeight:700,color:"var(--yellow)",fontFamily:mono,marginBottom:4}}>⚠ CONFIRM YOUR YEARS OF SERVICE</div>
-                    <div style={{fontSize:12,color:"var(--ink2)",fontFamily:mono,lineHeight:1.5}}>
-                      {useYos >= 0
-                        ? <>This period has <b>{overtimeHrs.toFixed(2)}h</b> ADD HR PAY, worked out at <b>{YOS_OPTIONS[useYos].label}</b> = <b>${fmtAUD(overtimePay)}</b>. </>
-                        : <>This period has <b>{overtimeHrs.toFixed(2)}h</b> ADD HR PAY — select your years of service to price it. </>}
-                      If you were upgraded from F/O, captain years of service restart at your upgrade, so the auto-set value (from your joining date) will be higher than your payslip.
-                    </div>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
-                    <select value={useYos} onChange={e=>{ const v=+e.target.value; setYos(v); setYosConfirmed(v); }} style={{background:"var(--panel)",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",padding:"6px 8px",fontFamily:mono,fontSize:12,cursor:"pointer"}}>
-                      <option value={-1}>— Select —</option>
-                      {YOS_OPTIONS.map(o=><option key={o.idx} value={o.idx}>{o.label}</option>)}
-                    </select>
-                    {useYos >= 0 && (
-                      <button onClick={()=>setYosConfirmed(useYos)} style={{background:"var(--yellow)",border:"none",borderRadius:6,color:"var(--panel)",padding:"7px 14px",fontFamily:mono,fontSize:12,fontWeight:700,cursor:"pointer"}}>✓ {YOS_OPTIONS[useYos].label} is correct</button>
-                    )}
-                  </div>
-                </div>
+                <YosConfirmBanner overtimeHrs={overtimeHrs} overtimePay={overtimePay} useYos={useYos}
+                  onPick={v=>{ setYos(v); setYosConfirmed(v); }} onConfirm={()=>setYosConfirmed(useYos)}/>
               )}
               {/* Month navigator */}
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18,flexWrap:"wrap",gap:10}}>
@@ -5727,6 +5756,12 @@ export default function App() {
 
           const Header = (
             <div style={{marginBottom:16}}>
+              {/* Same banner as MONTH / ROSTER — only once a BP is selected,
+                  since ADD HR PAY is only priced for a whole BP. */}
+              {bp && d.yosNeedsConfirm && (
+                <YosConfirmBanner overtimeHrs={d.overtimeHrs} overtimePay={d.overtimePay} useYos={d.useYos}
+                  onPick={v=>{ setYos(v); setYosConfirmed(v); }} onConfirm={()=>setYosConfirmed(d.useYos)}/>
+              )}
               <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:4}}>PAYSLIP RECONCILIATION</div>
               <div style={{fontFamily:heading,fontSize:25,fontWeight:700,color:"var(--ink)"}}>
                 Pay Check{bp ? ` — BP ${bp.bp}` : ""}
@@ -5924,8 +5959,8 @@ export default function App() {
                 {paySlip.meals.length===0 && (
                   <div style={{fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
                     Add one line per <span style={{fontFamily:mono}}>CR MEALS ATO</span> row on the payslip —
-                    its date range and amount. Leave the "to" date blank for a same-day slip.
-                    <button onClick={()=>d.payStays.forEach(s=>addPayRow("meals",{from:s.startDate,to:s.endDate===s.startDate?"":s.endDate,amount:""}))}
+                    its date range and amount. For a same-day slip, the "to" date can be left blank.
+                    <button onClick={()=>d.payStays.forEach(s=>addPayRow("meals",{from:s.startDate,to:s.endDate,amount:""}))}
                       style={{display:"block",marginTop:10,background:"transparent",border:"1px solid var(--accentLine)",borderRadius:6,color:"var(--accent)",fontSize:11,cursor:"pointer",padding:"5px 10px",fontFamily:mono}}>
                       Pre-fill {d.payStays.length} line{d.payStays.length!==1?"s":""} from this roster
                     </button>
@@ -5943,11 +5978,13 @@ export default function App() {
                   const row = pc.mealRows.find(r=>r.id===line.id);
                   return (
                     <PayRowShell key={line.id} onRemove={()=>removePayRow("meals",line.id)}>
-                      <DInput label="FROM" value={line.from} onChange={v=>updPayRow("meals",line.id,"from",v)}/>
-                      <DInput label="TO" value={line.to} onChange={v=>updPayRow("meals",line.id,"to",v)}/>
+                      <PDate label="FROM" value={line.from} onChange={v=>updPayRow("meals",line.id,"from",v)}/>
+                      <PDate label="TO" value={line.to} onChange={v=>updPayRow("meals",line.id,"to",v)}/>
                       <MInput label="PAID $" value={line.amount} onChange={v=>updPayRow("meals",line.id,"amount",v)}/>
-                      <div style={{minWidth:190,paddingBottom:4}}>
-                        {row?.stay ? (
+                      <div style={{flex:"1 1 180px",minWidth:180,paddingBottom:2}}>
+                        {!line.from ? (
+                          <span style={{fontSize:11,color:"var(--faint)",fontFamily:mono}}>enter the dates from the payslip</span>
+                        ) : row?.stay ? (
                           <>
                             <div style={{fontSize:11,color:"var(--ink2)",fontFamily:mono,marginBottom:3}}>
                               {row.stay.port||"—"} · {fmtShort(row.stay.startDate)}–{fmtShort(row.stay.endDate)}
@@ -5984,7 +6021,7 @@ export default function App() {
                         </span>
                         <span style={{fontSize:15,fontWeight:700,color:"var(--accent)"}}>${fmtAUD(staysTotal)}</span>
                       </div>
-                      {paySlip.meals.length>0 && (
+                      {pc.mealRows.some(r=>r.paid!=null) && (
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",gap:10,marginTop:4}}>
                           <span style={{fontSize:11,color:"var(--muted)"}}>Paid on payslip</span>
                           <span style={{fontSize:13,fontWeight:700,color:Math.abs(mealsPaid-staysTotal)>=0.005?"var(--red)":"var(--green)"}}>${fmtAUD(mealsPaid)}</span>
@@ -5999,8 +6036,8 @@ export default function App() {
               <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>DUTY HOURS &amp; ADD HR PAY</div>
               <Card style={{marginBottom:18}}>
                 <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap",marginBottom:12}}>
-                  <MInput label="DUTY HOUR AL — PAID $" value={paySlip.dha} onChange={v=>setPayField("dha",v)} width={140}/>
-                  <div style={{paddingBottom:4}}>
+                  <MInput label="DUTY HOUR AL — PAID $" value={paySlip.dha} onChange={v=>setPayField("dha",v)} width={190}/>
+                  <div style={{paddingBottom:2}}>
                     <Delta paid={pc.dha?.paid ?? null} calc={d.dhaTotal} off={pc.dha?.off}/>
                     <div style={{fontSize:10,color:"var(--faint)",fontFamily:mono,marginTop:3}}>
                       {(d.dhaTotal/((role==="cpt"?RATES.DHA_CPT:RATES.DHA_FO)*INDEX_YEARS[yearIdx].mult)).toFixed(2)}h
@@ -6009,14 +6046,14 @@ export default function App() {
                   </div>
                 </div>
                 <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap"}}>
-                  <MInput label="ADD HR PAY — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={140}/>
-                  <div style={{paddingBottom:4}}>
+                  <MInput label="ADD HR PAY — PAID $" value={paySlip.overtime} onChange={v=>setPayField("overtime",v)} width={190}/>
+                  <div style={{paddingBottom:2}}>
                     <Delta paid={pc.ot?.paid ?? null} calc={d.overtimePay} off={pc.ot?.off}/>
                     <div style={{fontSize:10,color:d.useYos<0&&d.overtimeHrs>0?"var(--red)":d.yosNeedsConfirm?"var(--yellow)":"var(--faint)",fontFamily:mono,marginTop:3}}>
                       {d.useYos<0&&d.overtimeHrs>0
                         ? "select Years of Service to resolve ADD HR PAY"
                         : `${d.creditTotal.toFixed(2)}h credit · ${d.overtimeHrs.toFixed(2)}h over 70h`}
-                      {d.yosNeedsConfirm && d.useYos>=0 && ` · at ${YOS_OPTIONS[d.useYos].label} — confirm Years of Service on MONTH / ROSTER (resets on upgrade to CPT)`}
+                      {d.yosNeedsConfirm && d.useYos>=0 && ` · at ${YOS_OPTIONS[d.useYos].label} — confirm Years of Service at the top of this page`}
                     </div>
                   </div>
                 </div>
@@ -6026,8 +6063,8 @@ export default function App() {
               <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>CANCEL ACCOM — ACCOMMODATION OPT-OUT</div>
               <Card style={{marginBottom:18}}>
                 <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap"}}>
-                  <MInput label="CANCEL ACCOM — PAID $" value={paySlip.accom} onChange={v=>setPayField("accom",v)} width={140}/>
-                  <div style={{paddingBottom:4}}>
+                  <MInput label="CANCEL ACCOM — PAID $" value={paySlip.accom} onChange={v=>setPayField("accom",v)} width={190}/>
+                  <div style={{paddingBottom:2}}>
                     <Delta paid={pc.accom?.paid ?? null} calc={pc.accomTotal} off={pc.accom?.off}/>
                   </div>
                 </div>
@@ -6057,10 +6094,12 @@ export default function App() {
                       const row = res.rows.find(r=>r.id===line.id);
                       return (
                         <PayRowShell key={line.id} onRemove={()=>removePayRow(key,line.id)}>
-                          <DInput label="DATE" value={line.date} onChange={v=>updPayRow(key,line.id,"date",v)}/>
+                          <PDate label="DATE" value={line.date} onChange={v=>updPayRow(key,line.id,"date",v)}/>
                           <MInput label="PAID $" value={line.amount} onChange={v=>updPayRow(key,line.id,"amount",v)}/>
-                          <div style={{minWidth:190,paddingBottom:4}}>
-                            {row?.item ? (
+                          <div style={{flex:"1 1 180px",minWidth:180,paddingBottom:2}}>
+                            {!line.date ? (
+                              <span style={{fontSize:11,color:"var(--faint)",fontFamily:mono}}>enter the date from the payslip</span>
+                            ) : row?.item ? (
                               <>
                                 <div style={{fontSize:11,color:"var(--ink2)",fontFamily:mono,marginBottom:3}}>
                                   {row.item.icon} {fmtShort(row.item.date)} · {row.item.label}
