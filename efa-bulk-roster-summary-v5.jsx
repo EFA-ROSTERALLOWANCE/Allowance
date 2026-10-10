@@ -735,6 +735,7 @@ function newSector(dep="", arr="") {
     sectorDate:"",
     aSignOn:"", aSignOff:"",
     nilFlight:false,        // same-port P/A sector — the aircraft never moved, 0 credit
+    returnToBay:false,      // same-port operating QF sector — credit = its block time
     missedMeal:false, continueDuty:false, reservePeriod:false,
   };
 }
@@ -1127,7 +1128,7 @@ function carryActualCredit(patternText, bpStart, carry) {
         if (mIdx - bpMon > 6) yr--; else if (bpMon - mIdx > 6) yr++;
         const date = `${yr}-${String(mIdx + 1).padStart(2, "0")}-${f[1]}`;
         const blkStr = (f[9].match(/-?\d{1,3}:\d{2}/) || [])[0];
-        cur.push({ date, marker: f[3] ? f[3].trim() : "", dep: f[5], arr: f[7],
+        cur.push({ date, marker: f[3] ? f[3].trim() : "", flt: f[4], dep: f[5], arr: f[7],
                    depTime: f[6], arrTime: f[8], blk: mins(blkStr) });
         continue;
       }
@@ -1144,7 +1145,9 @@ function carryActualCredit(patternText, bpStart, carry) {
   // Actual credit of one sector, in minutes; null when it can't be priced.
   const secCredit = (s) => {
     const pos = s.marker === "P" || s.marker === "A";
-    if (s.dep === s.arr) return pos ? 0 : null;
+    // Same port: positioning never departed (0); an operating QF flight
+    // number is a return to bay, credited at its own block time.
+    if (s.dep === s.arr) return pos ? 0 : /^\d+$/.test(s.flt) ? s.blk : null;
     if (s.marker === "&") return null;
     if (!pos) return s.blk;
     const depAp = AIRPORTS.find(a => a.code === s.dep);
@@ -1487,7 +1490,14 @@ function parseQantasRoster(text) {
       // isGroundDuty so DHA and ground meals are unchanged — only the credit
       // builder reads this flag. Mirrors efa-duty-calculator-v5.jsx.
       const nilFlight = (dep === arr) && isPositioning;
-      flights.push({ sectorDate, flightNo: flt, dep, arr, depTime, arrTime, isPositioning, isGroundDuty, nilFlight });
+      // A same-port sector flown under an operating QF flight number (no P/A
+      // marker) is a return to bay / air return — the aircraft moved and came
+      // back, and ARMS credits it at its own block time, not min(duty, 4)
+      // (BP3775, 10 Oct 26: 7526 HKG→HKG 1:20 then 7526 HKG→SYD 9:04, credit
+      // 10:24). It stays isGroundDuty so DHA and ground meals are unchanged —
+      // only the credit builder reads this flag. Mirrors efa-duty-calculator-v5.jsx.
+      const returnToBay = (dep === arr) && !isPositioning && /^QF\d+$/.test(flt);
+      flights.push({ sectorDate, flightNo: flt, dep, arr, depTime, arrTime, isPositioning, isGroundDuty, nilFlight, returnToBay });
     }
 
     if (flights.length === 0) return;
@@ -1545,6 +1555,7 @@ function parseQantasRoster(text) {
           isPositioning: f.isGroundDuty ? false : f.isPositioning,
           isGroundDuty: f.isGroundDuty,
           nilFlight: f.nilFlight,
+          returnToBay: f.returnToBay,
         });
         allSectors.push(sec);
       });
@@ -1831,7 +1842,7 @@ function calcCreditHoursForWeeks(weeks, rangeFrom, rangeTo) {
           // operating nor a positioning sector, and not as a ground duty.
           // DHA and ground meals are unaffected.
           return;
-        } else if (sec.isGroundDuty) {
+        } else if (sec.isGroundDuty && !sec.returnToBay) {
           const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
           if (on == null || off == null) return;
           let mins = off - on; if (mins < 0) mins += 1440;
@@ -1845,7 +1856,8 @@ function calcCreditHoursForWeeks(weeks, rangeFrom, rangeTo) {
           // Backstop for a same-port sector the parser did not tag nilFlight.
           // Same reasoning: the aircraft never left the ground, so there is no
           // block time and no credit. Mirrors efa-duty-calculator-v5.jsx.
-          if (depCode === arrCode) return;
+          // A parsed return to bay flew, so it falls through to its block time.
+          if (depCode === arrCode && !sec.returnToBay) return;
           const depAp = AIRPORTS.find(a => a.code === depCode);
           const arrAp = AIRPORTS.find(a => a.code === arrCode);
           if (!depAp || !arrAp) return;
