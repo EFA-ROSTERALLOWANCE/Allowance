@@ -719,6 +719,7 @@ function newSector(dep="", arr="") {
     aSignOn:"", aSignOff:"",
     isPositioning:false,    // PAX / positioning flight — 0.5× credit
     nilFlight:false,        // same-port P/A sector — the aircraft never moved, 0 credit
+    returnToBay:false,      // same-port operating QF sector — credit = its block time
     missedMeal:false, continueDuty:false, reservePeriod:false,
     hasRosterPublishDiff:false, rosterPublishSignOff:"", rosterPublishSignOffDate:"",
     hasRosterPublishSignOnDiff:false, rosterPublishSignOn:"", rosterPublishSignOnDate:"",
@@ -2013,7 +2014,7 @@ function carryActualCredit(patternText, bpStart, carry) {
         if (mIdx - bpMon > 6) yr--; else if (bpMon - mIdx > 6) yr++;
         const date = `${yr}-${String(mIdx + 1).padStart(2, "0")}-${f[1]}`;
         const blkStr = (f[9].match(/-?\d{1,3}:\d{2}/) || [])[0];
-        cur.push({ date, marker: f[3] ? f[3].trim() : "", dep: f[5], arr: f[7],
+        cur.push({ date, marker: f[3] ? f[3].trim() : "", flt: f[4], dep: f[5], arr: f[7],
                    depTime: f[6], arrTime: f[8], blk: mins(blkStr) });
         continue;
       }
@@ -2030,7 +2031,9 @@ function carryActualCredit(patternText, bpStart, carry) {
   // Actual credit of one sector, in minutes; null when it can't be priced.
   const secCredit = (s) => {
     const pos = s.marker === "P" || s.marker === "A";
-    if (s.dep === s.arr) return pos ? 0 : null;
+    // Same port: positioning never departed (0); an operating QF flight
+    // number is a return to bay, credited at its own block time.
+    if (s.dep === s.arr) return pos ? 0 : /^\d+$/.test(s.flt) ? s.blk : null;
     if (s.marker === "&") return null;
     if (!pos) return s.blk;
     const depAp = AIRPORTS.find(a => a.code === s.dep);
@@ -2551,12 +2554,23 @@ function parseQantasRoster(text) {
         // prints with Blk 0:00. It stays isGroundDuty so DHA and ground meals
         // are unchanged; only the credit builder reads this flag.
         const nilFlight = isGroundDuty && f.isPositioning;
+        // A same-port sector flown under an operating QF flight number (no P/A
+        // marker) is a return to bay / air return: the aircraft pushed back or
+        // took off and came back to the same port, then the duty carried on
+        // under the same flight number. ARMS numbers the attempts "( 1", "( 2"
+        // and credits each at its own block time — BP3775, 10 Oct 26: 7526 HKG
+        // 0158→HKG 0318 (1:20 blk), then 7526 HKG 0459→SYD (9:04), duty credit
+        // 10:24. It is not a rostered ground duty, so it must not get
+        // min(duty, 4). Like nilFlight it stays isGroundDuty so DHA and ground
+        // meals are unchanged — only the credit builder reads this flag.
+        const returnToBay = isGroundDuty && !f.isPositioning && /^QF\d+$/.test(f.flightNo);
         const sec = bldSec(f.flightNo, f.dep, f.arr, signOn, signOff, sectorDate, {
           flightDepTime: mkTime(f.depTime), flightArrTime: mkTime(f.arrTime),
           flightDepDate: f.sectorDate,
           isPositioning: isGroundDuty ? false : f.isPositioning,
           isGroundDuty,
           nilFlight,
+          returnToBay,
         });
         allSectors.push(sec);
       });
@@ -3291,7 +3305,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
                     credit: 0,
                     type: "Nil",
                   });
-                } else if (sec.isGroundDuty || /^(SIM|EF)\d*/i.test(sec.flightNo)) {
+                } else if ((sec.isGroundDuty && !sec.returnToBay) || /^(SIM|EF)\d*/i.test(sec.flightNo)) {
                   // SIM/EF and other ground duties = min(duty hours, 4)
                   const on = parseTime(sec.aSignOn), off = parseTime(sec.aSignOff);
                   if (on == null || off == null) return;
@@ -3329,7 +3343,9 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
                   // clocks is time spent at the airport, not block time, and
                   // credit is 0. Roster-parsed sectors are caught earlier by
                   // the nilFlight branch. DHA is unaffected.
-                  if (depCode === arrCode) {
+                  // A parsed return to bay (sec.returnToBay) is the exception: it
+                  // flew, so it falls through and is credited at its block time.
+                  if (depCode === arrCode && !sec.returnToBay) {
                     creditItems.push({
                       date: secDate,
                       label: `${sec.flightNo} ${depCode}→${arrCode} (same port — aircraft did not depart)`,
@@ -3353,7 +3369,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
                   const blockHrs = blockMins / 60;
                   const mult = sec.isPositioning ? 0.5 : 1.0;
                   const credit = blockHrs * mult;
-                  const tag = sec.isPositioning ? " (pax 0.5×)" : "";
+                  const tag = sec.isPositioning ? " (pax 0.5×)" : sec.returnToBay ? " (return to bay)" : "";
                   creditItems.push({
                     date: secDate,
                     label: `${sec.flightNo} ${depCode}→${arrCode}${tag}`,
