@@ -1540,6 +1540,24 @@ function PDate({label,value,onChange}) {
   );
 }
 
+// "× n" count on a payslip line — how many payments it covers.
+function QtyStepper({value,onChange}) {
+  const btn = {boxSizing:"border-box",height:34,width:30,background:"transparent",border:"1px solid var(--line)",
+    color:"var(--accent)",fontSize:15,fontFamily:mono,cursor:"pointer",padding:0};
+  return (
+    <div style={{display:"flex",flexDirection:"column",flex:"0 0 auto"}}>
+      <Lbl t="TIMES"/>
+      <div style={{display:"flex",alignItems:"center"}}>
+        <button title="One fewer" disabled={value<=1} onClick={()=>onChange(Math.max(1,value-1))}
+          style={{...btn,borderRadius:"6px 0 0 6px",opacity:value<=1?0.4:1,cursor:value<=1?"default":"pointer"}}>−</button>
+        <div style={{boxSizing:"border-box",height:34,minWidth:40,padding:"0 6px",borderTop:"1px solid var(--line)",borderBottom:"1px solid var(--line)",
+          background:"var(--bg)",fontFamily:mono,fontSize:14,lineHeight:"32px",textAlign:"center",color:"var(--ink)"}}>×{value}</div>
+        <button title="One more" onClick={()=>onChange(value+1)} style={{...btn,borderRadius:"0 6px 6px 0"}}>+</button>
+      </div>
+    </div>
+  );
+}
+
 // Reads out one payslip line against the calculator's own figure.
 function Delta({paid,calc,off}) {
   if (paid == null) return <span style={{fontSize:11,color:"var(--faint)",fontFamily:mono}}>enter an amount</span>;
@@ -3957,6 +3975,19 @@ export default function App() {
     setPaySlip(p=>({...p,[listKey]:p[listKey].map(r=>r.id===id?{...r,[field]:val}:r)}));
   const removePayRow = (listKey,id) =>
     setPaySlip(p=>({...p,[listKey]:p[listKey].filter(r=>r.id!==id)}));
+  // A hand-added call-in / DVA line starts at the role's rate, so only an
+  // odd payment needs typing. Call-ins carry a count (several day-off
+  // payments can land on one date); the amount follows it until the user
+  // types their own figure.
+  const payLineRate = (listKey) => listKey==="callIns"
+    ? (role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO)
+    : (role==="cpt"?RATES.DVA_CPT:RATES.DVA_FO);
+  const setPayQty = (listKey,id,qty) => setPaySlip(p=>({...p,[listKey]:p[listKey].map(r=>{
+    if (r.id!==id) return r;
+    const rate = payLineRate(listKey), was = r.qty || 1;
+    const auto = pcMoney(r.amount) === rate*was;
+    return {...r, qty, ...(auto ? {amount:(rate*qty).toFixed(2)} : {})};
+  })}));
 
   // Current week's days
   const days = allWeeks[weekStart] ?? Object.fromEntries(DAY_NAMES.map(k=>[k,emptyDay()]));
@@ -6099,7 +6130,7 @@ export default function App() {
                 <div key={key}>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
                     <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>{title}</div>
-                    <button className="addBtn" onClick={()=>addPayRow(key,{date:"",amount:""})}
+                    <button className="addBtn" onClick={()=>addPayRow(key,{date:"",amount:payLineRate(key).toFixed(2),...(key==="callIns"?{qty:1}:{})})}
                       style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>{addLbl}</button>
                   </div>
                   <Card style={{marginBottom:18}}>
@@ -6111,6 +6142,9 @@ export default function App() {
                       return (
                         <PayRowShell key={line.id} onRemove={()=>removePayRow(key,line.id)}>
                           <PDate label="DATE" value={line.date} onChange={v=>updPayRow(key,line.id,"date",v)}/>
+                          {key==="callIns" && (
+                            <QtyStepper value={line.qty||1} onChange={v=>setPayQty(key,line.id,v)}/>
+                          )}
                           <MInput label="PAID $" value={line.amount} onChange={v=>updPayRow(key,line.id,"amount",v)}/>
                           <div style={{flex:"1 1 180px",minWidth:180,paddingBottom:2}}>
                             {!line.date ? (
