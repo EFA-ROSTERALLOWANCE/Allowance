@@ -2817,7 +2817,7 @@ function parseQantasRoster(text) {
 // range. Pure - depends only on state values, never on JSX - so both tabs read
 // the same numbers instead of each maintaining its own copy of this maths.
 function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
-                        pilotJoiningDate, customFrom, customTo, monthView }) {
+                        pilotJoiningDate, customFrom, customTo, monthView, payExtras = [] }) {
           // Parse monthView "YYYY-MM" to get year and month
           const [mvYear,mvMonth]=monthView.split("-").map(Number);
           const monthName=new Date(mvYear,mvMonth-1,1).toLocaleString("en-AU",{month:"long"});
@@ -2918,6 +2918,33 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
               });
             });
           });
+
+          // Call-ins / DVAs the pilot added by hand on PAY CHECK. They count
+          // as expected pay on their date, at the role's indexed rate × count,
+          // unless the roster already produced one of that kind on that date
+          // (then the line is just compared against it). Each carries its
+          // line's id so derivePayCheck pairs the line with its own item.
+          const payExtraItems = [];
+          payExtras.forEach(x => {
+            if (!x.date || !isInRange(x.date)) return;
+            const dva = x.kind === "dva";
+            const re = dva ? PC_DVA : PC_DAY_OFF;
+            if ((monthDateMap[x.date] || []).some(it => re.test(it.id) && !it.lineId)) return;
+            const rate = (dva ? (role === "cpt" ? RATES.DVA_CPT : RATES.DVA_FO)
+                              : (role === "cpt" ? RATES.DDO_CPT : RATES.DDO_FO)) * INDEX_YEARS[yearIdx].mult;
+            const qty = dva ? 1 : Math.max(1, x.qty || 1);
+            const item = {
+              id: `${dva ? "extra_dva" : "extra_ddo"}_pc_${x.id}`, lineId: x.id,
+              label: dva ? "Duty Variation Allowance (added)" : "Day Off Payment (added)",
+              clause: dva ? "Cl. 5.28" : "Cl. 5.20", color: dva ? "var(--orange)" : "var(--red)",
+              icon: dva ? "⚡" : "📅", rate, qty, amount: rate * qty,
+              reason: `Added on PAY CHECK${qty > 1 ? ` — ${qty}×` : ""}`,
+            };
+            if (!monthDateMap[x.date]) monthDateMap[x.date] = [];
+            monthDateMap[x.date].push(item);
+            payExtraItems.push({ ...item, date: x.date });
+          });
+          payExtraItems.sort((a, b) => a.date.localeCompare(b.date));
 
           // Compute per-week totals (only for dates in range)
           const weekData=weeksInRange.map(ws=>{
@@ -3474,7 +3501,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
           const includeOvertime = isBpSelected;
           const monthGrandTotal = monthTotal + (includeOvertime ? overtimePay : 0);
           return { mvYear, mvMonth, monthName, useCustom, rangeFrom, rangeTo, rangeLabel,
-                   weeksInRange, monthTotal, monthTypes, trips, monthDateMap,
+                   weeksInRange, monthTotal, monthTypes, trips, monthDateMap, payExtraItems,
                    dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,
                    mealItems, mealTotal, stays, payStays,
                    creditItems, creditTotal, headerCreditDelta, creditCarryInHrs, bpHdr,
@@ -3776,7 +3803,9 @@ function derivePayCheck(paySlip, d) {
     const used = new Set();
     const rows = (lines || []).map(line => {
       const paid = pcMoney(line.amount);
-      let idx = calcItems.findIndex((it, i) => !used.has(i) && it.date === line.date);
+      // A hand-added line owns the item derivePeriod made for it.
+      let idx = calcItems.findIndex((it, i) => !used.has(i) && it.lineId === line.id);
+      if (idx < 0) idx = calcItems.findIndex((it, i) => !used.has(i) && it.date === line.date);
       // Payroll sometimes dates one of these a day either side of the pattern
       // it belongs to, so allow a near miss — but never pair across the period.
       if (idx < 0 && line.date) {
@@ -3979,15 +4008,22 @@ export default function App() {
   // odd payment needs typing. Call-ins carry a count (several day-off
   // payments can land on one date); the amount follows it until the user
   // types their own figure.
-  const payLineRate = (listKey) => listKey==="callIns"
+  const payLineRate = (listKey) => (listKey==="callIns"
     ? (role==="cpt"?RATES.DDO_CPT:RATES.DDO_FO)
-    : (role==="cpt"?RATES.DVA_CPT:RATES.DVA_FO);
+    : (role==="cpt"?RATES.DVA_CPT:RATES.DVA_FO)) * INDEX_YEARS[yearIdx].mult;
   const setPayQty = (listKey,id,qty) => setPaySlip(p=>({...p,[listKey]:p[listKey].map(r=>{
     if (r.id!==id) return r;
     const rate = payLineRate(listKey), was = r.qty || 1;
-    const auto = pcMoney(r.amount) === rate*was;
+    const auto = Math.abs((pcMoney(r.amount) ?? NaN) - +(rate*was).toFixed(2)) < 0.005;
     return {...r, qty, ...(auto ? {amount:(rate*qty).toFixed(2)} : {})};
   })}));
+  // Hand-added lines also count as expected pay (MONTH / ROSTER and the
+  // expected payslip) once dated — see payExtras in derivePeriod. Lines read
+  // from a PDF don't: they are what was paid, and stay a pure comparison.
+  const payExtras = [
+    ...paySlip.callIns.filter(r=>r.manual).map(r=>({id:r.id,kind:"callIn",date:r.date,qty:r.qty||1})),
+    ...paySlip.dvas.filter(r=>r.manual).map(r=>({id:r.id,kind:"dva",date:r.date})),
+  ];
 
   // Current week's days
   const days = allWeeks[weekStart] ?? Object.fromEntries(DAY_NAMES.map(k=>[k,emptyDay()]));
@@ -5356,9 +5392,9 @@ export default function App() {
                   mealItems, mealTotal, stays, creditItems, creditTotal, headerCreditDelta, creditCarryInHrs,
                   bpHdr, overtimeHrs, overtimePay, effectiveYos, useYos, yosNeedsConfirm,
                   selectedBpForItems, bpHdrItems,
-                  isBpSelected, includeOvertime, monthGrandTotal }
+                  isBpSelected, includeOvertime, monthGrandTotal, payExtraItems }
             = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
-                             pilotJoiningDate, customFrom, customTo, monthView });
+                             pilotJoiningDate, customFrom, customTo, monthView, payExtras });
 
           return (
             <div className="fadein">
@@ -5493,6 +5529,32 @@ export default function App() {
                             </div>
                           );
                         })()}
+                      </Card>
+                    </>
+                  )}
+
+                  {/* Call-ins / DVAs added by hand on PAY CHECK — already in
+                      the totals above; listed so the reader can see why. */}
+                  {payExtraItems.length>0&&(
+                    <>
+                      <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono,marginBottom:9}}>
+                        ADDED ON PAY CHECK — {payExtraItems.length} ITEM{payExtraItems.length!==1?"S":""}
+                      </div>
+                      <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
+                        {payExtraItems.map(item=>(
+                          <div key={item.id} style={{display:"grid",gridTemplateColumns:"minmax(90px,auto) 1fr minmax(80px,auto)",borderBottom:"1px solid var(--line2)",alignItems:"center"}}>
+                            <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                              <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",fontFamily:mono}}>{fmtShort(item.date)}</div>
+                            </div>
+                            <div style={{padding:"10px 13px",borderRight:"1px solid var(--line)"}}>
+                              <div style={{fontSize:12,fontWeight:600,color:item.color,lineHeight:1.35}}>{item.icon} {item.label}{item.qty>1?` × ${item.qty}`:""}</div>
+                              <div style={{fontSize:10,color:"var(--ink2)",marginTop:2,fontFamily:mono,lineHeight:1.4}}>
+                                {item.qty>1?`$${fmtAUD(item.rate)} each · `:""}{item.clause}
+                              </div>
+                            </div>
+                            <div style={{padding:"10px 14px",textAlign:"right",fontFamily:mono,fontSize:14,fontWeight:700,color:"var(--green)"}}>${fmtAUD(item.amount)}</div>
+                          </div>
+                        ))}
                       </Card>
                     </>
                   )}
@@ -5797,7 +5859,7 @@ export default function App() {
         {/* ══ PAY CHECK ══ */}
         {tab==="paycheck"&&(()=>{
           const d = derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, yearIdx,
-                                   pilotJoiningDate, customFrom, customTo, monthView });
+                                   pilotJoiningDate, customFrom, customTo, monthView, payExtras });
           const bp = rosterBPs.find(b => b.from === customFrom && b.to === customTo);
           const pc = derivePayCheck(paySlip, d);
 
@@ -6130,7 +6192,7 @@ export default function App() {
                 <div key={key}>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:9,gap:10,flexWrap:"wrap"}}>
                     <div style={{fontSize:10,letterSpacing:2,color:"var(--muted)",fontFamily:mono}}>{title}</div>
-                    <button className="addBtn" onClick={()=>addPayRow(key,{date:"",amount:payLineRate(key).toFixed(2),...(key==="callIns"?{qty:1}:{})})}
+                    <button className="addBtn" onClick={()=>addPayRow(key,{manual:true,date:"",amount:payLineRate(key).toFixed(2),...(key==="callIns"?{qty:1}:{})})}
                       style={{background:"transparent",border:"1px solid var(--line)",borderRadius:6,color:"var(--accent)",fontSize:11,cursor:"pointer",padding:"4px 10px",fontFamily:mono}}>{addLbl}</button>
                   </div>
                   <Card style={{marginBottom:18}}>
