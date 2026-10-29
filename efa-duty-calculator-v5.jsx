@@ -2000,7 +2000,8 @@ function carriedInAddHrs(hdr, kind) {
 // a same-port positioning sector = 0. A ground duty in the carried portion
 // returns null (planned figure stands). The carry-in's PRINTED part (see
 // carriedInPrinted) is re-measured the same way, from the latest carried duty
-// back, so carriedInAddHrs() keeps subtracting like from like.
+// back, so carriedInAddHrs() keeps subtracting like from like — plus any
+// carried sector dated on or after bpStart, which the by-date sum also holds.
 function carryActualCredit(patternText, bpStart, carry) {
   const res = { inCredit: null, inPrinted: null, outCredit: null };
   if (!patternText || !bpStart || !carry) return res;
@@ -2036,10 +2037,10 @@ function carryActualCredit(patternText, bpStart, carry) {
                    depTime: f[6], arrTime: f[8], blk: mins(blkStr) });
         continue;
       }
-      const r = ln.match(/Rpt\s+\d{4}\s+Rls\s+\d{4}(.*)$/);
+      const r = ln.match(/Rpt\s+(\d{4})\s+Rls\s+\d{4}(.*)$/);
       if (r) {
-        const t = r[1].match(/-?\d{1,3}:\d{2}/g) || [];
-        if (cur.length && t.length >= 3) duties.push({ sectors: cur, duty: mins(t[t.length - 2]) });
+        const t = r[2].match(/-?\d{1,3}:\d{2}/g) || [];
+        if (cur.length && t.length >= 3) duties.push({ sectors: cur, duty: mins(t[t.length - 2]), rpt: r[1] });
         cur = [];
       }
     }
@@ -2093,8 +2094,23 @@ function carryActualCredit(patternText, bpStart, carry) {
       const c = credOf(carried);
       const pDuty = mins(carry.inPrintedDuty) || 0;
       const printed = pDuty > 0 ? tail(carried, pDuty) : [];
-      const p = printed ? credOf(printed) : null;
-      if (c == null || p == null) continue;
+      if (c == null || !printed) continue;
+      // A carried sector dated inside the window is in the by-date credit sum
+      // too, even when no roster row prints it: the parser rebuilds the
+      // straddling pattern from these details. BP3771 carries in the 6 Sep
+      // QF7526 + 7 Sep CAR001 duty and prints neither, yet CAR001's 0:30 sat
+      // in both. Counted once with the printed duties, never twice.
+      const held = new Set(printed.flatMap(d => d.sectors));
+      // Dated the way the parser dates it: a duty's first sector takes the
+      // sign-on date, the day before departure when Rpt is later than the
+      // departure — BP3745's 20 Apr 0012 QF7526 reports 2220 on 19 Apr, so it
+      // sits outside the window and the whole carry is still added.
+      const heldDate = (d, s) =>
+        d.sectors[0] === s && hhmm(d.rpt) > hhmm(s.depTime) ? addDays(s.date, -1) : s.date;
+      for (const d of carried) for (const s of d.sectors) if (heldDate(d, s) >= bpStart) held.add(s);
+      let p = 0;
+      for (const s of held) { const sc = secCredit(s); if (sc == null) { p = null; break; } p += sc; }
+      if (p == null) continue;
       res.inCredit = fmt(c);
       res.inPrinted = fmt(p);
       break;

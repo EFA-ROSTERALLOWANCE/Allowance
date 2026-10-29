@@ -147,7 +147,18 @@ exactly to the header's duty carry, and prices them as the credit builder does
 (operating = actual Blk, positioning = 0.5 × block, same-port positioning = 0).
 The printed part of a carry-in is re-measured the same way. No exact match (a
 duty split at midnight, a ground duty in the carry) → the header's planned
-figure stands. The parser stores the actual in `carriedIn/OutCredit` and the
+figure stands.
+
+The printed part also counts any carried sector the **parser** puts inside the
+window, roster row or not: it rebuilds the straddling pattern from these details,
+so such a sector is already in the by-date credit sum. BP3771 carries in the
+6 Sep QF7526 + 7 Sep CAR001 duty and prints neither row, yet CAR001's 0:30 was
+counted twice and ADD HR PAY came out 0.5 h over the payslip. Sectors are dated
+the way the parser dates them: a duty's first sector takes its sign-on date, a
+day early when Rpt is later than departure. That is why BP3745's 20 Apr 0012
+QF7526 (Rpt 2220 on 19 Apr) stays outside the window and is added in full. Only
+the credit side changes; DHA's carry is unaffected and matched the payslip
+throughout. The parser stores the actual in `carriedIn/OutCredit` and the
 header's own values in `carriedIn/OutCreditPlanned`. On the parity surface —
 byte-identical in both sources.
 
