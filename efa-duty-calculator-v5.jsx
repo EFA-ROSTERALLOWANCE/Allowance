@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 // change the user gets: +0.0.1 for a small change (a fix, a wording or layout
 // tweak), +0.1.0 for a bigger one (a new feature or tab, a change to how pay is
 // worked out); a minor bump resets the patch (1.4.3 → 1.5.0).
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.21.5";
 
 // ─── EA 2025 ──────────────────────────────────────────────────────────────────
 const INDEX_YEARS = [

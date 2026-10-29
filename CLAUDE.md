@@ -314,8 +314,33 @@ has loaded. **Bump it with every change the user gets**, in the same commit as
 the change, using the booking-system rule: **+0.0.1 for a small change** (a fix,
 a wording or layout tweak) and **+0.1.0 for a bigger one** (a new feature or
 tab, a change to how pay is worked out); a minor bump resets the patch number
-(1.4.3 → 1.5.0). Started at 1.0.0 on 30 Oct 2026. Say the new number when
-reporting a change. The bulk app has no version shown.
+(1.4.3 → 1.5.0). Say the new number when reporting a change. The bulk app has
+no version shown.
+
+The number counts the whole history, not just work since the label appeared.
+It was introduced at 1.0.0 on 30 Oct 2026 and the same day re-derived by
+replaying the rule over every commit that changed `index.html` or the `.jsx`
+since the first upload (`0580dd6`, 30 Mar 2026 = 1.0.0), landing on 1.21.5:
+
+- **Upload era** (to `95b63a8`, 19 Jul 2026), when each release was a
+  delete-then-upload pair: the pair counts as one release, and re-uploads of
+  an identical file and case-only renames count as nothing. Commit subjects say
+  nothing, so size is the signal. Five releases count as minor: `a9577ec`
+  (+40%), `56bdc4c` (v5.4 responsive), `809ba97` (export option), `7b213dd`
+  (+7%), and `6a01867` (offline build, React inlined).
+- **Since the JSX** (`1940685` on): judged by subject. Sixteen minors:
+  `325f9b1` BP patterns on MONTH / ROSTER, `6d201f4` CC/CCR/MD DHA only,
+  `52964ef` help guide, `5d7acc6` auto EBA year, `262960c` transit removal,
+  `5c34375` 1 Jul meal rates from 15 Jun, `0e40e36` no day-off pay for OL06,
+  `9d398de` Pay Check tab, `a51b9a9` payslip PDF reading, `ad3ca41` Expected
+  Payslip, `8ae512e` day/night theme, `e2e9e85` boundary-stay meals,
+  `9576fad` ground-duty meals, `1724150` actual block for carried credit,
+  `e53fb0c` captain YOS, `3f3ba7f` return-to-bay credit. Everything else is a
+  patch.
+
+Only the minors decide the number, because each minor resets the patch count:
+21 minors gives 1.21, then the four patches after `3f3ba7f` plus the re-derive
+itself give .5.
 
 ## Commits
 
