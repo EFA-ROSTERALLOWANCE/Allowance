@@ -3,6 +3,12 @@ import { useState, useEffect } from "react";
 // BUILD 2026-07-11: SYD-time DHA attribution + credit-split at boundary applied.
 // If your HTML build predates this line, the boundary sector's DHA/OT won't show.
 
+// Shown beside EFA PAY in the top bar. Bump it in the same commit as every
+// change the user gets: +0.0.1 for a small change (a fix, a wording or layout
+// tweak), +0.1.0 for a bigger one (a new feature or tab, a change to how pay is
+// worked out); a minor bump resets the patch (1.4.3 → 1.5.0).
+const APP_VERSION = "1.0.0";
+
 // ─── EA 2025 ──────────────────────────────────────────────────────────────────
 const INDEX_YEARS = [
   { label: "EBA Commencement", mult: 1.0000 },
@@ -4601,7 +4607,7 @@ export default function App() {
       <div className="topbar">
         <div className="topbar-brand">
           <div>
-            <div style={{fontFamily:mono,fontSize:13,fontWeight:700,color:"var(--ink)",letterSpacing:2}}>EFA PAY</div>
+            <div style={{fontFamily:mono,fontSize:13,fontWeight:700,color:"var(--ink)",letterSpacing:2}}>EFA PAY<span style={{fontSize:9,fontWeight:400,color:"var(--faint)",letterSpacing:0.5,marginLeft:6}}>v{APP_VERSION}</span></div>
             <div style={{fontSize:9,color:"var(--muted)",letterSpacing:1.5}}>EA 2025 · TRIP ALLOWANCE CALCULATOR</div>
           </div>
         </div>

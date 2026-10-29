@@ -306,6 +306,17 @@ Keep that shell byte-for-byte (it is CRLF; only the bundle is LF); only the
 `<script>` before writing, so a shell edit fails the build instead of silently
 emitting a bundle that sits outside any script tag.
 
+## Version number (main calculator)
+
+`APP_VERSION` at the top of `efa-duty-calculator-v5.jsx` is shown in small grey
+type beside **EFA PAY** in the top bar, so the user can tell which build a phone
+has loaded. **Bump it with every change the user gets**, in the same commit as
+the change, using the booking-system rule: **+0.0.1 for a small change** (a fix,
+a wording or layout tweak) and **+0.1.0 for a bigger one** (a new feature or
+tab, a change to how pay is worked out); a minor bump resets the patch number
+(1.4.3 → 1.5.0). Started at 1.0.0 on 30 Oct 2026. Say the new number when
+reporting a change. The bulk app has no version shown.
+
 ## Commits
 
 Every commit is authored as **`Claude <noreply@anthropic.com>`** — one convention across all the EFA repos.
