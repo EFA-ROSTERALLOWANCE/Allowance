@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 // change the user gets: +0.0.1 for a small change (a fix, a wording or layout
 // tweak), +0.1.0 for a bigger one (a new feature or tab, a change to how pay is
 // worked out); a minor bump resets the patch (1.4.3 → 1.5.0).
-const APP_VERSION = "1.21.5";
+const APP_VERSION = "1.21.6";
 
 // ─── EA 2025 ──────────────────────────────────────────────────────────────────
 const INDEX_YEARS = [
@@ -3161,7 +3161,13 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
           const dhaCarryInHrs  = carriedInAddHrs(bpHdrItems, "duty");
           const dhaCarryOutHrs = bpHdrItems ? hm2hDha(bpHdrItems.carriedOutDuty) : 0;
           const dhaCarryDeltaHrs = dhaCarryInHrs - dhaCarryOutHrs;
-          const dhaTotal = dhaTotalRaw + dhaCarryDeltaHrs * dhaRateForItems;
+          const dhaTotalExact = dhaTotalRaw + dhaCarryDeltaHrs * dhaRateForItems;
+          // Payroll's rounding (DUTY HOUR AL), as for ADD HR PAY: the period's
+          // duty hours to the THOUSANDTH of an hour, then × rate. BP3771
+          // (Nichols, A330 F/O): 56:46 → 56.767h × $11.39 = $646.58, matching
+          // the payslip; exact hours gave $646.57. Must stay in step with the
+          // bulk app's dhaTotal.
+          const dhaTotal = Math.round((dhaTotalExact / dhaRateForItems) * 1000) / 1000 * dhaRateForItems;
 
           // Build flat list of meal/incidental items in range AND group them
           // by hotel stay. One "stay" = one hotel record. Items are assigned:
@@ -3521,7 +3527,8 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
           // total would be misleading.
           const isBpSelected = useCustom && rosterBPs.some(b => b.from === customFrom && b.to === customTo);
           const includeOvertime = isBpSelected;
-          const monthGrandTotal = monthTotal + (includeOvertime ? overtimePay : 0);
+          // monthTotal sums DHA at exact hours; swap in the payroll-rounded figure.
+          const monthGrandTotal = monthTotal + (dhaTotal - dhaTotalExact) + (includeOvertime ? overtimePay : 0);
           return { mvYear, mvMonth, monthName, useCustom, rangeFrom, rangeTo, rangeLabel,
                    weeksInRange, monthTotal, monthTypes, trips, monthDateMap, payExtraItems,
                    dhaItems, dhaTotal, dhaCarryDeltaHrs, dhaCarryInHrs, dhaRateForItems,

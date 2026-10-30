@@ -2116,11 +2116,15 @@ function processRoster(text, yearIdx, fallbackName) {
   const hdrCOutDutyH = hm2h(hdr?.carriedOutDuty);
   const hdrCInCredH  = carriedInAddHrs(hdr, "credit");
   const hdrCOutCredH = hm2h(hdr?.carriedOutCredit);
-  const dhaRateApplied = role === "cpt" ? RATES.DHA_CPT : RATES.DHA_FO;
   const headerDutyDelta   = hdrCInDutyH - hdrCOutDutyH;
   const headerCreditDelta = hdrCInCredH - hdrCOutCredH;
-  dhaTotal += headerDutyDelta * dhaRateApplied;
   dhaHours += headerDutyDelta;
+  // Payroll's rounding (DUTY HOUR AL): the BP's duty hours to the THOUSANDTH
+  // of an hour, then × rate. BP3771 (Nichols, A330 F/O): 56:46 → 56.767h ×
+  // $11.39 = $646.58, matching the payslip; exact hours gave $646.57. Must
+  // stay in step with the calculator's dhaTotal.
+  dhaHours = Math.round(dhaHours * 1000) / 1000;
+  dhaTotal = dhaHours * dhaPerHourRate;
   const creditHoursTotal = credit.total + headerCreditDelta;
 
   // ── Pilot list lookup + YOS bracket ────────────────────────────────────────
