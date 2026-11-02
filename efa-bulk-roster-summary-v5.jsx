@@ -499,13 +499,20 @@ const SALARIES = {
 
 const CREDIT_HOUR_THRESHOLD = 70;
 const CREDIT_HOUR_DIVISOR = 750;
-// Overtime hourly rate as payroll prices ADD HR PAY: annual salary ÷ CREDIT_HOUR_DIVISOR,
-// TRUNCATED to the cent (not rounded). BP3765 Peters (A330 CPT 7+y):
-// $275,463.77 ÷ 750 = $367.285… → $367.28; × 4.433h = $1,628.15, matching the
-// payslip, where rounding to $367.29 gave $1,628.20. The epsilon keeps an exact
-// cent (e.g. $346.20) from flooring a cent low through float error.
+// Overtime hourly rate as payroll prices ADD HR PAY: the annual salary as a
+// monthly figure rounded to the cent (salary ÷ 12), back to annual (× 12),
+// ÷ CREDIT_HOUR_DIVISOR, rounded to the cent. Verified to the cent on three payslips:
+//   BP3765 Peters (A330 CPT 7+y)  $275,463.77 → $367.28 × 4.433h = $1,628.15
+//   BP3765 Quach  (A330 CPT 3-5y) $259,651.03 → $346.20 × 4.442h = $1,537.82
+//   BP3771 Quach  (A330 CPT 5-7y) $267,440.56 → $356.59 × 15.592h = $5,559.95
+// Plain truncation of salary ÷ CREDIT_HOUR_DIVISOR fits Peters ($367.285… → .28) but pays
+// BP3771 at $356.58 (16c short); plain rounding fits BP3771 but pays Peters
+// $367.29. The monthly step is what tips $367.285 down: $22,955.31 × 12 =
+// $275,463.72 ÷ 750 = $367.28496. The epsilon keeps a float error from
+// rounding an exact half-cent the wrong way.
 function otHourlyRate(annualSalary) {
-  return Math.floor((annualSalary / CREDIT_HOUR_DIVISOR) * 100 + 1e-6) / 100;
+  const annual = (Math.round((annualSalary / 12) * 100 + 1e-6) / 100) * 12;
+  return Math.round((annual / CREDIT_HOUR_DIVISOR) * 100 + 1e-6) / 100;
 }
 
 function lookupAnnualSalary(fleet, role, bracketIdx, yearIdx) {
@@ -2155,7 +2162,7 @@ function processRoster(text, yearIdx, fallbackName) {
   const fleet = detectedFleet || (matchedPilot ? normaliseFleet(matchedPilot.fleet) : null);
 
   // ── Annual salary + over-70 credit-hour pay ────────────────────────────────
-  // Payroll's rounding (ADD HR PAY): hourly rate truncated to the cent (otHourlyRate), extra credit
+  // Payroll's rounding (ADD HR PAY): hourly rate rounded via the monthly salary (otHourlyRate), extra credit
   // hours to the THOUSANDTH of an hour, then multiply. Verified against BP3765
   // (Quach): 74:26.5 credit → 4.442h × $346.20 = $1,537.82 to the cent; 2 dp
   // hours gave $1,537.13. Hours are displayed to 2 dp. Same rule as the main
