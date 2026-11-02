@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 // change the user gets: +0.0.1 for a small change (a fix, a wording or layout
 // tweak), +0.1.0 for a bigger one (a new feature or tab, a change to how pay is
 // worked out); a minor bump resets the patch (1.4.3 → 1.5.0).
-const APP_VERSION = "1.21.6";
+const APP_VERSION = "1.21.7";
 
 // ─── EA 2025 ──────────────────────────────────────────────────────────────────
 const INDEX_YEARS = [
@@ -53,13 +53,20 @@ const SALARY = {
     ],
   },
 };
-// Overtime hourly rate as payroll prices ADD HR PAY: annual salary ÷ 750,
-// TRUNCATED to the cent (not rounded). BP3765 Peters (A330 CPT 7+y):
-// $275,463.77 ÷ 750 = $367.285… → $367.28; × 4.433h = $1,628.15, matching the
-// payslip, where rounding to $367.29 gave $1,628.20. The epsilon keeps an exact
-// cent (e.g. $346.20) from flooring a cent low through float error.
+// Overtime hourly rate as payroll prices ADD HR PAY: the annual salary as a
+// monthly figure rounded to the cent (salary ÷ 12), back to annual (× 12),
+// ÷ 750, rounded to the cent. Verified to the cent on three payslips:
+//   BP3765 Peters (A330 CPT 7+y)  $275,463.77 → $367.28 × 4.433h = $1,628.15
+//   BP3765 Quach  (A330 CPT 3-5y) $259,651.03 → $346.20 × 4.442h = $1,537.82
+//   BP3771 Quach  (A330 CPT 5-7y) $267,440.56 → $356.59 × 15.592h = $5,559.95
+// Plain truncation of salary ÷ 750 fits Peters ($367.285… → .28) but pays
+// BP3771 at $356.58 (16c short); plain rounding fits BP3771 but pays Peters
+// $367.29. The monthly step is what tips $367.285 down: $22,955.31 × 12 =
+// $275,463.72 ÷ 750 = $367.28496. The epsilon keeps a float error from
+// rounding an exact half-cent the wrong way.
 function otHourlyRate(annualSalary) {
-  return Math.floor((annualSalary / 750) * 100 + 1e-6) / 100;
+  const annual = (Math.round((annualSalary / 12) * 100 + 1e-6) / 100) * 12;
+  return Math.round((annual / 750) * 100 + 1e-6) / 100;
 }
 const YOS_OPTIONS = [
   { label: "Less than 3 years", idx: 0 },
@@ -3487,7 +3494,7 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
           const headerDutyDelta   = bpHdr ? carriedInAddHrs(bpHdr, "duty") - hm2h(bpHdr.carriedOutDuty)   : 0;
           const headerCreditDelta = bpHdr ? creditCarryInHrs              - hm2h(bpHdr.carriedOutCredit) : 0;
           const creditTotal = creditTotalRaw + headerCreditDelta;
-          // Payroll's rounding (ADD HR PAY): hourly rate truncated to the cent (otHourlyRate), overtime
+          // Payroll's rounding (ADD HR PAY): hourly rate rounded via the monthly salary (otHourlyRate), overtime
           // hours to the THOUSANDTH of an hour, then multiply. Verified against
           // BP3765 (Quach): 74:26.5 credit → 4.442h × $346.20 = $1,537.82 to the
           // cent; 2 dp hours gave $1,537.13. Hours are DISPLAYED to 2 dp, so the
