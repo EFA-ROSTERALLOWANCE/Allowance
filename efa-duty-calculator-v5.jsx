@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 // change the user gets: +0.0.1 for a small change (a fix, a wording or layout
 // tweak), +0.1.0 for a bigger one (a new feature or tab, a change to how pay is
 // worked out); a minor bump resets the patch (1.4.3 → 1.5.0).
-const APP_VERSION = "1.21.7";
+const APP_VERSION = "1.22.0";
 
 // ─── EA 2025 ──────────────────────────────────────────────────────────────────
 const INDEX_YEARS = [
@@ -248,6 +248,113 @@ const AIRPORTS = [
   { code:"CHC", name:"Christchurch",flag:"🇳🇿", tz:"Pacific/Auckland",    utcOffset:12 },
   { code:"LHR", name:"London Heathrow",flag:"🇬🇧", tz:"Europe/London",     utcOffset:0  },
   { code:"DRS", name:"Dresden",     flag:"🇩🇪", tz:"Europe/Berlin",       utcOffset:1  },
+  // Other Australian airports (incl. Norfolk Island). Not EFA ports, but a pilot
+  // can position from any of them, so each needs its real time zone; without an
+  // entry a sector's times were read as UTC+0. `minor` keeps them out of the
+  // meal-zone grid. Zone falls through to domestic via zoneFrom().
+  { code:"CBR", name:"Canberra", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"NTL", name:"Newcastle", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"BWU", name:"Bankstown", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"ABX", name:"Albury", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"ARM", name:"Armidale", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"BNK", name:"Ballina", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"BRK", name:"Bourke", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"CAZ", name:"Cobar", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"CFS", name:"Coffs Harbour", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"DBO", name:"Dubbo", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"GFN", name:"Grafton", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"LHG", name:"Lightning Ridge", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"MIM", name:"Merimbula", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"MRZ", name:"Moree", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"MYA", name:"Moruya", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"NAA", name:"Narrabri", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"NRA", name:"Narrandera", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"OAG", name:"Orange", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"PKE", name:"Parkes", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"PQQ", name:"Port Macquarie", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"TMW", name:"Tamworth", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"TRO", name:"Taree", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"WGA", name:"Wagga Wagga", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"WGE", name:"Walgett", flag:"🇦🇺", tz:"Australia/Sydney", utcOffset:10, minor:true },
+  { code:"BHQ", name:"Broken Hill", flag:"🇦🇺", tz:"Australia/Broken_Hill", utcOffset:9.5, minor:true },
+  { code:"LDH", name:"Lord Howe Island", flag:"🇦🇺", tz:"Australia/Lord_Howe", utcOffset:10.5, minor:true },
+  { code:"AVV", name:"Avalon", flag:"🇦🇺", tz:"Australia/Melbourne", utcOffset:10, minor:true },
+  { code:"MBW", name:"Moorabbin", flag:"🇦🇺", tz:"Australia/Melbourne", utcOffset:10, minor:true },
+  { code:"MQL", name:"Mildura", flag:"🇦🇺", tz:"Australia/Melbourne", utcOffset:10, minor:true },
+  { code:"BXG", name:"Bendigo", flag:"🇦🇺", tz:"Australia/Melbourne", utcOffset:10, minor:true },
+  { code:"PTJ", name:"Portland", flag:"🇦🇺", tz:"Australia/Melbourne", utcOffset:10, minor:true },
+  { code:"BWT", name:"Burnie", flag:"🇦🇺", tz:"Australia/Hobart", utcOffset:10, minor:true },
+  { code:"DPO", name:"Devonport", flag:"🇦🇺", tz:"Australia/Hobart", utcOffset:10, minor:true },
+  { code:"KNS", name:"King Island", flag:"🇦🇺", tz:"Australia/Hobart", utcOffset:10, minor:true },
+  { code:"FLS", name:"Flinders Island", flag:"🇦🇺", tz:"Australia/Hobart", utcOffset:10, minor:true },
+  { code:"MCY", name:"Sunshine Coast", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"BDB", name:"Bundaberg", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"HVB", name:"Hervey Bay", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"GLT", name:"Gladstone", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"ROK", name:"Rockhampton", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"MKY", name:"Mackay", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"PPP", name:"Proserpine", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"HTI", name:"Hamilton Island", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"MOV", name:"Moranbah", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"EMD", name:"Emerald", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"THG", name:"Biloela (Thangool)", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"WTB", name:"Toowoomba Wellcamp", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"TWB", name:"Toowoomba", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"ROM", name:"Roma", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"CTL", name:"Charleville", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"SGO", name:"St George", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"ULP", name:"Quilpie", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"BKQ", name:"Blackall", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"BCI", name:"Barcaldine", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"LRE", name:"Longreach", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"WIN", name:"Winton", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"ISA", name:"Mount Isa", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"CNJ", name:"Cloncurry", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"BVI", name:"Birdsville", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"NTN", name:"Normanton", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"DMD", name:"Doomadgee", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"WEI", name:"Weipa", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"HID", name:"Horn Island", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"IFL", name:"Innisfail", flag:"🇦🇺", tz:"Australia/Brisbane", utcOffset:10, minor:true },
+  { code:"PLO", name:"Port Lincoln", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"WYA", name:"Whyalla", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"CED", name:"Ceduna", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"KGC", name:"Kingscote", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"MGB", name:"Mount Gambier", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"CPD", name:"Coober Pedy", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"OLP", name:"Olympic Dam", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"PUG", name:"Port Augusta", flag:"🇦🇺", tz:"Australia/Adelaide", utcOffset:9.5, minor:true },
+  { code:"KTA", name:"Karratha", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"PHE", name:"Port Hedland", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"BME", name:"Broome", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"KGI", name:"Kalgoorlie", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"PBO", name:"Paraburdoo", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"ZNE", name:"Newman", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"LEA", name:"Learmonth (Exmouth)", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"GET", name:"Geraldton", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"ALH", name:"Albany", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"EPR", name:"Esperance", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"KNX", name:"Kununurra", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"CVQ", name:"Carnarvon", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"MJK", name:"Monkey Mia", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"DCN", name:"Derby (Curtin)", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"DRB", name:"Derby", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"BQB", name:"Busselton", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"LVO", name:"Laverton", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"LER", name:"Leinster", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"MKR", name:"Meekatharra", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"KFE", name:"Cloudbreak", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"BWB", name:"Barrow Island", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"WUN", name:"Wiluna", flag:"🇦🇺", tz:"Australia/Perth", utcOffset:8, minor:true },
+  { code:"ASP", name:"Alice Springs", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"AYQ", name:"Ayers Rock (Uluru)", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"KTR", name:"Katherine (Tindal)", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"TCA", name:"Tennant Creek", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"GOV", name:"Gove (Nhulunbuy)", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"GTE", name:"Groote Eylandt", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"ELC", name:"Elcho Island", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"MNG", name:"Maningrida", flag:"🇦🇺", tz:"Australia/Darwin", utcOffset:9.5, minor:true },
+  { code:"NLK", name:"Norfolk Island", flag:"🇳🇫", tz:"Pacific/Norfolk", utcOffset:11, minor:true },
 ];
 const AIRPORT_ZONE = {
   SYD:"domestic",WSI:"domestic",MEL:"domestic",PER:"domestic",BNE:"domestic",ADL:"domestic",HBA:"domestic",LST:"domestic",
@@ -261,6 +368,413 @@ const AIRPORT_ZONE = {
   AKL:"group_4", CHC:"group_4",                                                   // New Zealand
   BKK:"group_4",                                                                  // Thailand
 };
+// ─── Every other airport, for time zone and meal zone only ───────────────────
+// A pilot can position through any airport, not just the ports above. Without
+// an entry a sector's times were read as UTC+0 and its meals as domestic.
+// Generated 4 Nov 2026 from OurAirports (large and medium airports with
+// scheduled service and an IATA code) with IANA zones from mwgg/Airports,
+// nearest same-country airport filling the few with none. Keyed by zone;
+// each token is IATA code + ISO country. Not listed in pickers or on the meal
+// rates tab — findAirport() and zoneFrom() are the only readers.
+const WORLD_AIRPORTS_BY_TZ = {
+  "Africa/Abidjan":"ABJCI BYKCI HGOCI SPYCI",
+  "Africa/Accra":"ACCGH KMSGH NYIGH TKDGH TMLGH",
+  "Africa/Addis_Ababa":"ABKET ADDET AMHET ASOET AWAET AXUET BCOET BJRET DIRET GDEET GDQET GMBET JIJET JIMET MQXET",
+  "Africa/Algiers":"AAEDZ ALGDZ AZRDZ BJADZ BLJDZ BMWDZ BSKDZ CBHDZ CFKDZ CZLDZ DJGDZ ELGDZ ELUDZ GHADZ GJLDZ HMEDZ IAMDZ INZDZ LOODZ MZWDZ OGXDZ ORNDZ QSFDZ TEEDZ TGRDZ TINDZ TLMDZ TMRDZ TMXDZ VVZDZ",
+  "Africa/Asmara":"ASMER",
+  "Africa/Bamako":"BKOML GAQML KYSML MZIML TOMML",
+  "Africa/Bangui":"BGFCF",
+  "Africa/Banjul":"BJLGM",
+  "Africa/Bissau":"OXBGW",
+  "Africa/Blantyre":"BLZMW LLWMW",
+  "Africa/Brazzaville":"BZVCG PNRCG",
+  "Africa/Bujumbura":"BJMBI GIDBI",
+  "Africa/Cairo":"AACEG ABSEG ASWEG ATZEG CAIEG CCEEG DBBEG HBEEG HMBEG HRGEG LXREG MUHEG PSDEG RMFEG SPXEG SSHEG TCPEG",
+  "Africa/Casablanca":"AGAMA AHUMA BEMMA CMNMA ERHMA ESUMA FEZMA MLNES NDRMA OUDMA OZGMA OZZMA RAKMA RBAMA TNGMA TTAMA TTUMA UARMA",
+  "Africa/Conakry":"CKYGN",
+  "Africa/Dakar":"CSKSN DSSSN ZIGSN",
+  "Africa/Dar_es_Salaam":"ARKTZ DARTZ DODTZ JROTZ MBITZ MWZTZ MYWTZ TGTTZ ZNZTZ",
+  "Africa/Djibouti":"JIBDJ",
+  "Africa/Douala":"DLACM GOUCM MVRCM NGECM NSICM",
+  "Africa/El_Aaiun":"EUNEH NDBMR SMWEH VILEH",
+  "Africa/Freetown":"FNASL",
+  "Africa/Gaborone":"BBKBW FRWBW GBEBW MUBBW",
+  "Africa/Harare":"BUQZW HREZW KABZW VFAZW",
+  "Africa/Johannesburg":"BFNZA CPTZA DURZA ELSZA GRJZA HDSZA HLAZA JNBZA KIMZA MBDZA MGHZA MQPZA MZQZA OMDNA PHWZA PLZZA PTGZA PZBZA RCBZA SISZA SZKZA UTNZA UTTZA",
+  "Africa/Juba":"JUBSS MAKSS WUUSS",
+  "Africa/Kampala":"EBBUG KHXUG RUAUG SRTUG ULUUG",
+  "Africa/Khartoum":"DOGSD EBDSD ELFSD KRTSD KSLSD PZUSD UYLSD",
+  "Africa/Kigali":"GOMCD KGLRW KMERW",
+  "Africa/Kinshasa":"BDTCD FDUCD FIHCD GMACD KKWCD MDKCD",
+  "Africa/Lagos":"ABBNG ABVNG AKRNG BCUNG BNING CBQNG DKANG ENUNG GMONG IBANG ILRNG JOSNG KADNG KANNG LOSNG MDING MIUNG PHCNG PHGNG QOWNG QRWNG QUONG SKONG YOLNG",
+  "Africa/Libreville":"LBVGA MKUGA MVBGA OYEGA POGGA",
+  "Africa/Lome":"LFWTG",
+  "Africa/Luanda":"CABAO CBTAO DUEAO GXGAO MEGAO MSZAO NBJAO NOVAO SDDAO SPPAO SSYAO SZAAO VPEAO",
+  "Africa/Lubumbashi":"BUXCD FBMCD FKICD FMICD IRPCD KGACD KNDCD KWZCD MJMCD",
+  "Africa/Lusaka":"LUNZM LVIZM MFUZM NLAZM",
+  "Africa/Malabo":"BSGGQ GEMGQ OCSGQ SSGGQ",
+  "Africa/Maputo":"APLMZ BEWMZ INHMZ MNCMZ MPMMZ POLMZ TETMZ UELMZ VNXMZ VPYMZ VXCMZ",
+  "Africa/Maseru":"MSULS",
+  "Africa/Mbabane":"SHOSZ",
+  "Africa/Mogadishu":"BBOSO BSASO HGASO MGQSO",
+  "Africa/Monrovia":"MLWLR ROBLR",
+  "Africa/Nairobi":"ASVKE EDLKE KISKE LAUKE MBAKE MREKE MYDKE NBOKE NYKKE WILKE WJRKE",
+  "Africa/Ndjamena":"NDJTD",
+  "Africa/Niamey":"NIMNE ZNDNE",
+  "Africa/Nouakchott":"NKCMR OUZMR",
+  "Africa/Ouagadougou":"BOYBF OUABF",
+  "Africa/Porto-Novo":"COOBJ",
+  "Africa/Sao_Tome":"PCPST TMSST",
+  "Africa/Tripoli":"AKFLY BENLY LAQLY LTDLY MJILY SEBLY",
+  "Africa/Tunis":"DJETN MIRTN NBETN SFATN TBJTN TOETN TUNTN",
+  "Africa/Windhoek":"ERSNA LUDNA MPANA NDUNA ONDNA WDHNA WVBNA",
+  "America/Adak":"ADKUS",
+  "America/Anchorage":"ABLUS ADQUS AINUS AKNUS AKPUS ANCUS ANIUS ANVUS ARCUS ATKUS BETUS BRWUS BTIUS CDVUS DLGUS EGXUS ENAUS FAIUS FYUUS GALUS GKNUS HCRUS HOMUS HSLUS IANUS ILIUS MCGUS MRIUS NUIUS ORTUS PTHUS PTUUS RBYUS SCCUS SDPUS UNKUS UTOUS VDZUS WKKUS",
+  "America/Anguilla":"AXAAI",
+  "America/Antigua":"ANUAG BBQAG",
+  "America/Araguaina":"AUXBR PMWBR",
+  "America/Argentina/Buenos_Aires":"AEPAR BHIAR EZEAR MDQAR NECAR SSTAR",
+  "America/Argentina/Catamarca":"CRDAR CTCAR EQSAR PMYAR RELAR",
+  "America/Argentina/Cordoba":"CNQAR CORAR FMAAR IGRAR IGUBR PRAAR PSSAR RESAR RHDAR ROSAR SDEAR SFNAR",
+  "America/Argentina/Jujuy":"JUJAR",
+  "America/Argentina/La_Rioja":"IRJAR",
+  "America/Argentina/Mendoza":"AFAAR MDZAR",
+  "America/Argentina/Rio_Gallegos":"FTEAR LHSAR PMQAR PUDAR RGLAR",
+  "America/Argentina/Salta":"BRCAR CPCAR NQNAR RSAAR SLAAR VDMAR",
+  "America/Argentina/San_Juan":"UAQAR",
+  "America/Argentina/San_Luis":"LUQAR",
+  "America/Argentina/Tucuman":"TUCAR",
+  "America/Argentina/Ushuaia":"RGAAR USHAR",
+  "America/Aruba":"AUAAW",
+  "America/Asuncion":"AGTPY ASUPY ENOPY PMGBR",
+  "America/Atikokan":"YPLCA YZSCA",
+  "America/Bahia":"BPSBR IOSBR PAVBR SSABR VDCBR",
+  "America/Bahia_Banderas":"PVRMX",
+  "America/Barbados":"BGIBB",
+  "America/Belem":"BELBR CKSBR MABBR MCPBR TURBR",
+  "America/Belize":"BZEBZ CUKBZ CYCBZ CZHBZ DGABZ FRSGT PLJBZ SPRBZ TZABZ",
+  "America/Blanc-Sablon":"YBXCA YIFCA YNACA",
+  "America/Boa_Vista":"BVBBR LTMGY",
+  "America/Bogota":"ADZCO APOCO AUCCO AXMCO BAQCO BGACO BOGCO BSCCO BUNCO CLOCO CTGCO CUCCO CZUCO EJACO EOHCO EYPCO FLACO GPICO IBECO IPICO LETCO MDECO MTRCO MVPCO MZLCO NVACO PCRCO PDACO PEICO PPNCO PSOCO PUUCO PVACO RCHCO SJECO SMRCO SVICO SVZVE TBTBR TCOCO TMECO UIBCO VUPCO VVCCO",
+  "America/Boise":"BOIUS IDAUS MYLUS PIHUS SMNUS SUNUS TWFUS",
+  "America/Cambridge_Bay":"YCBCA",
+  "America/Campo_Grande":"CGRBR CMGBR",
+  "America/Cancun":"CTMMX CUNMX CZMMX TQOMX",
+  "America/Caracas":"BLAVE BNSVE BRMVE CAJVE CCSVE CUMVE CUPVE CZEVE LSPVE MARVE MUNVE PMVVE PZOVE SNVVE SOMVE STDVE VIGVE VLNVE VLVVE",
+  "America/Cayenne":"CAYGF LDXGF MPYGF",
+  "America/Cayman":"CYBKY GCMKY",
+  "America/Chicago":"ABIUS ABRUS ACTUS AEXUS ALOUS AMAUS ATWUS ATYUS AUSUS BHMUS BISUS BKGUS BLVUS BMIUS BNAUS BPTUS BRDUS BRLUS BROUS BTRUS CGIUS CIDUS CLLUS CMIUS COUUS CRPUS CWAUS DALUS DBQUS DDCUS DECUS DFWUS DHNUS DLHUS DSIUS DSMUS DVLUS EARUS EAUUS ECPUS ELDUS EVVUS FARUS FODUS FSDUS FSMUS FTWUS GCKUS GFKUS GGGUS GLHUS GPTUS GRBUS GRIUS GRKUS GTRUS GYYUS HIBUS HOTUS HOUUS HRLUS HROUS HSVUS HYSUS IAHUS ICTUS IMTUS INLUS IRKUS JANUS JBRUS JLNUS JMSUS LAWUS LBBUS LBFUS LBLUS LCHUS LFTUS LITUS LNKUS LRDUS LSEUS MAFUS MCIUS MCKUS MCWUS MDWUS MEIUS MEMUS MFEUS MGCUS MGMUS MHKUS MKEUS MKLUS MLIUS MLUUS MOBUS MOTUS MSLUS MSNUS MSPUS MSYUS MWAUS MWLUS OKCUS OMAUS ORDUS OWBUS PAHUS PIAUS PIBUS PIRUS PNSUS RFDUS RHIUS RSTUS SATUS SGFUS SHVUS SJTUS SLNUS SPIUS SPSUS STCUS STLUS SUXUS SWOUS TBNUS TULUS TUPUS TVFUS TXKUS TYRUS UINUS VCTUS VPSUS XNAUS XWAUS",
+  "America/Chihuahua":"CUUMX",
+  "America/Ciudad_Juarez":"CJSMX",
+  "America/Costa_Rica":"FONCR GLFCR LIOCR LIRCR NOBCR PJMCR SJOCR SYQCR XQPCR",
+  "America/Cuiaba":"AFLBR CGBBR ROOBR",
+  "America/Curacao":"CURCW",
+  "America/Dawson":"YDACA",
+  "America/Dawson_Creek":"YXJCA",
+  "America/Denver":"ABQUS AIAUS ALSUS ASEUS BFFUS BILUS BJCUS BTMUS BZNUS CDCUS CDRUS CEZUS CNMUS CNYUS CODUS COSUS CPRUS CVNUS CYSUS DENUS DIKUS DROUS EGEUS ELPUS FCAUS GCCUS GDVUS GGWUS GJTUS GTFUS GUCUS GUPUS HDNUS HLNUS HOBUS HVRUS JACUS LARUS LRUUS MSOUS MTJUS OGDUS OLFUS PUBUS PVUUS RAPUS RIWUS RKSUS ROWUS SAFUS SDYUS SGUUS SHRUS SLCUS SVCUS TEXUS TSMUS VELUS WYSUS",
+  "America/Detroit":"APNUS AZOUS CIUUS CMXUS DTWUS ESCUS FNTUS GRRUS LANUS MBSUS MKGUS MQTUS PLNUS TVCUS YAMCA",
+  "America/Dominica":"DCFDM DOMDM",
+  "America/Edmonton":"YBYCA YEGCA YHYCA YLLCA YMMCA YOJCA YPECA YPYCA YQLCA YQUCA YSMCA YXCCA YXHCA YYCCA YZFCA YZUCA",
+  "America/El_Salvador":"ILSSV SALSV",
+  "America/Fort_Nelson":"YYECA",
+  "America/Fortaleza":"CPVBR FORBR IMPBR JJDBR JPABR MVFBR NATBR PHBBR SLZBR THEBR",
+  "America/Glace_Bay":"YQYCA",
+  "America/Goose_Bay":"YWKCA YYRCA",
+  "America/Grand_Turk":"GDTTC NCATC PLSTC XSCTC",
+  "America/Grenada":"GNDGD",
+  "America/Guadeloupe":"GBJGP PTPGP",
+  "America/Guatemala":"GUAGT PBRGT RERGT",
+  "America/Guayaquil":"CUEEC ESMEC ETREC GYEEC LTXEC MECEC OCCEC SNCEC TUAEC UIOEC XMSEC",
+  "America/Guyana":"GEOGY KAIGY OGLGY",
+  "America/Halifax":"YGRCA YHZCA YYGCA",
+  "America/Havana":"BCACU BYMCU CCCCU CFGCU CMWCU CYOCU GERCU HAVCU HOGCU MZOCU SCUCU SNUCU TNDCU VRACU VTUCU",
+  "America/Hermosillo":"CENMX GYMMX HMOMX",
+  "America/Indiana/Indianapolis":"FWAUS INDUS LAFUS SBNUS",
+  "America/Inuvik":"YEVCA YFSCA YVQCA",
+  "America/Iqaluit":"YFBCA YGWCA YPXCA YUXCA",
+  "America/Jamaica":"KINJM KTPJM MBJJM OCJJM",
+  "America/Juneau":"GSTUS HNSUS JNUUS",
+  "America/Kentucky/Louisville":"SDFUS",
+  "America/Kralendijk":"BONBQ EUXBQ SABBQ",
+  "America/La_Paz":"CBBBO CIJBO GYABO LPBBO ORUBO PSZBO RIBBO SREBO SRZBO TDDBO TJABO UYUBO VVIBO",
+  "America/Lima":"AQPPE ARICL AYPPE CHHPE CHMPE CIXPE CJAPE CUZPE HUUPE ILQPE IQTPE JAEPE JAUPE JULPE LIMPE NZCPE PCLPE PEMPE PIUPE SQDCN TBPPE TCQPE TPPPE TRUPE TYLPE YMSPE",
+  "America/Los_Angeles":"ACVUS ALWUS BFIUS BFLUS BIHUS BLDUS BLIUS BURUS CCRUS CECUS CLDUS EATUS EKOUS ESDUS EUGUS FATUS FRDUS GEGUS HHRUS IPLUS LASUS LAXUS LGBUS LWSUS MCEUS MFRUS MMHUS MRYUS OAKUS OLMUS ONTUS OTHUS PAEUS PDTUS PDXUS PSCUS PSPUS PUWUS RDDUS RDMUS RNOUS SANUS SBAUS SBDUS SBPUS SCKUS SEAUS SFOUS SJCUS SLEUS SMFUS SMXUS SNAUS SQLUS STSUS TIJMX TIWUS TKFUS YKMUS YXXCA",
+  "America/Lower_Princes":"SFGMF SXMSX",
+  "America/Maceio":"AJUBR MCZBR",
+  "America/Managua":"BEFNI MGANI PUZNI",
+  "America/Manaus":"MAOBR MNXBR SJLBR TFFBR",
+  "America/Martinique":"FDFMQ",
+  "America/Matamoros":"MAMMX NLDMX PDSMX REXMX",
+  "America/Mazatlan":"CSWMX CULMX LAPMX LMMMX LTOMX MZTMX SJDMX TPQMX",
+  "America/Merida":"CMEMX CPEMX MIDMX",
+  "America/Mexico_City":"ACAMX AGUMX BJXMX CLQMX GDLMX HUXMX IZTMX MEXMX MLMMX MTTMX NLUMX OAXMX PAZMX PBCMX PXMMX QROMX SLPMX TAPMX TGZMX TLCMX UPNMX VERMX VSAMX ZCLMX ZIHMX ZLOMX",
+  "America/Miquelon":"FSPPM",
+  "America/Moncton":"YFCCA YQMCA YSJCA ZBFCA",
+  "America/Monterrey":"CVMMX DGOMX MTYMX SLWMX TAMMX TRCMX",
+  "America/Montevideo":"MVDUY PDPUY RVYUY",
+  "America/Montserrat":"MNIMS",
+  "America/Nassau":"ASDBS ATCBS AXPBS BIMBS CCZBS CRIBS ELHBS FPOBS GGTBS GHBBS IGABS LGIBS MHHBS MYGBS NASBS RSDBS SAQBS SMLBS TBIBS TCBBS TZNBS ZSABS",
+  "America/New_York":"ABEUS ABYUS ACKUS ACYUS AGSUS ALBUS AOOUS ARTUS ATLUS AUGUS AVLUS AVPUS BDLUS BEDUS BFDUS BGMUS BGRUS BHBUS BKWUS BOSUS BQKUS BTVUS BUFUS BWIUS CAEUS CAKUS CHAUS CHOUS CHSUS CKBUS CLEUS CLTUS CMHUS CRWUS CSGUS CVGUS DABUS DAYUS DCAUS DJTUS DOVUS DUJUS ELMUS ERIUS EWBUS EWNUS EWRUS EYWUS FAYUS FLLUS FLOUS GNVUS GSOUS GSPUS HGRUS HHHUS HPNUS HTSUS HVNUS HYAUS IADUS IAGUS ILGUS ILMUS IPTUS ISPUS ITHUS JAXUS JFKUS JSTUS LALUS LBEUS LCKUS LEBUS LEXUS LGAUS LNSUS LUKUS LWBUS LYHUS MCNUS MCOUS MDTUS MGWUS MHTUS MIAUS MLBUS MSSUS MYRUS NPTUS OAJUS OCEUS OGSUS OPFUS ORFUS ORHUS PBGUS PDKUS PGDUS PGVUS PHFUS PHLUS PIEUS PITUS PKBUS PQIUS PSMUS PVDUS PWMUS RDUUS RICUS RKDUS ROAUS ROCUS RSWUS RUTUS SAVUS SBYUS SCEUS SFBUS SHDUS SLKUS SRQUS SWFUS SYRUS TEBUS TLHUS TOLUS TPAUS TRIUS TTNUS TYSUS USAUS USTUS VLDUS VRBUS WSTUS",
+  "America/Nome":"CDBUS DRGUS DUTUS EMKUS GAMUS LURUS MYUUS OMEUS OTZUS PIZUS SNPUS STGUS SVAUS",
+  "America/Noronha":"FENBR",
+  "America/Nuuk":"GOHGL JAVGL JEGGL JHSGL JJUGL KUSGL SFJGL",
+  "America/Panama":"BLBPA BOCPA CHXPA CTDPA DAVPA ONXPA PACPA PTYPA",
+  "America/Paramaribo":"PBMSR",
+  "America/Phoenix":"AZAUS FLGUS GCNUS HIIUS PGAUS PHXUS PRCUS SOWUS TUSUS YUMUS",
+  "America/Port-au-Prince":"CAPHT CYAHT JEEHT PAPHT",
+  "America/Port_of_Spain":"POSTT TABTT",
+  "America/Porto_Velho":"BVHBR PVHBR",
+  "America/Puerto_Rico":"BQNPR CPXPR MAZPR NRRPR PSEPR SIGPR SJUPR VQSPR",
+  "America/Punta_Arenas":"PNTCL PUQCL",
+  "America/Rankin_Inlet":"YBKCA YRTCA",
+  "America/Recife":"PNZBR RECBR",
+  "America/Regina":"YNLCA YPACA YQRCA YSFCA YVCCA YXECA",
+  "America/Resolute":"YRBCA",
+  "America/Rio_Branco":"CZSBR RBRBR",
+  "America/Santarem":"ATMBR ITBBR STMBR TMTBR",
+  "America/Santiago":"ANFCL BBACL CCPCL CJCCL CPOCL ESRCL IQQCL LSCCL PMCCL SCLCL ZALCL ZCOCL ZOSCL",
+  "America/Santo_Domingo":"AZSDO BRXDO JBQDO LRMDO POPDO PUJDO SDQDO STIDO",
+  "America/Sao_Paulo":"AAXBR AQABR ARUBR BSBBR CACBR CAWBR CGHBR CNFBR CWBBR CXJBR FLNBR GELBR GIGBR GRUBR GVRBR GYNBR IPNBR IZABR JDFBR JOIBR JTCBR LAJBR LDBBR MGFBR MIIBR MOCBR NVTBR PETBR PFBBR PGZBR POABR PPBBR RAOBR RIABR SDUBR SJKBR SJPBR UBABR UDIBR URGBR VCPBR VIXBR XAPBR",
+  "America/Scoresbysund":"CNPGL",
+  "America/Sitka":"KLWUS KTNUS PSGUS SITUS WRGUS",
+  "America/St_Barthelemy":"SBHBL",
+  "America/St_Johns":"YAYCA YDFCA YQXCA YYTCA",
+  "America/St_Kitts":"NEVKN SKBKN",
+  "America/St_Lucia":"SLULC UVFLC",
+  "America/St_Thomas":"STTVI STXVI",
+  "America/St_Vincent":"BQUVC CIWVC MQSVC SVDVC UNIVC",
+  "America/Tegucigalpa":"GJAHN LCEHN RTBHN SAPHN TGUHN XPLHN",
+  "America/Thule":"NAQGL",
+  "America/Tijuana":"MXLMX",
+  "America/Toronto":"YBCCA YBGCA YCMCA YGLCA YGPCA YGVCA YHMCA YHUCA YKFCA YKLCA YLKCA YMOCA YMTCA YMXCA YNDCA YOWCA YPNCA YPQCA YQACA YQBCA YQGCA YQNCA YQTCA YRJCA YROCA YSBCA YTSCA YTZCA YULCA YUYCA YVBCA YVOCA YVPCA YVVCA YXUCA YYBCA YYYCA YYZCA YZVCA",
+  "America/Tortola":"EISVG VIJVG",
+  "America/Vancouver":"QBCCA XQUCA YAACA YAZCA YBLCA YCDCA YCGCA YKACA YLWCA YPRCA YPWCA YPZCA YQQCA YQZCA YVRCA YWLCA YXSCA YXTCA YYDCA YYFCA YYJCA YZPCA YZTCA YZYCN ZELCA ZMTCA",
+  "America/Whitehorse":"YQHCA YXYCA",
+  "America/Winnipeg":"XKSCA YAGCA YBRCA YDNCA YIVCA YQDCA YQKCA YRLCA YTHCA YWGCA YXLCA YYLCA YYQCA ZSJCA",
+  "America/Yakutat":"YAKUS",
+  "Arctic/Longyearbyen":"LYRNO",
+  "Asia/Aden":"AAYYE ADEYE GXFYE RIYYE SAHYE SCTYE TAIYE",
+  "Asia/Almaty":"ALAKZ BXHKZ CITKZ DMBKZ DZNKZ HSAKZ KGFKZ KOVKZ NQZKZ PLXKZ PPKKZ PWQKZ TDKKZ UKKKZ",
+  "Asia/Amman":"ADJJO AMMJO AQJJO ETMIL",
+  "Asia/Anadyr":"DYRRU KPWRU PWERU",
+  "Asia/Aqtau":"SCOKZ",
+  "Asia/Aqtobe":"AKXKZ",
+  "Asia/Ashgabat":"ASBTM BKNTM CRZTM KRWTM MYPTM TAZTM",
+  "Asia/Atyrau":"GUWKZ",
+  "Asia/Baghdad":"BGWIQ BSRIQ EBLIQ ISUIQ KIKIQ NJFIQ",
+  "Asia/Bahrain":"BAHBH",
+  "Asia/Baku":"GBBAZ GNJAZ GYDAZ LHLAZ NAJAZ",
+  "Asia/Bangkok":"BFVTH CEITH CJMTH CNXTH DINVN DMKTH HANVN HDYTH HGNTH HHQTH HKTTH HPHVN KBVTH KKCTH KOPTH LOETH LPTTH MAQTH NAWTH NNTTH NSTTH PHSTH PHYTH PXRTH ROITH SNOTH TDXTH THSTH TSTTH UBPTH UNNTH URTTH USMTH UTHTH UTPTH VDHVN VDOVN VIIVN",
+  "Asia/Barnaul":"BAXRU",
+  "Asia/Beirut":"BEYLB",
+  "Asia/Bishkek":"BSZKG IKGKG IKUKG OSSKG",
+  "Asia/Brunei":"BWNBN LMNMY",
+  "Asia/Chita":"HTARU",
+  "Asia/Choibalsan":"COQMN",
+  "Asia/Colombo":"BTCLK CMBLK HRILK JAFLK KCTLK RMLLK TRRLK",
+  "Asia/Damascus":"ALPSY DAMSY KACSY LTKSY",
+  "Asia/Dhaka":"BZLBD CGPBD CXBBD DACBD JSRBD RJHBD SPDBD ZYLBD",
+  "Asia/Dili":"BCHTL DILTL OECTL UAITL",
+  "Asia/Dubai":"AANAE AUHAE DWCAE DXBAE FJRAE RKTAE SHJAE",
+  "Asia/Dushanbe":"DYUTJ KQTTJ LBDTJ TJUTJ",
+  "Asia/Famagusta":"ECNCY",
+  "Asia/Ho_Chi_Minh":"BMVVN CAHVN CXRVN DADVN DLIVN HUIVN PQCVN PXUVN SGNVN TBBVN UIHVN VCAVN VCSVN VKGVN",
+  "Asia/Hovd":"HVDMN LTIMN ULGMN ULOMN",
+  "Asia/Irkutsk":"BTKRU IKTRU UKXRU UUDRU",
+  "Asia/Jakarta":"BDOID BKSID BTHID BTJID CGKID CXPID DHXID DUMID FLZID GNSID HLPID JOGID KJTID KNOID LSRID MEQID MLGID NTXID PDGID PDOID PGKID PKUID PLMID SOCID SRGID SUBID TKGID TNJID TXEID YIAID",
+  "Asia/Jayapura":"AMQID BIKID DJJID FKQID KNGID LUVID MKQID MKWID NAMID OKLID SOQID TIMID TMHID TTEID UGUID WMXID",
+  "Asia/Jerusalem":"HFAIL TLVIL",
+  "Asia/Kabul":"HEAAF KBLAF KDHAF KHTAF MZRAF",
+  "Asia/Kamchatka":"PKCRU",
+  "Asia/Karachi":"BHVPK CJLPK DEAPK GILPK GWDPK ISBPK KDUPK KHIPK LHEPK LYPPK MUXPK PEWPK PZHPK RYKPK SKTPK SKZPK TUKPK UETPK WNSPK",
+  "Asia/Kathmandu":"BIRNP BWANP JKRNP KEPNP KTMNP LUANP PHHNP PKRNP TPJNP",
+  "Asia/Kolkata":"AGRIN AGXIN AHAIN AJLIN AMDIN ATQIN AYJIN BBIIN BDQIN BEKIN BHJIN BHOIN BHUIN BLRIN BOMIN CCJIN CCUIN CDPIN CJBIN CNNIN COKIN DBRIN DEDIN DELIN DHMIN DIBIN DMUIN DXNIN GAUIN GAYIN GDBIN GOIIN GOPIN GOXIN GWLIN HBXIN HGIIN HJRIN HSRIN HSSIN HWRIN HYDIN IDRIN IMFIN ISKIN IXAIN IXBIN IXCIN IXDIN IXEIN IXGIN IXIIN IXJIN IXKIN IXLIN IXMIN IXPIN IXRIN IXSIN IXUIN IXYIN IXZIN JAIIN JDHIN JGAIN JLRIN JRHIN JSAIN KJBIN KLHIN KNUIN KQHIN KUUIN LKOIN LTUIN MAAIN MYQIN MZSIN NAGIN NDCIN NMIIN PABIN PATIN PBDIN PGHIN PNQIN PNYIN RDPIN REWIN RJAIN RPRIN SAGIN SDWIN SHLIN STVIN SXRIN TEZIN TIRIN TRVIN TRZIN UDRIN UKEIN VGAIN VNSIN VTZIN",
+  "Asia/Krasnoyarsk":"ABARU EIERU HTGRU IAARU KCYRU KJARU KYZRU NSKRU VAQRU VEORU",
+  "Asia/Kuala_Lumpur":"AORMY IPHMY JHBMY KBRMY KUAMY KULMY LGKMY MKZMY PENMY SZBMY TGGMY TODMY",
+  "Asia/Kuching":"BBNMY BKIMY BTUMY KCHMY LBUMY LDUMY MKMMY MURMY MYYMY MZVMY SBWMY SDKMY TWUMY",
+  "Asia/Kuwait":"KWIKW",
+  "Asia/Magadan":"GDXRU",
+  "Asia/Makassar":"AAPID BDJID BEJID BMUID BPNID DPSID KOEID KXBID LOPID MDCID NAHID PLWID TJGID TRKID TRTID UPGID WNIID",
+  "Asia/Manila":"BCDPH BSOPH BXUPH CBOPH CEBPH CGMPH CGYPH CRKPH CRMPH CYPPH CYZPH DGTPH DPLPH DRPPH DVOPH GESPH ILOPH JOLPH KLOPH LAOPH MBTPH MNLPH MPHPH OZCPH PAGPH PPSPH RXSPH SFSPH SJIPH SUGPH TACPH TAGPH TBHPH TUGPH TWTPH USUPH VRCPH WNPPH ZAMPH",
+  "Asia/Muscat":"DQMOM KHSOM MCTOM OHSOM SLLOM",
+  "Asia/Nicosia":"LCACY PFOCY",
+  "Asia/Novokuznetsk":"KEJRU NOZRU",
+  "Asia/Novosibirsk":"OVBRU",
+  "Asia/Omsk":"OMSRU",
+  "Asia/Oral":"URAKZ",
+  "Asia/Phnom_Penh":"BBMKH DSYKH KOSKH KTIKH SAIKH",
+  "Asia/Pontianak":"KTGID NPOID PKYID PNKID PSUID SQGID",
+  "Asia/Pyongyang":"DSOKP FNJKP RGOKP WOSKP",
+  "Asia/Qatar":"DOHQA",
+  "Asia/Qostanay":"KSNKZ",
+  "Asia/Qyzylorda":"BXYKZ KZOKZ",
+  "Asia/Riyadh":"ABTSA AHBSA AJFSA AQISA BHHSA DMMSA DWDSA EAMSA EJHSA ELQSA GIZSA HASSA HOFSA JEDSA KMCSA MEDSA NUMSA RAESA RAHSA RSISA RUHSA SHWSA TIFSA TUISA TUUSA ULHSA URYSA WAESA YNBSA",
+  "Asia/Sakhalin":"UUSRU",
+  "Asia/Samarkand":"BHKUZ NCUUZ NVIUZ SKDUZ TMJUZ UGCUZ",
+  "Asia/Seoul":"CJJKR CJUKR GMPKR HINKR ICNKR KPOKR KUVKR KWJKR MWXKR PUSKR RSUKR TAEKR USNKR WJUKR YNYKR",
+  "Asia/Shanghai":"AATCN ACXCN AEBCN AKUCN AOGCN AQGCN AVACN AXFCN BARCN BAVCN BFJCN BFYCN BHYCN BPECN BPLCN BPXCN BSDCN BZXCN CANCN CDECN CGDCN CGOCN CGQCN CHGCN CIFCN CKGCN CQWCN CSXCN CTUCN CWJCN CZXCN DATCN DBCCN DCYCN DDGCN DDRCN DIGCN DLCCN DLUCN DNHCN DOYCN DSNCN DTUCN DYGCN DZHCN EHUCN ENHCN ENYCN ERLCN FOCCN FUGCN FUOCN FYJCN FYNCN GMQCN GOQCN GXHCN GYSCN GYUCN HAKCN HCJCN HCZCN HDGCN HEKCN HETCN HFECN HGHCN HIACN HJJCN HLDCN HMICN HNYCN HPGCN HQLCN HRBCN HSCCN HSNCN HTNCN HTTCN HUOCN HUZCN HXDCN HYNCN HZACN HZGCN HZHCN INCCN IQMCN IQNCN JDZCN JGDCN JGNCN JGSCN JHGCN JICCN JIQCN JJNCN JMJCN JMUCN JNGCN JNHCN JNZCN JSJCN JUZCN JXACN JZHCN KGTCN KHGCN KHNCN KJHCN KJICN KMGCN KRLCN KWECN KWLCN LCXCN LDSCN LFQCN LHWCN LJGCN LLFCN LLVCN LNJCN LNLCN LPFCN LSGCN LUMCN LXACN LYACN LYGCN LYICN LZGCN LZHCN LZOCN LZYCN MDGCN MIGCN NBSCN NDGCN NGQCN NKGCN NLHCN NLTCN NNGCN NTGCN NZHCN NZLCN OHECN PEKCN PKXCN PZICN QSZCN RIZCN RKZCN RLKCN RQACN SHACN SHECN SHSCN SJWCN SQJCN SWACN SYXCN SZHCN SZXCN TAOCN TCZCN TENCN TFUCN TGOCN THQCN TLQCN TNACN TNHCN TSNCN TXNCN TYNCN UCBCN URCCN UYNCN WDSCN WEFCN WEHCN WGNCN WHACN WMTCN WNZCN WUACN WUHCN WUSCN WUXCN WUZCN XAICN XFNCN XICCN XILCN XIYCN XMNCN XNNCN XUZCN YBPCN YCUCN YICCN YIECN YIHCN YINCN YIWCN YKHCN YLXCN YNJCN YNTCN YNZCN YSQCN YTYCN YUSCN YYACN ZATCN ZHACN ZHYCN ZQZCN ZUHCN ZYICN",
+  "Asia/Srednekolymsk":"CKHRU CYXRU MQJRU SEKRU ZKPRU",
+  "Asia/Taipei":"CYITW HUNTW KHHTW KNHTW KYDTW LZNTW MFKTW MZGTW RMQTW TNNTW TPETW TSATW TTTTW",
+  "Asia/Tashkent":"AZNUZ FEGUZ NMAUZ OMNUZ TASUZ TVTUZ",
+  "Asia/Tbilisi":"BUSGE KUTGE SUIGE TBSGE",
+  "Asia/Tehran":"ABDIR ADUIR AEUIR AFZIR AWZIR AZDIR BDHIR BJBIR BNDIR BUZIR BXRIR DEFIR GCHIR GSMIR HDMIR IFNIR IKAIR KERIR KHDIR KHKIR KIHIR KKSIR KSHIR LFMIR LRRIR MHDIR MRXIR NSHIR OMHIR PGUIR PYKIR RASIR RJNIR RZRIR SDGIR SRYIR SYZIR TBZIR THRIR XBJIR ZAHIR ZBRIR",
+  "Asia/Thimphu":"PBHBT",
+  "Asia/Tokyo":"AKJJP AOJJP ASJJP AXJJP AXTJP FKSJP FSZJP FUJJP FUKJP GAJJP HACJP HIJJP HKDJP HNAJP HSGJP IBRJP IKIJP ISGJP ITMJP IWJJP IWKJP IZOJP KCZJP KIJJP KIXJP KKJJP KKXJP KMIJP KMJJP KMQJP KOJJP KTDJP KUHJP KUMJP MBEJP MMBJP MMDJP MMJJP MMYJP MSJJP MYEJP MYJJP NGOJP NGSJP NKMJP NRTJP NTQJP OBOJP OGNJP OIMJP OIRJP OITJP OKAJP OKDJP OKEJP OKIJP OKJJP ONJJP RISJP RNJJP SDJJP SDSJP SHBJP SHIJP SHMJP SYOJP TAKJP TJHJP TKNJP TKSJP TNEJP TOYJP TRAJP TSJJP TTJJP UBJJP UEOJP UKBJP WKJJP YGJJP",
+  "Asia/Tomsk":"TOFRU",
+  "Asia/Ulaanbaatar":"AVKMN BYNMN DLZMN MXVMN UBNMN UGAMN",
+  "Asia/Ust-Nera":"USRRU",
+  "Asia/Vientiane":"LPQLA PKZLA VTELA",
+  "Asia/Vladivostok":"KHVRU KXKRU NLIRU OHORU VVORU",
+  "Asia/Yakutsk":"BQSRU IKSRU MJZRU NERRU OLZRU PYJRU SYSRU ULKRU VYIRU YKSRU ZIXRU",
+  "Asia/Yangon":"AKYMM HEHMM KAWMM KETMM KYPMM LIWMM LSHMM MDLMM MGZMM MOGMM MYTMM NYTMM PBUMM RGNMM SNWMM THLMM TVYMM",
+  "Asia/Yekaterinburg":"BVJRU CEKRU EYKRU HMARU KGPRU KRORU MQFRU NJCRU NOJRU NUXRU NYARU NYMRU OSWRU OVSRU PEERU RENRU RMZRU SBTRU SGCRU SLYRU SVXRU TJMRU UFARU URJRU",
+  "Asia/Yerevan":"EVNAM LWNAM",
+  "Atlantic/Azores":"FLWPT GRWPT HORPT PDLPT PIXPT SJZPT SMAPT TERPT",
+  "Atlantic/Bermuda":"BDABM",
+  "Atlantic/Canary":"ACEES FUEES LPAES SPCES TFNES TFSES VDEES",
+  "Atlantic/Cape_Verde":"BVCCV MMOCV RAICV SIDCV SNECV VXECV",
+  "Atlantic/Faroe":"FAEFO",
+  "Atlantic/Madeira":"FNCPT PXOPT",
+  "Atlantic/Reykjavik":"AEYIS EGSIS GRYIS HFNIS IFJIS KEFIS RKVIS VPNIS",
+  "Atlantic/St_Helena":"ASISH HLESH",
+  "Atlantic/Stanley":"MPNFK",
+  "Europe/Amsterdam":"AMSNL EINNL GRQNL MSTNL NRNDE RTMNL",
+  "Europe/Astrakhan":"ASFRU",
+  "Europe/Athens":"AOKGR ATHGR AXDGR CFUGR CHQGR EFLGR GPAGR HERGR IOAGR JKHGR JMKGR JSHGR JSIGR JTRGR KGSGR KLXGR KVAGR KZIGR MJTGR PVKGR RHOGR SKGGR SMIGR VOLGR ZTHGR",
+  "Europe/Belgrade":"BEGRS INIRS KVORS PRNXK",
+  "Europe/Berlin":"BERDE BREDE CGNDE DTMDE DUSDE ERFDE FCNDE FDHDE FKBDE FMMDE FMODE FRADE GWTDE HAJDE HAMDE HDFDE HHNDE KSFDE LBCDE LEJDE MHGDE MUCDE NUEDE PADDE RLGDE SCNDE STRDE SZGAT",
+  "Europe/Bratislava":"BTSSK KSCSK SLDSK TATSK",
+  "Europe/Brussels":"ANRBE BRUBE CRLBE LGGBE OSTBE",
+  "Europe/Bucharest":"ARWRO BAYRO BBURO BCMRO CLJRO CNDRO CRARO GHVRO IASRO OMRRO OTPRO SBZRO SCVRO SUJRO TGMRO TSRRO",
+  "Europe/Budapest":"BUDHU DEBHU PEVHU SOBHU",
+  "Europe/Chisinau":"RMOMD",
+  "Europe/Copenhagen":"AALDK AARDK BLLDK CPHDK EBJDK KRPDK ODEDK RKEDK RNNDK SGDDK",
+  "Europe/Dublin":"CFNIE DUBIE KIRIE NOCIE ORKIE SNNIE",
+  "Europe/Gibraltar":"GIBGI",
+  "Europe/Guernsey":"ACIGG GCIGG",
+  "Europe/Helsinki":"ENFFI HELFI IVLFI JOEFI JYVFI KAJFI KAOFI KEMFI KOKFI KTTFI KUOFI LPPFI OULFI PORFI RVNFI SVLFI TKUFI TMPFI VAAFI",
+  "Europe/Isle_of_Man":"IOMIM",
+  "Europe/Istanbul":"ADBTR ADFTR AJITR AOETR ASRTR AYTTR BALTR BGGTR BJVTR BZITR CKZTR COVTR DIYTR DLMTR DNZTR EDOTR ERCTR ERZTR ESBTR EZSTR GNYTR GZPTR GZTTR HTYTR IGDTR ISETR ISTTR KCMTR KFSTR KSYTR KYATR KZRTR MLXTR MQMTR MSRTR MZHTR NAVTR NKTTR NOPTR OGUTR ONQTR RZVTR SAWTR SZFTR TEQTR TJKTR TZXTR VANTR VASTR YEITR YKOTR",
+  "Europe/Jersey":"JERJE",
+  "Europe/Kaliningrad":"KGDRU",
+  "Europe/Kirov":"KVXRU",
+  "Europe/Lisbon":"AVRIN BGCPT CATPT FAOPT LISPT OPOPT PRMPT VRLPT VSEPT",
+  "Europe/Ljubljana":"LJUSI MBXSI",
+  "Europe/London":"ABZGB BEBGB BFSGB BHDGB BHXGB BOHGB BRRGB BRSGB CALGB CWLGB DNDGB EDIGB EMAGB EOIGB EXTGB GLAGB HUYGB ILYGB INVGB KOIGB LBAGB LCYGB LDYGB LGWGB LPLGB LSIGB LTNGB MANGB MMEGB NCLGB NQYGB NWIGB PIKGB SENGB SOUGB STNGB SYYGB TREGB WICGB",
+  "Europe/Luxembourg":"LUXLU",
+  "Europe/Madrid":"AGPES ALCES BCNES BIOES BJZES CDTES EASES GROES GRXES IBZES ILDES LCGES LEIES LENES LEUES MADES MAHES ODBES OVDES PMIES PNAES REUES RJLES RMUES SCQES SDRES SLMES SVQES VGOES VITES VLCES VLLES XRYES ZAZES",
+  "Europe/Malta":"MLAMT",
+  "Europe/Mariehamn":"MHQFI",
+  "Europe/Minsk":"BQTBY GMEBY MSQBY MVQBY",
+  "Europe/Moscow":"AERRU AMVRU ARHRU CEERU CSYRU DMERU ESLRU GDZRU GOJRU GRVRU IARRU IGTRU IWARU KMWRU KRRRU KSZRU KZNRU LEDRU MCXRU MMKRU MRVRU NALRU NBCRU NNMRU OGZRU PESRU PEXRU PEZRU PKVRU SCWRU SKXRU STWRU SVORU UCTRU USKRU UUARU VKORU VKTRU VOZRU VUSRU ZIARU",
+  "Europe/Oslo":"AESNO ALFNO ANXNO BDUNO BGONO BJFNO BNNNO BOONO BVGNO EVENO FRONO HAUNO HFTNO HOVNO HVGNO KKNNO KRSNO KSUNO LKLNO LKNNO MEHNO MJFNO MOLNO MQNNO OLANO OSLNO RRSNO RVKNO SKNNO SOJNO SRPNO SSJNO SVGNO SVJNO TOSNO TRDNO TRFNO VAWNO VDSNO",
+  "Europe/Paris":"AJAFR AURFR AVNFR BESFR BIAFR BIQFR BODFR BORLA BSLFR BVAFR BVEFR BZRFR CCFFR CDGFR CFEFR CFRFR CLYFR CMFFR DCMFR DLEFR DOLFR EGCFR ETZFR FNIFR FSCFR GNBFR GVACH LDEFR LIGFR LILFR LRHFR LYSFR MPLFR MRSFR NCEFR NCYFR NTEFR ORYFR PGFFR PISFR PUFFR RDZFR RNSFR SXBFR TLNFR TLSFR TUFFR XCRFR",
+  "Europe/Podgorica":"TGDME TIVME",
+  "Europe/Prague":"BRQCZ JCLCZ KLVCZ OSRCZ PEDCZ PRGCZ",
+  "Europe/Riga":"RIXLV",
+  "Europe/Rome":"AHOIT AOIIT BDSIT BGYIT BLQIT BRIIT BZOIT CAGIT CIAIT CIYIT CRVIT CTAIT CUFIT EBAIT FCOIT FLRIT FOGIT FRLIT GOAIT LINIT LMPIT MXPIT NAPIT OLBIT PEGIT PMFIT PMOIT PNLIT PSAIT PSRIT QSRIT REGIT RMIIT SUFIT TPSIT TRNIT TRSIT TSFIT VBSIT VCEIT VRNIT",
+  "Europe/Samara":"IJKRU KUFRU",
+  "Europe/Sarajevo":"BNXBA OMOBA SJJBA TZLBA",
+  "Europe/Saratov":"BWORU GSVRU",
+  "Europe/Skopje":"OHDMK SKPMK",
+  "Europe/Sofia":"BOJBG PDVBG SOFBG VARBG",
+  "Europe/Stockholm":"AGHSE AJRSE ARNSE BLESE BMASE GEVSE GOTSE HADSE JKGSE KLRSE KRFSE KRNSE KSDSE LLASE LPISE LYCSE MMXSE MXXSE NRKSE NYOSE OERSE ORBSE OSDSE RNBSE SCRSE SDLSE SFTSE THNSE TYFSE UMESE VBYSE VHMSE VSTSE VXOSE",
+  "Europe/Tallinn":"EPUEE KDLEE TAYEE TLLEE UREEE",
+  "Europe/Tirane":"TIAAL",
+  "Europe/Ulyanovsk":"ULVRU ULYRU",
+  "Europe/Vienna":"ACHCH GRZAT INNAT KLUAT LNZAT VIEAT",
+  "Europe/Vilnius":"KUNLT PLQLT VNOLT",
+  "Europe/Volgograd":"VOGRU",
+  "Europe/Warsaw":"BZGPL GDNPL IEGPL KRKPL KTWPL LCJPL LUZPL POZPL RDOPL RZEPL SZYPL SZZPL WAWPL WMIPL WROPL",
+  "Europe/Zagreb":"BWKHR DBVHR OSIHR PUYHR RJKHR SPUHR ZADHR ZAGHR",
+  "Europe/Zurich":"BRNCH LUGCH ZRHCH",
+  "Indian/Antananarivo":"BPYMG DIEMG FTUMG MJNMG MNJMG MOQMG NOSMG SMSMG SVBMG TLEMG TMMMG TNRMG WMNMG",
+  "Indian/Comoro":"AJNKM HAHKM",
+  "Indian/Mahe":"PRISC SEZSC",
+  "Indian/Maldives":"GANMV HAQMV KDMMV KDOMV MLEMV NMFMV VAMMV",
+  "Indian/Mauritius":"MRUMU RRGMU",
+  "Indian/Mayotte":"DZAYT",
+  "Indian/Reunion":"RUNRE ZSERE",
+  "Pacific/Apia":"APWWS",
+  "Pacific/Auckland":"BHENZ DUDNZ GISNZ HKKNZ HLZNZ IVCNZ KATNZ KKENZ NPENZ NPLNZ NSNNZ PMRNZ ROTNZ TIUNZ TRGNZ TUONZ WAGNZ WHKNZ WKANZ WLGNZ WRENZ WSZNZ ZQNNZ",
+  "Pacific/Bougainville":"BUAPG",
+  "Pacific/Chatham":"CHTNZ",
+  "Pacific/Chuuk":"TKKFM YAPFM",
+  "Pacific/Easter":"IPCCL",
+  "Pacific/Efate":"SONVU TAHVU VLIVU",
+  "Pacific/Fiji":"LBSFJ NANFJ SUVFJ",
+  "Pacific/Funafuti":"FUNTV",
+  "Pacific/Galapagos":"GPSEC",
+  "Pacific/Gambier":"GMRPF",
+  "Pacific/Guadalcanal":"HIRSB MUASB",
+  "Pacific/Guam":"GUMGU",
+  "Pacific/Honolulu":"HNLUS HNMUS ITOUS JHMUS KOAUS LIHUS LNYUS MKKUS MUEUS OGGUS",
+  "Pacific/Kiritimati":"CXIKI",
+  "Pacific/Kosrae":"KSAFM",
+  "Pacific/Kwajalein":"KWAMH",
+  "Pacific/Majuro":"MAJMH",
+  "Pacific/Marquesas":"AUQPF NHVPF",
+  "Pacific/Nauru":"INUNR",
+  "Pacific/Niue":"IUENU",
+  "Pacific/Noumea":"GEANC ILPNC KNQNC LIFNC MEENC NOUNC TGJNC TOUNC UVENC",
+  "Pacific/Pago_Pago":"PPGAS",
+  "Pacific/Palau":"RORPW",
+  "Pacific/Pohnpei":"PNIFM",
+  "Pacific/Port_Moresby":"CMUPG DAUPG GKAPG GURPG HGUPG HKNPG KMAPG KVGPG LAEPG MAGPG MASPG MDUPG OPUPG PNPPG POMPG RABPG VAIPG VMUPG WBMPG WWKPG",
+  "Pacific/Rarotonga":"RARCK",
+  "Pacific/Saipan":"ROPMP SPNMP TIQMP",
+  "Pacific/Tahiti":"AAAPF AHEPF AXRPF BOBPF FAVPF FGUPF HOIPF HUHPF KKRPF MAUPF MKPPF MOZPF MVTPF PPTPF RFPPF RGIPF RURPF TIHPF TKPPF TKXPF TUBPF XMHPF",
+  "Pacific/Tarawa":"TRWKI",
+  "Pacific/Tongatapu":"HPATO TBUTO VAVTO",
+  "Pacific/Wake":"AWKUM",
+  "Pacific/Wallis":"WLSWF",
+};
+const WORLD_AIRPORTS = (() => {
+  const m = {};
+  for (const tz in WORLD_AIRPORTS_BY_TZ)
+    for (const t of WORLD_AIRPORTS_BY_TZ[tz].split(" ")) m[t.slice(0, 3)] = { tz, country: t.slice(3) };
+  return m;
+})();
+// ATO overseas cost group (1–6) per country, from Table 9 of each Taxation
+// Determination as published on ato.gov.au (read 4 Nov 2026). A country not in
+// the table takes `unlisted` — cost group 3 from TD 2025/4, cost group 1 in
+// TD 2024/3. Each MEAL_RATE_YEARS tier names the determination it uses (`td`),
+// so a port is zoned by the list in force on the date of the meal. Every port
+// in AIRPORT_ZONE sits in the same group in all three, so those stay fixed.
+const ATO_COUNTRY_GROUPS = {
+  "2026/4": { unlisted:3, groups:"AE6 AG6 AL3 AM3 AR3 AT5 AZ3 BA2 BB6 BD5 BE5 BF3 BG3 BH6 BM6 BN3 BO3 BR3 BS6 BY2 CA5 CH6 CI5 CK4 CL3 CM4 CN5 CO3 CR4 CY4 CZ4 DE5 DK6 DO4 DZ3 EC4 EE4 EG2 ER3 ES4 ET2 FI6 FJ3 FR5 GA5 GB5 GE3 GI4 GM2 GR4 GT4 GY5 HK6 HR3 HU4 ID3 IE6 IL6 IN3 IQ4 IS6 IT5 JM4 JO6 JP5 KE4 KG2 KH4 KR5 KW5 KZ3 LA2 LB4 LC5 LK4 LT4 LU6 LV4 MA3 MC6 MK2 ML3 MM2 MO5 MT4 MU4 MX4 MY3 MZ3 NA2 NC5 NG4 NI3 NL5 NO6 NP2 NZ4 OM6 PA4 PE3 PF6 PG4 PH4 PK2 PL4 PR6 PT4 PY2 QA6 RO3 RS3 RU4 RW2 SA5 SB4 SE6 SG6 SI4 SK4 SL3 SN5 SV4 TH4 TL3 TN2 TO3 TR3 TT6 TW5 TZ2 UA2 UG3 US6 UY3 VC3 VN3 VU4 WS4 XK2 ZA2" },
+  "2025/4": { unlisted:3, groups:"AE6 AG6 AL2 AM3 AR3 AT5 AZ3 BA2 BB6 BD4 BE5 BF3 BG3 BH6 BM6 BN3 BO3 BR3 BS6 BY2 CA5 CH6 CI5 CK4 CL3 CM4 CN5 CO3 CR4 CY4 CZ4 DE5 DK6 DO4 DZ3 EC4 EE4 EG2 ER3 ES4 ET2 FI6 FJ3 FR5 GA5 GB5 GE3 GI4 GM2 GR4 GT4 GY4 HK6 HR3 HU3 ID3 IE6 IL6 IN3 IQ4 IR1 IS6 IT5 JM4 JO6 JP5 KE4 KG2 KH3 KR5 KW5 KZ3 LA2 LB3 LC5 LK4 LT4 LU5 LV4 MA3 MC6 MK2 ML3 MM2 MO5 MT4 MU4 MX4 MY3 MZ3 NA2 NC5 NG4 NI3 NL5 NO6 NP2 NZ4 OM6 PA4 PE3 PF6 PG4 PH4 PK2 PL3 PR6 PT4 PY2 QA6 RO3 RS3 RU4 RW2 SA5 SB4 SE5 SG6 SI3 SK4 SL3 SN4 SV4 TH4 TL3 TN2 TO3 TR3 TT6 TW5 TZ2 UA2 UG3 US6 UY3 VC3 VN3 VU4 WS4 XK2 ZA2" },
+  "2024/3": { unlisted:1, groups:"AE6 AG6 AL2 AM3 AR2 AT5 AZ3 BA2 BB6 BD4 BE5 BF3 BG3 BH6 BM6 BN3 BO3 BR3 BS6 BY2 CA5 CH6 CI5 CK4 CL3 CM4 CN5 CO3 CR4 CY4 CZ4 DE5 DK6 DO4 DZ3 EC4 EE4 EG3 ER3 ES4 ET2 FI6 FJ3 FR5 GA5 GB5 GE3 GI4 GM2 GR4 GT4 GY4 HK6 HR3 HU3 ID3 IE6 IL6 IN3 IQ4 IR1 IS6 IT5 JM4 JO6 JP5 KE4 KG2 KH3 KR5 KW5 KZ3 LA2 LB3 LC5 LK3 LT4 LU5 LV4 MA3 MC6 MK2 ML3 MM2 MO5 MT4 MU4 MX4 MY3 MZ3 NA2 NC5 NG4 NI3 NL5 NO6 NP3 NZ4 OM6 PA4 PE4 PF6 PG4 PH4 PK2 PL3 PR6 PT4 PY2 QA6 RO3 RS3 RU4 RW3 SA5 SB4 SE5 SG6 SI3 SK4 SL2 SN4 SV4 TH4 TL4 TN2 TO3 TR3 TT6 TW5 TZ3 UA3 UG3 US6 UY3 VC4 VN3 VU4 WS4 XK2 ZA2" },
+};
+const ATO_GROUP_MAPS = {};
+for (const td in ATO_COUNTRY_GROUPS) {
+  const m = {};
+  for (const t of ATO_COUNTRY_GROUPS[td].groups.split(" ")) m[t.slice(0, 2)] = +t.slice(2);
+  ATO_GROUP_MAPS[td] = m;
+}
+// Australian external territories are paid as domestic, as XCH/CCK already are.
+const DOMESTIC_COUNTRIES = new Set(["AU", "CX", "CC", "NF"]);
+function regionalFlag(cc) {
+  return /^[A-Z]{2}$/.test(cc) ? String.fromCodePoint(...[...cc].map(ch => 0x1F1A5 + ch.charCodeAt(0))) : "🌐";
+}
+const _worldApCache = {};
+// The airport record for any code: the hand-kept AIRPORTS table first, then the
+// generated world table (code-only name, flag from its country). null if unknown.
+function findAirport(code) {
+  const ap = AIRPORTS.find(a => a.code === code);
+  if (ap || !code) return ap || null;
+  if (_worldApCache[code]) return _worldApCache[code];
+  const w = WORLD_AIRPORTS[code];
+  if (!w) return null;
+  let utcOffset = 0;
+  try {
+    const p = new Intl.DateTimeFormat("en", { timeZone: w.tz, timeZoneName: "longOffset" })
+      .formatToParts(new Date(Date.UTC(new Date().getUTCFullYear(), 0, 15))).find(x => x.type === "timeZoneName")?.value || "";
+    const m = p.match(/GMT([+-])(\d{2}):(\d{2})/);
+    if (m) utcOffset = (m[1] === "-" ? -1 : 1) * (+m[2] + +m[3] / 60);
+  } catch { /* unknown zone: leave 0 */ }
+  return (_worldApCache[code] = { code, name: code, flag: regionalFlag(w.country), tz: w.tz, utcOffset, country: w.country, minor: true });
+}
 // Transit time (in minutes) between each airport and the crew hotel. Applied to
 // shrink the slip-at-hotel window: hotelCheckIn = signOff + transit, and
 // hotelCheckOut = signOn - transit. Bases (HKG/MEL/PVG/SYD) get 0 because the
@@ -299,11 +813,14 @@ const MEAL_RATE_YEARS = [
   // announced). International brackets carry forward as the upper-tier
   // ATO TD2025/4 amounts.
   // ATO TD 2026/4 (2026–27), top band ($272,681+): Table 3 domestic, Table 8 overseas.
-  { label: "15 Jun 2026 onwards · TD 2026/4 (2026–27) top band", from: "2026-06-15", rates: {
+  { label: "15 Jun 2026 onwards · TD 2026/4 (2026–27) top band", from: "2026-06-15", td: "2026/4", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:43.65, lunch:61.70, dinner:86.35, incidental:36.30},
     group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
     group_6:  {label:"Group 6 — HK/SG etc. ($475/day)",      flag:"🇸🇬",color:"var(--purple)",breakfast:138.33,lunch:138.33,dinner:138.34,incidental:60.00},
+    group_1:  {label:"Group 1 — ATO cost group 1 ($150/day)",flag:"🌍",color:"var(--red2)",breakfast:40.00, lunch:40.00, dinner:40.00, incidental:30.00, hidden:true},
+    group_2:  {label:"Group 2 — ATO cost group 2 ($220/day)",flag:"🌍",color:"var(--orange2)",breakfast:60.00, lunch:60.00, dinner:60.00, incidental:40.00, hidden:true},
+    group_3:  {label:"Group 3 — ATO cost group 3 ($275/day)",flag:"🌍",color:"var(--yellow2)",breakfast:76.66, lunch:76.66, dinner:76.68, incidental:45.00, hidden:true},
   }},
   // From 22 Feb 2026: EFA EA 2025 cl. 6.23 references ATO Taxation
   // Determination TD2025/4 Table 3 (FY 2025-26, salary $263,851+ rates,
@@ -311,28 +828,37 @@ const MEAL_RATE_YEARS = [
   // breakfast = lunch = nominal/3 rounded DOWN to the cent; dinner =
   // nominal − (breakfast + lunch).
   // ATO TD 2025/4 (2025–26), top band ($263,851+): Table 3 domestic, Table 8 overseas.
-  { label: "22 Feb – 14 Jun 2026 · TD 2025/4 (2025–26) top band", from: "2026-02-22", rates: {
+  { label: "22 Feb – 14 Jun 2026 · TD 2025/4 (2025–26) top band", from: "2026-02-22", td: "2025/4", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:42.15, lunch:59.60, dinner:83.40, incidental:35.05},
     group_4:  {label:"Group 4 — NZ etc. ($340/day)",         flag:"🇳🇿",color:"var(--blue)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_5:  {label:"Group 5 — CN/JP/MFM/UK/DE etc. ($425/day)",flag:"🌏",color:"var(--pink)",breakfast:121.66,lunch:121.66,dinner:121.68,incidental:60.00},
     group_6:  {label:"Group 6 — HK/SG etc. ($475/day)",      flag:"🇸🇬",color:"var(--purple)",breakfast:138.33,lunch:138.33,dinner:138.34,incidental:60.00},
+    group_1:  {label:"Group 1 — ATO cost group 1 ($150/day)",flag:"🌍",color:"var(--red2)",breakfast:40.00, lunch:40.00, dinner:40.00, incidental:30.00, hidden:true},
+    group_2:  {label:"Group 2 — ATO cost group 2 ($220/day)",flag:"🌍",color:"var(--orange2)",breakfast:60.00, lunch:60.00, dinner:60.00, incidental:40.00, hidden:true},
+    group_3:  {label:"Group 3 — ATO cost group 3 ($275/day)",flag:"🌍",color:"var(--yellow2)",breakfast:76.66, lunch:76.66, dinner:76.68, incidental:45.00, hidden:true},
   }},
   // 19 May 2025 – 21 Feb 2026: prior schedule (lower-tier amounts; same
   // B=L rounded-down / D catch-up rule so daily sums are exact).
   // ATO TD 2025/4 (2025–26), middle band ($148,251–$263,850): Table 2 domestic, Table 7 overseas.
-  { label: "19 May 2025 – 21 Feb 2026 · TD 2025/4 (2025–26) middle band", from: "2025-05-19", rates: {
+  { label: "19 May 2025 – 21 Feb 2026 · TD 2025/4 (2025–26) middle band", from: "2025-05-19", td: "2025/4", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:37.85, lunch:53.45, dinner:75.00, incidental:35.05},
     group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
     group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"var(--purple)",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
+    group_1:  {label:"Group 1 — ATO cost group 1 ($120/day)",flag:"🌍",color:"var(--red2)",breakfast:31.66, lunch:31.66, dinner:31.68, incidental:25.00, hidden:true},
+    group_2:  {label:"Group 2 — ATO cost group 2 ($165/day)",flag:"🌍",color:"var(--orange2)",breakfast:43.33, lunch:43.33, dinner:43.34, incidental:35.00, hidden:true},
+    group_3:  {label:"Group 3 — ATO cost group 3 ($215/day)",flag:"🌍",color:"var(--yellow2)",breakfast:58.33, lunch:58.33, dinner:58.34, incidental:40.00, hidden:true},
   }},
   // Pre-19 May 2025: oldest schedule (fallback for any earlier date).
   // ATO TD 2024/3 (2024–25), middle band ($143,651–$255,670): Table 2 domestic, Table 7 overseas.
-  { label: "Before 19 May 2025 · TD 2024/3 (2024–25) middle band", from: "2000-01-01", rates: {
+  { label: "Before 19 May 2025 · TD 2024/3 (2024–25) middle band", from: "2000-01-01", td: "2024/3", rates: {
     domestic: {label:"Domestic (AUS)",                       flag:"🇦🇺",color:"var(--green2)",breakfast:36.90, lunch:52.10, dinner:73.10, incidental:34.25},
     group_4:  {label:"Group 4 — NZ etc.",                    flag:"🇳🇿",color:"var(--blue)",breakfast:71.66, lunch:71.66, dinner:71.68, incidental:45.00},
     group_5:  {label:"Group 5 — China/Japan/Macau/UK/Germany",flag:"🌏",color:"var(--pink)",breakfast:96.66, lunch:96.66, dinner:96.68, incidental:50.00},
     group_6:  {label:"Group 6 — HK/Singapore etc.",          flag:"🇸🇬",color:"var(--purple)",breakfast:120.00,lunch:120.00,dinner:120.00,incidental:50.00},
+    group_1:  {label:"Group 1 — ATO cost group 1 ($120/day)",flag:"🌍",color:"var(--red2)",breakfast:31.66, lunch:31.66, dinner:31.68, incidental:25.00, hidden:true},
+    group_2:  {label:"Group 2 — ATO cost group 2 ($165/day)",flag:"🌍",color:"var(--orange2)",breakfast:43.33, lunch:43.33, dinner:43.34, incidental:35.00, hidden:true},
+    group_3:  {label:"Group 3 — ATO cost group 3 ($215/day)",flag:"🌍",color:"var(--yellow2)",breakfast:58.33, lunch:58.33, dinner:58.34, incidental:40.00, hidden:true},
   }},
 ];
 // Default DESTINATIONS (latest rates) — used for display on Meal Rates page
@@ -359,7 +885,7 @@ const SECTOR_COLORS=["var(--accent)","var(--green)","var(--pink)","var(--yellow2
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getUtcOffsetHours(code, dateStr) {
-  const ap=AIRPORTS.find(a=>a.code===code); if(!ap) return 0;
+  const ap=findAirport(code); if(!ap) return 0;
   if(!dateStr) return ap.utcOffset;
   try {
     const d=new Date(dateStr+"T12:00:00Z");
@@ -402,8 +928,18 @@ function fmtAUD(n) {
   const v = (n == null || Number.isNaN(n)) ? 0 : Number(n);
   return v.toLocaleString("en-AU",{minimumFractionDigits:2,maximumFractionDigits:2});
 }
-function zoneFrom(c) { return AIRPORT_ZONE[c]||"domestic"; }
-function apInfo(c) { return AIRPORTS.find(a=>a.code===c)||null; }
+// Meal zone for a port on a date. Hand-kept ports are fixed; any other overseas
+// airport takes its country's ATO cost group under the determination of the
+// meal-rate tier in force that day. Unknown codes stay domestic, as before.
+function zoneFrom(c, dateStr) {
+  if (AIRPORT_ZONE[c]) return AIRPORT_ZONE[c];
+  const w = WORLD_AIRPORTS[c];
+  if (!w || DOMESTIC_COUNTRIES.has(w.country)) return "domestic";
+  const tier = MEAL_RATE_YEARS.find(yr => (dateStr || "9999") >= yr.from) || MEAL_RATE_YEARS[MEAL_RATE_YEARS.length - 1];
+  const g = ATO_GROUP_MAPS[tier.td]?.[w.country] ?? ATO_COUNTRY_GROUPS[tier.td]?.unlisted ?? 3;
+  return "group_" + g;
+}
+function apInfo(c) { return findAirport(c); }
 // All date helpers use UTC to avoid DST day-slip in +10/+11 timezones like AEST/AEDT
 function parseDate(s) { if(!s) return null; const d=new Date(s+"T00:00:00Z"); return isNaN(d)?null:d; }
 function isoDate(d) { return d.toISOString().slice(0,10); }
@@ -990,7 +1526,7 @@ function calcAllowances(day, role, yearIdx, tripDate) {
     const nightsForMeals = daysBetween(hotel.hotelFrom, hotel.hotelTo);
     const ci = parseTime(hotel.hotelCheckIn), co = parseTime(hotel.hotelCheckOut);
     const hotelSec = day.sectors[hotel.afterSectorIdx ?? 0];
-    const zone = hotelSec?.arrAirport ? zoneFrom(hotelSec.arrAirport) : (day.destination || "domestic");
+    const zone = hotelSec?.arrAirport ? zoneFrom(hotelSec.arrAirport, hotel.hotelFrom) : (day.destination || "domestic");
     const dest = (getDestinations(hotel.hotelFrom)[zone]) || getDestinations(hotel.hotelFrom).domestic;
     if (ci == null || co == null) return;
     const tot = totalSlipMins(ci, co, nightsForMeals);
@@ -1041,7 +1577,7 @@ function calcAllowances(day, role, yearIdx, tripDate) {
     if (!gw) return;
     const { onMin, offMin, port } = gw;
     const sDate = sec.sectorDate;
-    const zone = port ? zoneFrom(port) : "domestic";
+    const zone = port ? zoneFrom(port, sDate) : "domestic";
     const dest = (getDestinations(sDate)[zone]) || getDestinations(sDate).domestic;
     MEAL_WINDOWS.forEach(w => {
       const overlap = Math.max(0, Math.min(offMin, w.wE) - Math.max(onMin, w.wS));
@@ -1086,7 +1622,7 @@ function calcAllowances(day, role, yearIdx, tripDate) {
       const hotelSec = day.sectors[hotel.afterSectorIdx ?? 0];
       const port = hotelSec?.arrAirport || day.destination || "";
       if (!port) return;
-      const zone = zoneFrom(port) || "domestic";
+      const zone = zoneFrom(port, hotel.hotelFrom || hotel.hotelTo) || "domestic";
       if (!portTotals[port]) {
         portTotals[port] = { totalMin: 0, firstDate: hotel.hotelFrom || hotel.hotelTo, zone };
       }
@@ -1277,7 +1813,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
     const nightsForMeals = daysBetween(hotel.hotelFrom, hotel.hotelTo);
     const ci = parseTime(hotel.hotelCheckIn), co = parseTime(hotel.hotelCheckOut);
     const hotelSec = day.sectors[hotel.afterSectorIdx ?? 0];
-    const zone = hotelSec?.arrAirport ? zoneFrom(hotelSec.arrAirport) : (day.destination || "domestic");
+    const zone = hotelSec?.arrAirport ? zoneFrom(hotelSec.arrAirport, hotel.hotelFrom) : (day.destination || "domestic");
     const dest = (getDestinations(hotel.hotelFrom)[zone]) || getDestinations(hotel.hotelFrom).domestic;
     if (ci == null || co == null) return;
     const tot = totalSlipMins(ci, co, nightsForMeals);
@@ -1327,7 +1863,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
     if (!gw) return;
     const { onMin, offMin, sDate, port } = gw;
     if (!sDate) return;
-    const zone = port ? zoneFrom(port) : "domestic";
+    const zone = port ? zoneFrom(port, sDate) : "domestic";
     const dest = (getDestinations(sDate)[zone]) || getDestinations(sDate).domestic;
     MEAL_WINDOWS.forEach(w => {
       const overlap = Math.max(0, Math.min(offMin, w.wE) - Math.max(onMin, w.wS));
@@ -1374,7 +1910,7 @@ function calcAllowancesByDate(day, role, yearIdx, tripDate) {
       const hotelSec = day.sectors[hotel.afterSectorIdx ?? 0];
       const port = hotelSec?.arrAirport || day.destination || "";
       if (!port) return;
-      const zone = zoneFrom(port) || "domestic";
+      const zone = zoneFrom(port, hotel.hotelFrom || hotel.hotelTo) || "domestic";
       if (!portTotals[port]) {
         portTotals[port] = { totalMin: 0, firstDate: hotel.hotelFrom || hotel.hotelTo, zone };
       }
@@ -2068,8 +2604,8 @@ function carryActualCredit(patternText, bpStart, carry) {
     if (s.dep === s.arr) return pos ? 0 : /^\d+$/.test(s.flt) ? s.blk : null;
     if (s.marker === "&") return null;
     if (!pos) return s.blk;
-    const depAp = AIRPORTS.find(a => a.code === s.dep);
-    const arrAp = AIRPORTS.find(a => a.code === s.arr);
+    const depAp = findAirport(s.dep);
+    const arrAp = findAirport(s.arr);
     if (!depAp || !arrAp) return null;
     let b = (hhmm(s.arrTime) - getUtcOffsetHours(s.arr, s.date) * 60)
           - (hhmm(s.depTime) - getUtcOffsetHours(s.dep, s.date) * 60);
@@ -3434,8 +3970,8 @@ function derivePeriod({ allWeeks, rosterBPs, role, aircraft, yos, yosConfirmed, 
                     });
                     return;
                   }
-                  const depAp = AIRPORTS.find(a => a.code === depCode);
-                  const arrAp = AIRPORTS.find(a => a.code === arrCode);
+                  const depAp = findAirport(depCode);
+                  const arrAp = findAirport(arrCode);
                   if (!depAp || !arrAp) return;
                   const depMin = parseTime(depTime), arrMin = parseTime(arrTime);
                   if (depMin == null || arrMin == null) return;
@@ -4906,7 +5442,7 @@ export default function App() {
                     const hCo = parseTime(hotel.hotelCheckOut);
                     const hTotSlip = hNights >= 0 && hCi != null && hCo != null ? totalSlipMins(hCi, hCo, hNights) : 0;
                     const hPerDayM = hNights >= 0 && hCi != null && hCo != null ? mealsCoveredPerDay(hCi, hCo, hNights, hotel.hotelFrom || hotel.hotelTo) : [];
-                    const hZone = sec.arrAirport ? zoneFrom(sec.arrAirport) : (d.destination || "domestic");
+                    const hZone = sec.arrAirport ? zoneFrom(sec.arrAirport, hotel.hotelFrom) : (d.destination || "domestic");
                     const hDest = (getDestinations(hotel.hotelFrom)[hZone]) || getDestinations(hotel.hotelFrom).domestic;
                     const hRetDepTz = d.sectors[idx + 1]?.depAirport;
 
@@ -5248,7 +5784,7 @@ export default function App() {
             <Card style={{padding:0,overflow:"hidden",marginBottom:18}}>
               <div style={{padding:"9px 14px",fontSize:11,letterSpacing:2,color:"var(--muted)",fontFamily:mono,borderBottom:"1px solid var(--line)"}}>AIRPORT → MEAL ZONE</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))"}}>
-                {AIRPORTS.map(ap=>{
+                {AIRPORTS.filter(ap=>!ap.minor).map(ap=>{
                   const dest=mealRates[zoneFrom(ap.code)];
                   return <div key={ap.code} style={{padding:"11px 14px",borderRight:"1px solid var(--line2)",borderBottom:"1px solid var(--line2)",display:"flex",alignItems:"center",gap:9}}>
                     <div style={{fontSize:20}}>{ap.flag}</div>
@@ -5264,7 +5800,7 @@ export default function App() {
             <Card style={{padding:0,overflow:"hidden"}}>
               <div className="rates-grid" style={{borderBottom:"1px solid var(--line)"}}>
                 <div style={{padding:"9px 14px",fontSize:10,letterSpacing:1.5,color:"var(--ink2)",fontFamily:mono,borderRight:"1px solid var(--line)"}}>ALLOWANCE</div>
-                {Object.values(mealRates).map((dest,i)=>(
+                {Object.values(mealRates).filter(dest=>!dest.hidden).map((dest,i)=>(
                   <div key={i} style={{padding:"9px 12px",borderRight:i<3?"1px solid var(--line)":"none"}}>
                     <div style={{fontSize:16}}>{dest.flag}</div>
                     <div style={{fontSize:11,fontWeight:700,color:dest.color,marginTop:2,lineHeight:1.3}}>{dest.label}</div>
@@ -5287,7 +5823,7 @@ export default function App() {
                       {row.clause&&<div style={{fontSize:9,color:"var(--muted)",fontFamily:mono,marginTop:1}}>{row.clause}{row.win?` · ${row.win}`:""}</div>}
                     </div>
                   </div>
-                  {Object.values(mealRates).map((dest,i)=>{
+                  {Object.values(mealRates).filter(dest=>!dest.hidden).map((dest,i)=>{
                     const val=row.key==="_t"?dest.breakfast+dest.lunch+dest.dinner:row.key==="_ti"?dest.breakfast+dest.lunch+dest.dinner+dest.incidental:dest[row.key];
                     return <div key={i} style={{padding:"10px 12px",borderRight:i<3?"1px solid var(--line)":"none",textAlign:"right"}}>
                       <span style={{fontFamily:mono,fontSize:row.bold?14:12,fontWeight:row.bold?700:500,color:row.bold?"var(--accent)":row.sub?"var(--ink2)":"var(--ink)"}}>${fmtAUD(val)}</span>
